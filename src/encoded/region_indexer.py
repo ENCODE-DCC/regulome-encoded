@@ -84,7 +84,7 @@ ENCODED_REGION_REQUIREMENTS = {
 }
 
 REGULOME_SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
-REGULOME_ALLOWED_STATUSES = ['released', 'archived', 'in progress']  # no 'in progress' permission!
+REGULOME_ALLOWED_STATUSES = ['released', 'archived', 'in progress', 'revoked', 'deleted']  # no 'in progress' permission!
 REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 # NOTE: regDB requirements keyed on "collection_type": assay_term_name or else annotation_type
@@ -681,7 +681,7 @@ class RegionIndexer(Indexer):
                 return  # Note if dataset is NO LONGER a candidate its files won't get removed.
 
         if last_exc is None:
-            files = dataset.get('files', [])
+            files = dataset.get('original_files', [])
             for afile in files:
                 # files may not be embedded
                 if isinstance(afile, str):
@@ -772,7 +772,7 @@ class RegionIndexer(Indexer):
         if 'Experiment' not in dataset['@type'] and 'FileSet' not in dataset['@type']:
             return None
 
-        if len(dataset.get('files', [])) == 0:
+        if len(dataset.get('original_files', [])) == 0:
             return None
 
         dataset_uses = []
@@ -901,6 +901,11 @@ class RegionIndexer(Indexer):
                             if val not in required_properties[prop]:
                                 failed = True
                                 break
+                        # Temporary patch on ChIP-seq and DNase-seq data for reproducing RegulomeDB v1.1
+                        file_rfa = afile.get('award', {}).get('rfa')
+                        if ((collection_type in ['ChIP-seq', 'DNase-seq'])
+                            and (file_rfa not in ['ENCODE', 'ENCODE2', 'community'])):
+                            failed = True
                         if not failed:
                             file_uses.append(FOR_REGULOME_DB)
 
