@@ -8,6 +8,7 @@ import { FetchedData, Param } from './fetched';
 import * as globals from './globals';
 import _ from 'underscore';
 import { SortTablePanel, SortTable } from './sorttable';
+import { TestViz } from './visualizations';
 
 
 const regulomeGenomes = [
@@ -216,9 +217,6 @@ const ResultsTable = (props) => {
 
     const context = props.context;
     const data = context["@graph"];
-    
-    console.log("building table of length:");
-    console.log(data.length);
 
     const dataColumns = {
 

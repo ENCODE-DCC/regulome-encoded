@@ -73,7 +73,7 @@ export class TestViz extends React.Component {
 
         const d3 = this.d3;
 
-        let displayCategories = ["assay_term_name", "organ_slims", "biosample_term_name", "target.label"];
+        let displayCategories = ["assay_term_name", "annotation_type", "organ_slims", "biosample_term_name", "target.label"];
 
         let facets = this.props.context.facets;
 
@@ -155,7 +155,7 @@ export class TestViz extends React.Component {
                 .padding(0.2)
 
             const yScale = d3.scaleLinear()
-                .domain([0, chartMax])
+                .domain([0, maxY])
                 .range([height - margin.bottom, margin.top])
 
             // Define the axes
