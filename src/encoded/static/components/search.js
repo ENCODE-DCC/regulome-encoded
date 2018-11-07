@@ -94,7 +94,7 @@ export class PickerActions extends React.Component {
     render() {
         if (this.context.actions && this.context.actions.length) {
             return (
-                <div className="pull-right">
+                <div className="fade-out-pull-right">
                     {this.context.actions.map(action => React.cloneElement(action, { key: this.props.context.name, id: this.props.context['@id'] }))}
                 </div>
             );
@@ -658,13 +658,12 @@ const Term = (props) => {
 
     return (
         <li className={`facet-term${negated ? ' negated-selected' : (selected ? ' selected' : '')}`}>
-            {statusFacet ? <Status item={term} badgeSize="small" css="facet-term__status" noLabel /> : null}
             <a className="facet-term__item" href={href} onClick={href ? onFilter : null}>
                 <div className="facet-term__text">
-                    {em ? <em>{title}</em> : <span>{title}</span>}
+                    {selected ? <i className="icon icon-check-square-o" /> : null}
+                    {negated ? <i className="icon icon-square-o" /> : null}
+                    {em ? <em>{title}  ({count})</em> : <span>{title}  ({count})</span>}
                 </div>
-                {negated ? null : <div className="facet-term__count">{count}</div>}
-                {(selected || negated) ? null : <div className="facet-term__bar" style={barStyle} />}
             </a>
             <div className="facet-term__negator">
                 {(selected || negated || exists) ? null : <a href={negationHref} title={'Do not include items with this term'}><i className="icon icon-minus-circle" /></a>}
@@ -805,7 +804,7 @@ class Facet extends React.Component {
                             </div>
                         : null}
                         {(terms.length > 5 && !moreTermSelected) ?
-                            <div className="pull-right">
+                            <div className="fade-out-pull-right">
                                 {/* Display the "+ See more" button if more than five terms exist for this facet */}
                                 <small>
                                     <button type="button" className={seeMoreClass} data-toggle="collapse" data-target={`#${termID}`} onClick={this.handleClick} />
@@ -1439,9 +1438,6 @@ ResultTableList.defaultProps = {
 // Display a local genome browser in the ResultTable where search results would normally go. This
 // only gets displayed if the query string contains only one type and it's "File."
 export const ResultBrowser = (props) => {
-
-    console.log(props);
-    console.log(props.assembly);
 
     let visUrl = '';
     const datasetCount = props.datasets.length;

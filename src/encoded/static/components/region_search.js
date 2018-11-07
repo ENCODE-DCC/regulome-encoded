@@ -8,6 +8,7 @@ import { FetchedData, Param } from './fetched';
 import * as globals from './globals';
 import _ from 'underscore';
 import { SortTablePanel, SortTable } from './sorttable';
+import { TestViz } from './visualizations';
 
 
 const regionGenomes = [
@@ -307,7 +308,7 @@ class AdvSearch extends React.Component {
                                 <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="region">
                                 </textarea>
 
-                                <p className="example-inputs" onClick={this.handleExamples}>Click for example entry: <span className="example-input" id="example-snps">multiple dbSNPs</span>, <span className="example-input" id="example-coordinates">0-based coordinates</span>, <span className="example-input" id="example-nucleotide">single nucleotide coordinate</span>, or <span className="example-input" id="example-gene">gene name</span></p>
+                                <p className="example-inputs" onClick={this.handleExamples}>Click for example entry: <span className="example-input" id="example-snps">multiple dbSNPs</span>, <span className="example-input" id="example-coordinates">0-based coordinates</span>, or <span className="example-input" id="example-nucleotide">single nucleotide coordinate</span></p>
 
                                 <input type="submit" value="Search" className="btn btn-sm btn-info" />
                                 <input type="hidden" name="genome" value={this.state.genome} />
@@ -317,7 +318,7 @@ class AdvSearch extends React.Component {
                     </form>
 
                     {(context.notification) ?
-                        <p>{context.notification}</p>
+                        <div className="notification">{context.notification}</div>
                     : null}
                     {(context.coordinates) ?
                         <p>Searched coordinates: {context.coordinates}</p>
@@ -387,6 +388,53 @@ const PeakDetails = (props) => {
         <div>
             <SortTablePanel title="Peak details">
                 <SortTable list={peaks} columns={peaksTableColumns} />
+            </SortTablePanel>
+        </div>
+    );
+
+}
+
+const ResultsTable = (props) => {
+
+    const context = props.context;
+    const data = context["@graph"];
+
+    const dataColumns = {
+
+        assay_title: {
+            title: 'Method',
+            getValue: item => item.assay_title ? item.assay_title : item.annotation_type,
+        },
+
+        biosample_term_name: {
+            title: 'Biosample term name',
+        },
+
+        organ_slims: {
+            title: 'Organ',
+            getValue: (item) => item.organ_slims ? item.organ_slims.join(', ') : "",
+        },
+
+        assay_slims: {
+            title: 'Assay',
+        },
+
+        accession: {
+            title: "Link",
+            display: (item) => {
+                return <a href={item['@id']}>{item.accession}</a>;
+            }
+        },
+
+        description: {
+            title: 'Description',
+        },
+    };
+
+    return (
+        <div>
+            <SortTablePanel title="Results">
+                <SortTable list={data} columns={dataColumns} />
             </SortTablePanel>
         </div>
     );
@@ -534,79 +582,110 @@ class RegulomeSearch extends React.Component {
 
         return (
             <div>
-                <div className="lead-logo"><img src="/static/img/RegulomeLogoFinal.gif"></img></div>
+                <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif"></img></a></div>
 
-                <AdvSearch {...this.props} />
                 {notification.startsWith('Success') ?
-                    <div className="panel data-display main-panel">
-                        <div className="row">
-                            <div className="col-sm-5 col-md-4 col-lg-3">
-                                <FacetList
-                                    {...this.props}
-                                    facets={facets}
-                                    filters={filters}
-                                    searchBase={searchBase ? `${searchBase}&` : `${searchBase}?`}
-                                    onFilter={this.onFilter}
-                                />
+                    <div>
+                        <div>
+                            <div className="result-summary">
+                                {(context.notification) ?
+                                    <p>{context.notification}</p>
+                                : null}
+                                {(context.coordinates) ?
+                                    <p>Searched coordinates: {context.coordinates}</p>
+                                : null}
+                                {(context.regulome_score) ?
+                                    <p className="regulomescore">RegulomeDB score: {context.regulome_score}</p>
+                                : null}
                             </div>
+                            {(context.regulome_score  && !context.peak_details) ?
+                                <a
+                                    rel="nofollow"
+                                    className="btn btn-info btn-sm btn-left centered-btn"
+                                    href={searchBase ? `${searchBase}&peak_metadata` : '?peak_metadata'}
+                                >
+                                    See peaks
+                                </a>
+                            : null}
+                            {(context.peak_details !== undefined && context.peak_details !== null) ?
+                                <div className="btn-container">
+                                    <a className="btn btn-info btn-sm" href={context.download_elements[0]} data-bypass>Download peak details (TSV)</a>
+                                    <a className="btn btn-info btn-sm" href={context.download_elements[1]} data-bypass>Download peak details (JSON)</a>
+                                </div>
+                            : null}
+                            <div>
+                                <div className="panel flex-panel">
 
-                            <div className="col-sm-7 col-md-8 col-lg-9">
-                                <div>
-                                    {visualizeKeys && context.visualize_batch && !visualizeDisabled ?
-                                        <div className="visualize-block">
-                                            <h4>Visualizations</h4>
-                                            {visualizeCfg['hg19']['UCSC'] ?
-                                                <div>
-                                                    <div className="visualize-element"><a href={visualizeCfg['hg19']['Quick View']} rel="noopener noreferrer" target="_blank">Quick View
-                                                        <span className="beta-badge">BETA</span>
-                                                    </a></div>
-                                                    <div className="visualize-element"><a href={visualizeCfg['hg19']['UCSC']} rel="noopener noreferrer" target="_blank">UCSC</a></div>
-                                                </div>
-                                            :
-                                                <div className="visualize-element visualize-error">Choose other datasets. These cannot be visualized.</div>
-                                            }
+                                    {facets.length ?
+                                        <div className="facet-column">
+                                            <FacetList
+                                                {...this.props}
+                                                facets={facets}
+                                                filters={filters}
+                                                searchBase={searchBase ? `${searchBase}&` : `${searchBase}?`}
+                                                onFilter={this.onFilter}
+                                            />
                                         </div>
-                                    :
-                                        <div className="visualize-block">
-                                            <h4>Visualizations</h4>
-                                            <div className="visualize-element visualize-error">Filter to fewer than 100 results to visualize</div>
-                                        </div>
-                                    }
-                                    <h4>
-                                        Showing {results.length} of {total}
-                                    </h4>
-                                    <div className="results-table-control">
-                                        {total > results.length && searchBase.indexOf('limit=all') === -1 ?
-                                                <a
-                                                    rel="nofollow"
-                                                    className="btn btn-info btn-sm"
-                                                    href={searchBase ? `${searchBase}&limit=all` : '?limit=all'}
-                                                    onClick={this.onFilter}
-                                                >
-                                                    View All
-                                                </a>
+                                    : ''}
+
+                                    <div className="wide-column">
+
+                                        <TestViz {...this.props}/>
+
+                                        {visualizeKeys && context.visualize_batch && !visualizeDisabled ?
+                                            <div className="visualize-block">
+                                                <h4>Biodalliance</h4>
+                                                {visualizeCfg['hg19']['UCSC'] ?
+                                                    <div>
+                                                        <div className="visualize-element"><a href={visualizeCfg['hg19']['Quick View']} rel="noopener noreferrer" target="_blank">Quick View
+                                                            <span className="beta-badge">BETA</span>
+                                                        </a></div>
+                                                        <div className="visualize-element"><a href={visualizeCfg['hg19']['UCSC']} rel="noopener noreferrer" target="_blank">UCSC</a></div>
+                                                    </div>
+                                                :
+                                                    <div className="visualize-element visualize-error">Choose other datasets. These cannot be visualized.</div>
+                                                }
+                                            </div>
                                         :
-                                            <span>
-                                                {results.length > 25 ?
-                                                        <a
-                                                            className="btn btn-info btn-sm"
-                                                            href={trimmedSearchBase || '/regulome-search/'}
-                                                            onClick={this.onFilter}
-                                                        >
-                                                            View 25
-                                                        </a>
-                                                : null}
-                                            </span>
+                                            <div className="visualize-block">
+                                                <h4>Biodalliance</h4>
+                                                <div className="visualize-element visualize-error">Filter to fewer than 100 results to visualize</div>
+                                            </div>
                                         }
+                                        <h4>
+                                            Showing {results.length} of {total}
+                                        </h4>
+                                        <div className="results-table-control">
+                                            {total > results.length && searchBase.indexOf('limit=all') === -1 ?
+                                                    <a
+                                                        rel="nofollow"
+                                                        className="btn btn-info btn-sm"
+                                                        href={searchBase ? `${searchBase}&limit=all` : '?limit=all'}
+                                                        onClick={this.onFilter}
+                                                    >
+                                                        View All
+                                                    </a>
+                                            :
+                                                <span>
+                                                    {results.length > 25 ?
+                                                            <a
+                                                                className="btn btn-info btn-sm"
+                                                                href={trimmedSearchBase || '/regulome-search/'}
+                                                                onClick={this.onFilter}
+                                                            >
+                                                                View 25
+                                                            </a>
+                                                    : null}
+                                                </span>
+                                            }
+
+                                        </div>
+
+                                        <ResultsTable {...this.props} />
 
                                     </div>
+
                                 </div>
-
-                                <hr />
-
-                                <ul className="nav result-table" id="result-table">
-                                    {results.map(result => Listing({ context: result, columns, key: result['@id'] }))}
-                                </ul>
 
                             </div>
                         </div>
@@ -618,7 +697,10 @@ class RegulomeSearch extends React.Component {
                 : null}
 
                 {(context.peak_details === undefined && !notification.startsWith('Success')) ?
-                    <DataTypes />
+                    <div>
+                        <AdvSearch {...this.props} />
+                        <DataTypes />
+                    </div>
                 :  null}
 
             </div>

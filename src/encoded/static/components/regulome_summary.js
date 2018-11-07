@@ -50,6 +50,8 @@ class RegulomeSummary extends React.Component {
     render() {
         const context = this.props.context;
         const summaries = context.summaries;
+        const notifications = context.notifications;
+        const coordinates = context.coordinates;
 
         let snp_count = 0;
         summaries.forEach(summary => {
@@ -58,11 +60,16 @@ class RegulomeSummary extends React.Component {
 
         return (
             <div>
-                <div className="lead-logo"><img src="/static/img/RegulomeLogoFinal.gif"></img></div>
+                <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif"></img></a></div>
 
                 <div className="results-summary">
                     <p>This search has evaluated {context.notifications.length} input lines and found {snp_count} SNP(s).</p>
-                    <p>Click on the scores for detailed information.</p>
+                    {notifications.map((notification,idx) => {
+                        if (notification[coordinates[idx]] !== "Success") {
+                            return (<p key={idx}>Region {coordinates[idx]} {notification[coordinates[idx]]}</p>)
+                        }
+                    })}
+                    <p><i className="icon icon-hand-o-right" />Click on the scores for detailed information.</p>
 
                 </div>
 
