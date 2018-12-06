@@ -137,8 +137,8 @@ export class TestViz extends React.Component {
         function drawOneChart(svgBars, chartData, maxWidth, fillColor, xAxisLabel, yAxisLabel, maxY){
 
             // create SVG container for chart components
-            let margin = {top: 40, bottom: 140, right: 20, left: 30};
-            let height = 300;
+            let margin = {top: 40, bottom: 150, right: 20, left: 30};
+            let height = 310;
             let width = maxWidth;
 
             svgBars

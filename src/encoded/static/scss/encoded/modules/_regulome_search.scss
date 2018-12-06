@@ -498,11 +498,9 @@ table {
     }
     .wide-column {
         flex: 0 0 75%;
-        padding-left: 20px;
         @media screen and (max-width: $screen-md-min) {
             flex: 0 0 100%;
             overflow: scroll;
-            padding-left: 0;
             padding-top: 20px;
         }
     }
