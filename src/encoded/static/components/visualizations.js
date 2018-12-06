@@ -16,7 +16,7 @@ export class TestViz extends React.Component {
         // Bind `this` to non-React methods.
         this.drawCharts = this.drawCharts.bind(this);
         this.bindClickHandlers = this.bindClickHandlers.bind(this);
-        this.drawChartsWrapper = this.drawChartsWrapper.bind(this);
+        this.drawChartsResized = this.drawChartsResized.bind(this);
     };
 
     componentDidMount() {
@@ -32,7 +32,7 @@ export class TestViz extends React.Component {
                 // Bind node/subnode click handlers to parent component handlers
                 this.bindClickHandlers(this.d3, targetElement);
 
-                window.addEventListener("resize", this.drawChartsWrapper);
+                window.addEventListener("resize", this.drawChartsResized);
 
             }
 
@@ -41,15 +41,20 @@ export class TestViz extends React.Component {
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this.drawChartsWrapper);
+        window.removeEventListener("resize", this.drawChartsResized);
     }
 
     // need to redraw charts when window changes
     componentDidUpdate() {
-        this.drawChartsWrapper;
+        if (this.chartdisplay){
+            this.d3 = require('d3');
+            const targetElement = this.chartdisplay;
+            targetElement.innerHTML = '';
+            this.drawCharts(targetElement);
+        }
     }
 
-    drawChartsWrapper() {
+    drawChartsResized() {
         if (this.chartdisplay){
             this.d3 = require('d3');
             const targetElement = this.chartdisplay;
