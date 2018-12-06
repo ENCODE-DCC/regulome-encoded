@@ -272,10 +272,6 @@ class AdvSearch extends React.Component {
             exampleString = "rs3768324\nrs75982468\nrs10905307\nrs10823321\nrs7745856";
         } else if (e.target.id === "example-coordinates") {
             exampleString = "chr11:62607065-62607067\nchr10:5894500-5894501\nchr10:11741181-11741181\nchr1:39492463-39492463\nchr6:10695158-10695160";
-        } else if (e.target.id === "example-gene") {
-            exampleString = "CTCF (homo sapiens)";
-        } else if (e.target.id === "example-nucleotide"){
-            exampleString = "ENSG00000102974";
         } else {
             exampleString = "rs3768324\nrs75982468\nrs10905307\nrs10823321\nrs7745856";
         }
@@ -303,12 +299,12 @@ class AdvSearch extends React.Component {
                 <PanelBody>
                     <form id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
                         <div className="form-group">
-                            <label htmlFor="annotation"><i className="icon icon-search"></i>Search by dbSNP ID, gene name, single nucleotide coordinate, or coordinate range (hg19)</label>
+                            <label htmlFor="annotation"><i className="icon icon-search"></i>Search by dbSNP ID or coordinate range (hg19)</label>
                             <div className="input-group input-group-region-input">
                                 <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="region">
                                 </textarea>
 
-                                <p className="example-inputs" onClick={this.handleExamples}>Click for example entry: <span className="example-input" id="example-snps">multiple dbSNPs</span>, <span className="example-input" id="example-coordinates">0-based coordinates</span>, or <span className="example-input" id="example-nucleotide">single nucleotide coordinate</span></p>
+                                <p className="example-inputs" onClick={this.handleExamples}>Click for example entry: <span className="example-input" id="example-snps">multiple dbSNPs</span> or <span className="example-input" id="example-coordinates">coordinates ranges</span></p>
 
                                 <input type="submit" value="Search" className="btn btn-sm btn-info" />
                                 <input type="hidden" name="genome" value={this.state.genome} />
