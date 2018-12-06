@@ -57,11 +57,11 @@ function getLetterPath(i) {
 
   const letterC = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
 
-  if (i === 0) {
+  if (i === 2) {
     return letterG;
-  } else if (i === 1) {
+  } else if (i === 0) {
     return letterA;
-  } else if (i === 2) {
+  } else if (i === 1) {
     return letterC;
   } else if (i === 3) {
     return letterT;
@@ -93,28 +93,47 @@ function getLetterCnts(s, i) {
  * @param {number} i - letter index. Range: [0,4)
  * @returns {number[][]} counts of each letter.
  */
-function offsets(s, i) {
-  const cnts = getLetterCnts(s, i);
+function offsets(cnts,maxCount) {
   const offs = [];
 
   let ctr = 0;
+  let en = 0;//1 / 0.69314718056 * (4 - 1) / (2 * maxCount);
+
+  let H = 0;
+
+  cnts.forEach((d,j) => {
+      let relative_frequency = d / maxCount;
+      if (relative_frequency > 0) {
+        H = H - relative_frequency * Math.log2(relative_frequency);
+      }
+  });
 
   // add on the index so we can use it.
   // determine heights of rects
+  let totalTest = 0;
   cnts.forEach((d, j) => {
-    const nextCtr = ctr + d;
+
+    let dnew = 0;
+    if (d > 0) {
+        let relative_frequency = d / maxCount;
+        dnew = (2 - H) * relative_frequency * 10; // 10 is scaling factor not a mathematical constant
+    }
+    totalTest = totalTest + dnew;
+
+    const nextCtr = ctr + dnew;
+
     // -(nextCtr-ctr) is for sorting
     offs.push([ctr, nextCtr, (nextCtr - ctr), j]);
     ctr = nextCtr;
   });
-
 
   // sort by heights of produced rects
   offs.sort((a, b) => (b[2] - a[2]));
 
   // re-arrange data structure based on sort
   const outOffsets = [];
-  ctr = 0;
+  ctr = maxCount - totalTest;
+
   offs.forEach((d) => {
     const diff = d[2];
     outOffsets.push([ctr, ctr + diff, d[3]]);
@@ -212,11 +231,11 @@ function isValidData(data, seqLenBounds, seqNumBounds) {
 
 function intToLetter(i) {
   if (i === 0) {
-    return 'G';
-  } else if (i === 1) {
     return 'A';
-  } else if (i === 2) {
+  } else if (i === 1) {
     return 'C';
+  } else if (i === 2) {
+    return 'G';
   } else if (i === 3) {
     return 'T';
   }
@@ -275,21 +294,25 @@ function getRandomData(seqLenBounds, seqNumBounds) {
  * @param {number[]} seqLenBounds
  * @param {number[]} seqNumBounds
  */
-function entryPoint(sequenceData, seqLenBounds, seqNumBounds, LogoSelector) {
-  const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
-
-  if (!isValid) {
-    return;
-  }
+function entryPoint(logoSelector, PWM) {
+  // skipping error checking for now
+  // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
+  //
+  // if (!isValid) {
+  //   return;
+  // }
 
   // number of sequences
-  const n = sequenceData.length;
+  let n = 0;
+  PWM.forEach(pwm => {
+      n = Math.max(n, Math.max(...pwm));
+  })
 
   // number of nucleotides per sequence
-  const m = d3.max(sequenceData, d => d.length);
+  const m = PWM.length;
 
   // range of letter bounds at each nucleotide index position
-  const yz = d3.range(m).map(i => offsets(sequenceData, i));
+  const yz = d3.range(m).map(i => offsets(PWM[i],n));
 
   /**
    * Next, we set local values that govern visual appearance.
@@ -308,12 +331,24 @@ function entryPoint(sequenceData, seqLenBounds, seqNumBounds, LogoSelector) {
   const endpointWidth = (svgFullWidth - svgLetterWidth) / 2;
 
   // height including x-axis labels and endpoint markers
-  const svgFullHeight = 250;
+  const svgFullHeight = 180;
+  const svgFullHeightWithMargin = 200;
 
   // height of just the base letters
   const svgLetterHeight = 150;
 
-  const colors = d3.scaleOrdinal(d3.schemeCategory10);
+  function colors(i){
+    if (i === 0) {
+      return '#489655';
+    } else if (i === 1) {
+      return '#335C95';
+    } else if (i === 2) {
+      return '#EFB549';
+    } else if (i === 3) {
+      return '#C13B42';
+    }
+    return null;
+  }
 
   // map: sequence length -> innerSVG
   const xscale = d3.scaleLinear().domain([0, m])
@@ -325,14 +360,16 @@ function entryPoint(sequenceData, seqLenBounds, seqNumBounds, LogoSelector) {
   // map: number of sequences -> svg letter height
   const yscale = d3.scaleLinear().domain([0, n]).range([0, svgLetterHeight]);
 
-  const svg = d3.select(LogoSelector)
+  const svg = d3.select(logoSelector)
     .append('svg')
     .attr('width', svgFullWidth)
-    .attr('height', svgFullHeight)
-    .attr('viewBox','0 0 '+svgFullWidth+' '+svgFullHeight)
-    .attr('preserveAspectRation','xMidYMid meet');
+    .attr('height', svgFullHeightWithMargin)
+    .attr('viewBox','0 0 '+svgFullWidth+' '+svgFullHeightWithMargin)
+    .attr('preserveAspectRation','xMidYMid meet')
+    .append("g")
+    .attr('transform', 'translate(0, 10)');
 
-  const endptFontSize = 32;
+  const endptFontSize = 20;
 
   const endptTY = (svgFullHeight + svgLetterHeight) / 2;
 
@@ -341,14 +378,31 @@ function entryPoint(sequenceData, seqLenBounds, seqNumBounds, LogoSelector) {
     .text('5\'')
     .style('text-anchor', 'begin')
     .style('font-size', endptFontSize)
-    .attr('transform', `translate(0,${endptTY})`);
+    .attr('transform', `translate(0,${endptTY + 10})`);
 
   // Attach right endpoint to SVG
   svg.append('text')
     .text('3\'')
     .style('text-anchor', 'end')
     .style('font-size', endptFontSize)
-    .attr('transform', `translate(${svgFullWidth},${endptTY})`);
+    .attr('transform', `translate(${svgFullWidth},${endptTY + 10})`);
+
+  // Add the y axis
+  let y = d3.scaleLinear().range([svgLetterHeight, 0]);
+  y.domain([0, 2]);
+  svg.append("g")
+    .call(d3.axisLeft(y)
+    .ticks(4));
+
+  // text label for the y axis
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -65)
+    .attr("x",0 - (svgFullHeight / 2))
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .style("font-size", endptFontSize)
+    .text("Bits");
 
 
   /**

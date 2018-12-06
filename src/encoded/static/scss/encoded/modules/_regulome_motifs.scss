@@ -1,0 +1,35 @@
+.element {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 0;
+    .motif-element {
+        flex: 0 0 50%;
+        svg {
+            max-width: 100%;
+            max-height: 90px;
+            .domain {
+                display: none;
+            }
+            line {
+                display: none;
+            }
+            text {
+                font-size: 16px;
+            }
+        }
+    }
+    .motif-description {
+        flex: 0 0 50%;
+        p {
+            margin-bottom: 0;
+        }
+    }
+    border-bottom: 1px solid $regulomeGray;
+    &:first-child {
+        border-top: 1px solid $regulomeGray;
+    }
+}
+.sequence-logo-table {
+    margin: 30px 0;
+}

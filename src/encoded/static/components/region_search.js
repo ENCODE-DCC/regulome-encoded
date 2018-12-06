@@ -9,6 +9,7 @@ import * as globals from './globals';
 import _ from 'underscore';
 import { SortTablePanel, SortTable } from './sorttable';
 import { TestViz } from './visualizations';
+import { Motifs } from './motifs';
 
 
 const regulomeGenomes = [
@@ -308,6 +309,7 @@ class RegulomeSearch extends React.Component {
         const notification = context.notification;
         const searchBase = url.parse(this.context.location_href).search || '';
         const trimmedSearchBase = searchBase.replace(/[?|&]limit=all/, '');
+        const urlBase = this.context.location_href.split('/regulome-search')[0];
         const filters = context.filters;
         const facets = context.facets;
         const total = context.total;
@@ -457,6 +459,8 @@ class RegulomeSearch extends React.Component {
                             <div>
                                 <div className="panel flex-panel">
 
+                                    <TestViz {...this.props}/>
+
                                     {facets.length ?
                                         <div className="facet-column">
                                             <div className="facet-controls">
@@ -475,6 +479,57 @@ class RegulomeSearch extends React.Component {
                                     : ''}
 
                                     <div className="wide-column">
+
+                                        {visualizeKeys && context.visualize_batch && !visualizeDisabled ?
+                                            <div className="visualize-block">
+                                                <h4>Visualize</h4>
+                                                {visualizeCfg['hg19']['UCSC'] ?
+                                                    <div>
+                                                        <div className="visualize-element"><a href={visualizeCfg['hg19']['Quick View']} rel="noopener noreferrer" target="_blank">Quick View
+                                                            <span className="beta-badge">BETA</span>
+                                                        </a></div>
+                                                        <div className="visualize-element"><a href={visualizeCfg['hg19']['UCSC']} rel="noopener noreferrer" target="_blank">UCSC</a></div>
+                                                    </div>
+                                                :
+                                                    <div className="visualize-element visualize-error">Choose other datasets. These cannot be visualized.</div>
+                                                }
+                                            </div>
+                                        :
+                                            <div className="visualize-block">
+                                                <h4>Visualize</h4>
+                                                <div className="visualize-element visualize-error">Filter to fewer than 100 results to visualize</div>
+                                            </div>
+                                        }
+
+                                        <Motifs {...this.props} urlBase={urlBase} />
+
+                                        <h4>Detailed results</h4>
+                                        <div className="visualize-error">Showing {results.length} of {total}</div>
+                                        <div className="results-table-control">
+                                            {total > results.length && searchBase.indexOf('limit=all') === -1 ?
+                                                    <a
+                                                        rel="nofollow"
+                                                        className="btn btn-info btn-sm"
+                                                        href={searchBase ? `${searchBase}&limit=all` : '?limit=all'}
+                                                        onClick={this.onFilter}
+                                                    >
+                                                        View All
+                                                    </a>
+                                            :
+                                                <span>
+                                                    {results.length > 25 ?
+                                                            <a
+                                                                className="btn btn-info btn-sm"
+                                                                href={trimmedSearchBase || '/regulome-search/'}
+                                                                onClick={this.onFilter}
+                                                            >
+                                                                View 25
+                                                            </a>
+                                                    : null}
+                                                </span>
+                                            }
+
+                                        </div>
 
                                         <ResultsTable {...this.props} />
 
