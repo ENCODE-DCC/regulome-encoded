@@ -76,3 +76,27 @@ def test_regulome_score(testapp, workbook):
 
     res = testapp.get('http://0.0.0.0:6543/regulome-search/?region=rs3768324&genome=GRCh37')
     assert res.json['regulome_score'] == '1a'
+
+
+def test_regulome_summary(testapp, workbook):
+    res = testapp.post_json('/index', {'record': True})
+    res = testapp.post_json('/index_region', {'record': True})
+    sleep(5)  # For some reason testing fails without some winks
+    summary_query_url = 'http://0.0.0.0:6543/regulome-summary/?regions={}&genome=GRCh37'
+
+    region_query = ('%23This is a comment line %0A'
+                    'chr1:39492462-39492462 rs3768324 %0A'
+                    'rs75982468 %0D'
+                    'chr10 5894500 %09 5894500 rs10905307 %0A%0D'
+                    'This is an invalid region query %0D%0A')
+    res = testapp.get(summary_query_url.format(region_query))
+    import json
+    print(json.dumps(res.json, indent=4, sort_keys=True))
+    res_notes = sorted(res.json['notifications'], key=lambda x: next(iter(x)))
+    expected_notes = [
+        {"This is an invalid region query ": "Failed: invalid region input"},
+        {"chr10:11741181-11741181": "Success"},
+        {"chr10:5894500-5894500": "Success"},
+        {"chr1:39492462-39492462": "Success"},
+    ]
+    assert res_notes == expected_notes
