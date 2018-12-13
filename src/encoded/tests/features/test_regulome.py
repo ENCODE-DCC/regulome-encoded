@@ -100,3 +100,21 @@ def test_regulome_summary(testapp, workbook):
         {"chr1:39492462-39492462": "Success"},
     ]
     assert res_notes == expected_notes
+
+
+@pytest.mark.parametrize("query_term,expected,valid", [
+    ('chrx:5894500-5894500', ('chrX', 5894500, 5894500), True),
+    ('chr10:5894500-5894500extra string ', ('chr10', 5894500, 5894500), True),
+    ('chr10 5894500\t5894500\trs10905307', ('chr10', 5894500, 5894500), True),
+    ('rs10905307\textra string', ('chr10', 5894500, 5894500), True),
+    ('Invalid query term ', None, False),
+])
+def test_get_coordinate(query_term, expected, valid):
+    from encoded.region_search import get_coordinate
+    if valid:
+        assert get_coordinate(query_term) == expected
+    else:
+        error_msg = 'Region "{}" is not recognizable.'.format(query_term)
+        with pytest.raises(ValueError) as excinfo:
+            get_coordinate(query_term)
+        assert str(excinfo.value) == error_msg

@@ -308,7 +308,7 @@ def get_coordinate(query_term, assembly='GRCh37', atlas=None):
             chrom, start, end = get_rsid_coordinates(query_match.group(0),
                                                      assembly, atlas)
     if not chrom or not start or not end:
-        raise ValueError('Region "{}"" is not recognizable.'.format(query_term))
+        raise ValueError('Region "{}" is not recognizable.'.format(query_term))
     chrom = chrom.replace('x', 'X').replace('y', 'Y')
     if int(start) > int(end):
         return chrom, int(end), int(start)
