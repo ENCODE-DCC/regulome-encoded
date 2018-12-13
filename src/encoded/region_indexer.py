@@ -131,7 +131,16 @@ def includeme(config):
     config.scan(__name__)
     config.add_route('_regionindexer_state', '/_regionindexer_state')
     registry = config.registry
-    registry['region' + INDEXER] = RegionIndexer(registry)
+    is_region_indexer = registry.settings.get('regionindexer')
+    if is_region_indexer:
+        registry['region'+INDEXER] = RegionIndexer(registry)
+
+def tsvreader(file):
+    reader = csv.reader(file, delimiter='\t')
+    for row in reader:
+        yield row
+
+# Mapping should be generated dynamically for each assembly type
 
 
 # Region mapping: index: chr*, doc_type: assembly, _id=uuid
