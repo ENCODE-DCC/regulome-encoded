@@ -459,8 +459,6 @@ class RegulomeSearch extends React.Component {
                             <div>
                                 <div className="panel flex-panel">
 
-                                    <TestViz {...this.props}/>
-
                                     {facets.length ?
                                         <div className="facet-column">
                                             <div className="facet-controls">
@@ -479,27 +477,6 @@ class RegulomeSearch extends React.Component {
                                     : ''}
 
                                     <div className="wide-column">
-
-                                        {visualizeKeys && context.visualize_batch && !visualizeDisabled ?
-                                            <div className="visualize-block">
-                                                <h4>Visualize</h4>
-                                                {visualizeCfg['hg19']['UCSC'] ?
-                                                    <div>
-                                                        <div className="visualize-element"><a href={visualizeCfg['hg19']['Quick View']} rel="noopener noreferrer" target="_blank">Quick View
-                                                            <span className="beta-badge">BETA</span>
-                                                        </a></div>
-                                                        <div className="visualize-element"><a href={visualizeCfg['hg19']['UCSC']} rel="noopener noreferrer" target="_blank">UCSC</a></div>
-                                                    </div>
-                                                :
-                                                    <div className="visualize-element visualize-error">Choose other datasets. These cannot be visualized.</div>
-                                                }
-                                            </div>
-                                        :
-                                            <div className="visualize-block">
-                                                <h4>Visualize</h4>
-                                                <div className="visualize-element visualize-error">Filter to fewer than 100 results to visualize</div>
-                                            </div>
-                                        }
 
                                         <Motifs {...this.props} urlBase={urlBase} />
 
