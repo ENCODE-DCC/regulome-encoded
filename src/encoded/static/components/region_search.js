@@ -482,31 +482,6 @@ class RegulomeSearch extends React.Component {
 
                                         <h4>Detailed results</h4>
                                         <div className="visualize-error">Showing {results.length} of {total}</div>
-                                        <div className="results-table-control">
-                                            {total > results.length && searchBase.indexOf('limit=all') === -1 ?
-                                                    <a
-                                                        rel="nofollow"
-                                                        className="btn btn-info btn-sm"
-                                                        href={searchBase ? `${searchBase}&limit=all` : '?limit=all'}
-                                                        onClick={this.onFilter}
-                                                    >
-                                                        View All
-                                                    </a>
-                                            :
-                                                <span>
-                                                    {results.length > 25 ?
-                                                            <a
-                                                                className="btn btn-info btn-sm"
-                                                                href={trimmedSearchBase || '/regulome-search/'}
-                                                                onClick={this.onFilter}
-                                                            >
-                                                                View 25
-                                                            </a>
-                                                    : null}
-                                                </span>
-                                            }
-
-                                        </div>
 
                                         <ResultsTable {...this.props} />
 

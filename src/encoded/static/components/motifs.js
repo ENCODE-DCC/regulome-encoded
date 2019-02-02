@@ -82,10 +82,9 @@ export class Motifs extends React.Component {
                         targetElement.insertAdjacentHTML('afterbegin','<div class="motif-element" id="motif'+d.accession+'"></div>')
                         let html_str = `
                             <div class='motif-description'>
-                                <p>${d.accession}</p>
-                                ${d.annotation_type ? `<p>${d.annotation_type}</p>` : ''}
-                                ${d.biosample_term_name ? `<p>${d.biosample_term_name}</p>` : ''}
-                                ${d.organ_slims ? `<p>${d.organ_slims}</p>` : ''}
+                                <p><a href=${d['@id']}>${d.accession}</a></p>
+                                ${d.biosample_term_name ? `<p>Biosample: ${d.biosample_term_name}</p>` : ''}
+                                ${d.organ_slims ? `<p>Organ: ${d.organ_slims.join(', ')}</p>` : ''}
                             </div>`;
                         targetElement.insertAdjacentHTML('afterbegin',html_str);
                         entryPoint("#motif"+d.accession, PWM, d3);

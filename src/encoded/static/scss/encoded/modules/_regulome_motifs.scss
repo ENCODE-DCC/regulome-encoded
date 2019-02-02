@@ -1,10 +1,10 @@
 .element {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    padding: 10px 0;
+    flex: 0 0 49.5%;
+    padding: 10px;
+    margin-right: 0.5%;
     .motif-element {
-        flex: 0 0 50%;
+        flex: 0 0 60%;
         svg {
             max-width: 100%;
             max-height: 90px;
@@ -20,16 +20,26 @@
         }
     }
     .motif-description {
-        flex: 0 0 50%;
+        flex: 0 0 40%;
+        a {
+            font-weight: 700;
+        }
         p {
             margin-bottom: 0;
         }
     }
-    border-bottom: 1px solid $regulomeGray;
-    &:first-child {
-        border-top: 1px solid $regulomeGray;
-    }
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    // &:first-child {
+    //     border-top: 1px solid $regulomeGray;
+    // }
 }
 .sequence-logo-table {
-    margin: 30px 0;
+    margin: 0 0 30px;
+}
+
+.sequence-logo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 }
