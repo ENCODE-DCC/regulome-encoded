@@ -1,8 +1,9 @@
 .element {
     display: flex;
     // flex: 0 0 49.5%;
-    padding: 10px;
-    margin-right: 0.5%;
+    // padding: 10px;
+    // margin-right: 0.5%;
+    padding-top: 10px;
     .motif-element {
         flex: 0 0 60%;
         svg {
@@ -21,6 +22,7 @@
     }
     .motif-description {
         flex: 0 0 40%;
+        padding-left: 10px;
         a {
             font-weight: 700;
         }
@@ -28,18 +30,19 @@
             margin-bottom: 0;
         }
     }
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    // &:first-child {
-    //     border-top: 1px solid $regulomeGray;
-    // }
+    // border: 1px solid #ccc;
+    // border-radius: 3px;
+    border-top: 1px solid #ccc;
+    &:first-child {
+        border-top: 1px solid #ccc;
+    }
 }
 .sequence-logo-table {
     margin: 0 0 30px;
 }
 
-.sequence-logo {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-}
+// .sequence-logo {
+//     display: flex;
+//     flex-wrap: wrap;
+//     align-items: center;
+// }
