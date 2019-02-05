@@ -33,6 +33,20 @@ export class Motifs extends React.Component {
         });
 
     }
+    
+    // need to redraw charts when window changes
+    componentDidUpdate() {
+        if (this.chartdisplay){
+            
+            this.chartdisplay.innerHTML = '';
+
+            this.d3 = require('d3');
+            this.sequenceLogos = logos;//require('d3-sequence-logo'); // logos
+            const targetElement = this.chartdisplay;
+            this.drawMotifs(targetElement);
+
+        }
+    }
 
     drawMotifs(targetElement) {
 

@@ -634,6 +634,13 @@ const Term = (props) => {
     const barStyle = {
         width: `${Math.ceil((count / total) * 28)}%`,
     };
+    
+    console.log("bar width");
+    console.log(Math.ceil((count / total) * 28));
+    console.log("count");
+    console.log(count);
+    console.log("total");
+    console.log(total);
 
     // Determine if the given term should display selected, as well as what the href for the term
     // should be. If it *is* selected, also indicate whether it was selected for negation or not.
