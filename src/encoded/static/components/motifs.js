@@ -5,6 +5,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/mo
 import * as globals from './globals';
 import url from 'url';
 import { FetchedData, Param } from './fetched';
+import * as logos from '../libs/d3-sequence-logo';
 
 
 // Display information on page as JSON formatted data
@@ -23,7 +24,7 @@ export class Motifs extends React.Component {
             if (this.chartdisplay){
 
                 this.d3 = require('d3');
-                this.sequenceLogos = require('d3-sequence-logo');
+                this.sequenceLogos = logos;//require('d3-sequence-logo');
                 const targetElement = this.chartdisplay;
                 this.drawMotifs(targetElement);
 

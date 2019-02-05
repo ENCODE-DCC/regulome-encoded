@@ -57,12 +57,12 @@ function getLetterPath(i) {
 
   const letterC = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
 
-  if (i === 2) {
-    return letterG;
-  } else if (i === 0) {
+  if (i === 0) {
     return letterA;
   } else if (i === 1) {
     return letterC;
+  } else if (i === 2) {
+    return letterG;
   } else if (i === 3) {
     return letterT;
   }
@@ -72,12 +72,12 @@ function getLetterPath(i) {
 /**
  * @param {string[]} s - sequence data. An array of equal-length strings.
  * @param {number} i - letter index. Range: [0,4)
- * @returns {number[]} counts of each letter.
+ * @returns {number[]} counts of each letter. 
  */
 function getLetterCnts(s, i) {
-  const dict = { G: 0,
-    A: 0,
+  const dict = { A: 0,
     C: 0,
+    G: 0,
     T: 0 };
 
   s.forEach((d) => {
@@ -91,14 +91,14 @@ function getLetterCnts(s, i) {
 /**
  * @param {string[]} s - sequence data. An array of equal-length strings.
  * @param {number} i - letter index. Range: [0,4)
- * @returns {number[][]} counts of each letter.
+ * @returns {number[][]} counts of each letter. 
  */
-function offsets(cnts,maxCount) {
+function offsets(cnts, maxCount) {
   const offs = [];
 
   let ctr = 0;
   let en = 0;//1 / 0.69314718056 * (4 - 1) / (2 * maxCount);
-
+  
   let H = 0;
 
   cnts.forEach((d,j) => {
@@ -110,15 +110,15 @@ function offsets(cnts,maxCount) {
 
   // add on the index so we can use it.
   // determine heights of rects
-  let totalTest = 0;
+  let offsetFromTop = 0;
   cnts.forEach((d, j) => {
 
     let dnew = 0;
     if (d > 0) {
         let relative_frequency = d / maxCount;
-        dnew = (2 - H) * relative_frequency * 10; // 10 is scaling factor not a mathematical constant
+        dnew = (2 - H) * relative_frequency * (maxCount/2);//maxCount/2 is scaling factor
     }
-    totalTest = totalTest + dnew;
+    offsetFromTop = offsetFromTop + dnew;
 
     const nextCtr = ctr + dnew;
 
@@ -127,13 +127,14 @@ function offsets(cnts,maxCount) {
     ctr = nextCtr;
   });
 
+
   // sort by heights of produced rects
   offs.sort((a, b) => (b[2] - a[2]));
 
   // re-arrange data structure based on sort
   const outOffsets = [];
-  ctr = maxCount - totalTest;
-
+  ctr = maxCount - offsetFromTop;
+  
   offs.forEach((d) => {
     const diff = d[2];
     outOffsets.push([ctr, ctr + diff, d[3]]);
@@ -189,15 +190,15 @@ function calcPathTransform(path, d, yscale, colWidth) {
 }
 
 /**
- * Checks that sequence data obeys bounds, and that each
+ * Checks that sequence data obeys bounds, and that each 
  * sequence has the same length.
  *
  * Possible change is to create more informative error msg.
  *
  * @param {string[]} data - sequenceData
- * @param {number[]} seqLenBounds - lower/upper bounds for
+ * @param {number[]} seqLenBounds - lower/upper bounds for 
  *  number of bases in a sequence.
- * @param {number[]} seqNumBounds - lower/upper bounds for
+ * @param {number[]} seqNumBounds - lower/upper bounds for 
  *  number of sequences.
  * @returns {boolean} true/false - does the data conform?
  */
@@ -224,9 +225,9 @@ function isValidData(data, seqLenBounds, seqNumBounds) {
 
 /**
  * Yields nucleotide base string corresponding to given int.
- *
+ * 
  * @param {number} i
- * @returns {string}
+ * @returns {string} 
  */
 
 function intToLetter(i) {
@@ -244,9 +245,9 @@ function intToLetter(i) {
 
 /**
  * Standard, from MDN.
- * Returns a random integer between min (inclusive) and max
+ * Returns a random integer between min (inclusive) and max 
  * (inclusive)
- *
+ * 
  * @param {number} min
  * @param {number} max
  * @returns {number}
@@ -257,11 +258,11 @@ function getRandomInt(min, max) {
 
 
 /**
- * Generate random sequences by sampling from DiscreteUniform(0,4).
+ * Generate random sequences by sampling from DiscreteUniform(0,4). 
  *
- * A different approach could be to favor some bases more
- * than others at different positions by modeling the
- * distribution P(base | position) as a categorical that
+ * A different approach could be to favor some bases more 
+ * than others at different positions by modeling the 
+ * distribution P(base | position) as a categorical that 
  * has its parameters sampled from a Dirichlet.
  *
  * @param {number[]} seqLenBounds
@@ -297,7 +298,7 @@ function getRandomData(seqLenBounds, seqNumBounds) {
 function entryPoint(logoSelector, PWM) {
   // skipping error checking for now
   // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
-  //
+  // 
   // if (!isValid) {
   //   return;
   // }
@@ -306,7 +307,7 @@ function entryPoint(logoSelector, PWM) {
   let n = 0;
   PWM.forEach(pwm => {
       n = Math.max(n, Math.max(...pwm));
-  })
+  });
 
   // number of nucleotides per sequence
   const m = PWM.length;
@@ -316,9 +317,9 @@ function entryPoint(logoSelector, PWM) {
 
   /**
    * Next, we set local values that govern visual appearance.
-   *
+   * 
    * We define width/height here, rather than in the HTML,
-   * so one can easily switch the code to modify svg size
+   * so one can easily switch the code to modify svg size 
    * based on the data if desired.
    */
 
@@ -363,10 +364,10 @@ function entryPoint(logoSelector, PWM) {
   const svg = d3.select(logoSelector)
     .append('svg')
     .attr('width', svgFullWidth)
-    .attr('height', svgFullHeightWithMargin)
+    .attr('height', svgFullHeight)
     .attr('viewBox','0 0 '+svgFullWidth+' '+svgFullHeightWithMargin)
     .attr('preserveAspectRation','xMidYMid meet')
-    .append("g")
+    .append('g')
     .attr('transform', 'translate(0, 10)');
 
   const endptFontSize = 20;
@@ -386,7 +387,7 @@ function entryPoint(logoSelector, PWM) {
     .style('text-anchor', 'end')
     .style('font-size', endptFontSize)
     .attr('transform', `translate(${svgFullWidth},${endptTY + 10})`);
-
+    
   // Add the y axis
   let y = d3.scaleLinear().range([svgLetterHeight, 0]);
   y.domain([0, 2]);
@@ -395,20 +396,20 @@ function entryPoint(logoSelector, PWM) {
     .ticks(4));
 
   // text label for the y axis
-  svg.append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", -65)
-    .attr("x",0 - (svgFullHeight / 2))
-    .attr("dy", "1em")
-    .style("text-anchor", "middle")
-    .style("font-size", endptFontSize)
-    .text("Bits");
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', -65)
+    .attr('x',0 - (svgFullHeight / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .style('font-size', endptFontSize)
+    .text('Bits');
 
 
   /**
    * Our groups are organized by columns--
    * each column gets an SVG group.
-   *
+   * 
    * The column is used to neatly handle all x-offsets and labels.
    */
   const group = svg.selectAll('group')
@@ -420,11 +421,11 @@ function entryPoint(logoSelector, PWM) {
 
   /**
    * Attach the number labels to the x-axis.
-   *
-   * A possible modification is to make xLabelFontSize
-   * data-dependent. As written its position will change
-   * with the column width (# of nucleotides), so
-   * visually it will look fine, but it may be
+   * 
+   * A possible modification is to make xLabelFontSize 
+   * data-dependent. As written its position will change 
+   * with the column width (# of nucleotides), so 
+   * visually it will look fine, but it may be 
    * desirable to alter font size as well.
    */
   const xLabelFontSize = 20;
@@ -447,7 +448,7 @@ function entryPoint(logoSelector, PWM) {
    *
    * notes:
    *  Filter is used here to avoid attaching paths with 0 size
-   *  to the DOM. This filtering could optionally be performed
+   *  to the DOM. This filtering could optionally be performed 
    *  earlier, when we build yz.
    */
   group.selectAll('path')
