@@ -1,3 +1,5 @@
+import time
+
 from operator import itemgetter
 
 from elasticsearch.exceptions import (
@@ -133,14 +135,16 @@ class RegionAtlas(object):
         range_query = self._range_query(start, end, False, peaks_too, max_results)
 
         try:
+            es_region_begin = time.time()
             results = self.region_es.search(index=chrom.lower(), doc_type=assembly, _source=False,
                                             body=range_query, size=max_results)
+            es_region_time = time.time() - es_region_begin
         except NotFoundError:
             return None
         except Exception:
             return None
 
-        return list(results['hits']['hits'])
+        return list(results['hits']['hits']), es_region_time
 
     def _resident_details(self, uuids, use=None, max_results=SEARCH_MAX):
         '''private: returns resident details filtered by use.'''
@@ -149,8 +153,10 @@ class RegionAtlas(object):
         use_types = [FOR_DUAL_USE, use]
         try:
             id_query = {"query": {"ids": {"values": uuids}}}
+            es_dataset_begin = time.time()
             res = self.region_es.search(index=RESIDENT_REGIONSET_KEY, body=id_query,
                                         doc_type=use_types, size=max_results)
+            es_dataset_time = time.time() - es_dataset_begin
         except Exception:
             return None
 
@@ -159,12 +165,12 @@ class RegionAtlas(object):
         for hit in hits:
             details[hit["_id"]] = hit["_source"]
 
-        return details
+        return (details, es_dataset_time)
 
     def _filter_peaks_by_use(self, peaks, use=None):
         '''private: returns peaks and resident details, both filtered by use'''
         uuids = list(set([peak['_id'] for peak in peaks]))
-        details = self._resident_details(uuids, use)
+        (details, es_dataset_time) = self._resident_details(uuids, use)
         if not details:
             return ([], details)
         filtered_peaks = []
@@ -174,14 +180,15 @@ class RegionAtlas(object):
             if uuid in details:
                 peak['resident_detail'] = details[uuid]
                 filtered_peaks.append(peak)
-        return (filtered_peaks, details)
+        return (filtered_peaks, details, es_dataset_time)
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False, use=None):
         '''Return peaks in a region and resident details, both filtered by use'''
-        peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
+        (peaks, es_region_time) = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
         if not peaks:
             return (peaks, None)
-        return self._filter_peaks_by_use(peaks, use=use)
+        (peaks, peak_details, es_dataset_time) = self._filter_peaks_by_use(peaks, use=use)
+        return (peaks, peak_details, es_region_time, es_dataset_time)
 
     @staticmethod
     def _peak_uuids_in_overlap(peaks, chrom, start, end=None):
@@ -451,7 +458,7 @@ class RegulomeAtlas(RegionAtlas):
 
         start = snps[0]['start']  # SNPs must be in location order!
         end = snps[-1]['end']                                        # MUST do SLOW peaks_too
-        (peaks, details) = self.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
+        (peaks, details, *_) = self.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
         if not peaks or not details:
             for snp in snps:
                 snp['score'] = None
@@ -493,7 +500,7 @@ class RegulomeAtlas(RegionAtlas):
 
     def _scored_regions(self, assembly, chrom, start, end):
         '''For a region, yields sub-regions (start, end, score) of contiguous numeric score > 0'''
-        (peaks, details) = self.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
+        (peaks, details, *_) = self.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
         if not peaks or not details:
             return
 
@@ -589,7 +596,7 @@ class RegulomeAtlas(RegionAtlas):
 
     def live_score(self, assembly, chrom, pos):
         '''Returns score knowing single position and nothing more.'''
-        (peaks, details) = self.find_peaks_filtered(assembly, chrom, pos, pos)
+        (peaks, details, *_) = self.find_peaks_filtered(assembly, chrom, pos, pos)
         if not peaks or not details:
             return None
         (datasets, _files) = self.details_breakdown(details)

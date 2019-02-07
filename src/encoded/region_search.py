@@ -111,7 +111,7 @@ def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
 
     all_hits = {}  # { 'dataset_paths': [], 'files': {}, 'datasets': {}, 'peaks': [], 'message': ''}
 
-    (peaks, peak_details) = atlas.find_peaks_filtered(_GENOME_TO_ALIAS[assembly], chrom, start, end,
+    (peaks, peak_details, es_region_time, es_dataset_time) = atlas.find_peaks_filtered(_GENOME_TO_ALIAS[assembly], chrom, start, end,
                                                       peaks_too)
     if not peaks:
         return {'message': 'No hits found in this location'}
@@ -125,6 +125,8 @@ def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
         all_hits['peaks'] = peaks  # For "download_elements", contains 'inner_hits' with positions
     # NOTE: peak['inner_hits']['positions']['hits']['hits'] may exist with uuids but to same file
 
+    all_hits['es_time'] = {'es_region_time': es_region_time,
+                           'es_dataset_time': es_dataset_time}
     (all_hits['datasets'], all_hits['files']) = atlas.details_breakdown(peak_details)
     all_hits['dataset_paths'] = list(all_hits['datasets'].keys())
     all_hits['file_count'] = len(all_hits['files'])
@@ -393,15 +395,15 @@ def regulome_summary(context, request):
     result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
 
     # Redirect to regulome report for single unique region query
-    if len(result['coordinates']) == 1:
-        query = {'region': result['coordinates'],
-                 'genome': result['assembly'],
-                 'from': result['from'],
-                 'limit': result['total']}
-        location = request.route_url('regulome-search', slash='', _query=query)
-        raise HTTPSeeOther(location=location)
-    result['@type'] = ['regulome-summary']
-    result['title'] = 'Regulome summary'
+    # if len(result['coordinates']) == 1:
+    #     query = {'region': result['coordinates'],
+    #              'genome': result['assembly'],
+    #              'from': result['from'],
+    #              'limit': result['total']}
+    #     location = request.route_url('regulome-search', slash='', _query=query)
+    #     raise HTTPSeeOther(location=location)
+    # result['@type'] = ['regulome-summary']
+    # result['title'] = 'Regulome summary'
 
     # No regions to search
     if result['coordinates'] == []:
@@ -433,7 +435,10 @@ def regulome_summary(context, request):
                 regulome_score = 'N/A'
                 result['notifications'].append({coord: 'Failed: {}'.format(e)})
         summaries.append({'chrom': chrom, 'start': start, 'end': end,
-                          'rsids': rsids, 'regulome_score': regulome_score})
+                          'rsids': rsids, 'regulome_score': regulome_score,
+                          'es_time': all_hits.get('es_time', -1),
+                          'file_count': all_hits.get('file_count', 0),
+                          'dataset_count': all_hits.get('dataset_count', 0)})
         result['timing'].append({coord: (time.time() - begin)})  # DEBUG timing
     result['summaries'] = summaries
     return result
