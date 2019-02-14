@@ -8,11 +8,7 @@ from snovault.elasticsearch.indexer_state import SEARCH_MAX
 from .region_indexer import (
     snp_index_key,
     RESIDENT_REGIONSET_KEY,
-    FOR_REGION_SEARCH,
     FOR_REGULOME_DB,
-    FOR_DUAL_USE,
-    ENCODED_ALLOWED_STATUSES,
-    ENCODED_DATASET_TYPES,
     REGULOME_ALLOWED_STATUSES,
     REGULOME_DATASET_TYPES
 )
@@ -36,29 +32,27 @@ REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300,
 #    registry['region'+INDEXER] = RegionIndexer(registry)
 
 
-class RegionAtlas(object):
+class RegulomeAtlas(object):
     '''Methods for getting stuff out of the region_index.'''
 
     def __init__(self, region_es):
         self.region_es = region_es
-        self.expected_use = FOR_REGION_SEARCH
 
-    @staticmethod
-    def type():
-        return 'region search'
+    def type(self):
+        return 'regulome'
 
-    @staticmethod
-    def allowed_statuses():
-        return ENCODED_ALLOWED_STATUSES
+    def allowed_statuses(self):
+        return REGULOME_ALLOWED_STATUSES
 
-    @staticmethod
-    def set_type():
-        return ENCODED_DATASET_TYPES
+    def set_type(self):
+        return ['Dataset']
 
-    @staticmethod
-    def set_indices():
-        indices = [set_type.lower() for set_type in ENCODED_DATASET_TYPES]
+    def set_indices(self):
+        indices = [set_type.lower() for set_type in REGULOME_DATASET_TYPES]
         return indices
+
+    # def snp_suggest(self, assembly, text):
+    # Using suggest with 60M of rsids leads to es crashing during SNP indexing
 
     def snp(self, assembly, rsid):
         '''Return single SNP by rsid and assembly'''
@@ -88,24 +82,25 @@ class RegionAtlas(object):
         }
         if snps:
             filter_fish = {'bool': {'should': [range_clause]}}
-        else:
-            filter_fish = {
-                'nested': {
-                    'path': 'positions',
-                    'query': {
-                        'bool': {'should': [range_clause]}
+            query = {
+                'query': {
+                    'bool': {
+                        'filter': filter_fish
                     }
-                }
+                },
+                '_source': snps,  # True is snps, False if regions
+            }
+        else:
+            query = {
+                'query': {
+                    'nested': {
+                        'path': 'positions',
+                        'query': range_clause,
+                    },
+                },
+                '_source': snps,  # True is snps, False if regions
             }
 
-        query = {
-            'query': {
-                'bool': {
-                    'filter': filter_fish
-                }
-            },
-            '_source': snps,  # True is snps, False if regions
-        }
         # special SLOW query will return inner_hits positions
         if with_inner_hits:
             query['query']['bool']['filter']['nested']['inner_hits'] = {'size': max_results}
@@ -142,15 +137,12 @@ class RegionAtlas(object):
 
         return list(results['hits']['hits'])
 
-    def _resident_details(self, uuids, use=None, max_results=SEARCH_MAX):
+    def _resident_details(self, uuids, max_results=SEARCH_MAX):
         '''private: returns resident details filtered by use.'''
-        if use is None:
-            use = self.expected_use
-        use_types = [FOR_DUAL_USE, use]
         try:
             id_query = {"query": {"ids": {"values": uuids}}}
             res = self.region_es.search(index=RESIDENT_REGIONSET_KEY, body=id_query,
-                                        doc_type=use_types, size=max_results)
+                                        doc_type=[FOR_REGULOME_DB], size=max_results)
         except Exception:
             return None
 
@@ -161,10 +153,13 @@ class RegionAtlas(object):
 
         return details
 
-    def _filter_peaks_by_use(self, peaks, use=None):
-        '''private: returns peaks and resident details, both filtered by use'''
+    def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
+        '''Return peaks in a region and resident details'''
+        peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
+        if not peaks:
+            return (peaks, None)
         uuids = list(set([peak['_id'] for peak in peaks]))
-        details = self._resident_details(uuids, use)
+        details = self._resident_details(uuids)
         if not details:
             return ([], details)
         filtered_peaks = []
@@ -175,13 +170,6 @@ class RegionAtlas(object):
                 peak['resident_detail'] = details[uuid]
                 filtered_peaks.append(peak)
         return (filtered_peaks, details)
-
-    def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False, use=None):
-        '''Return peaks in a region and resident details, both filtered by use'''
-        peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
-        if not peaks:
-            return (peaks, None)
-        return self._filter_peaks_by_use(peaks, use=use)
 
     @staticmethod
     def _peak_uuids_in_overlap(peaks, chrom, start, end=None):
@@ -228,30 +216,6 @@ class RegionAtlas(object):
             dataset = details[uuid]['dataset']
             dataset_dets[dataset['@id']] = dataset
         return (dataset_dets, file_dets)
-
-
-class RegulomeAtlas(RegionAtlas):
-    '''Methods for getting stuff out of the region_index.'''
-
-    def __init__(self, region_es):
-        super(RegulomeAtlas, self).__init__(region_es)
-        self.expected_use = FOR_REGULOME_DB
-
-    def type(self):
-        return 'regulome'
-
-    def allowed_statuses(self):
-        return REGULOME_ALLOWED_STATUSES
-
-    def set_type(self):
-        return ['Dataset']
-
-    def set_indices(self):
-        indices = [set_type.lower() for set_type in REGULOME_DATASET_TYPES]
-        return indices
-
-    # def snp_suggest(self, assembly, text):
-    # Using suggest with 60M of rsids leads to es crashing during SNP indexing
 
     @staticmethod
     def evidence_categories():
