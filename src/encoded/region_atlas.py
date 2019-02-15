@@ -82,25 +82,24 @@ class RegulomeAtlas(object):
         }
         if snps:
             filter_fish = {'bool': {'should': [range_clause]}}
-            query = {
-                'query': {
-                    'bool': {
-                        'filter': filter_fish
-                    }
-                },
-                '_source': snps,  # True is snps, False if regions
-            }
         else:
-            query = {
-                'query': {
-                    'nested': {
-                        'path': 'positions',
-                        'query': range_clause,
-                    },
-                },
-                '_source': snps,  # True is snps, False if regions
+            filter_fish = {
+                'nested': {
+                    'path': 'positions',
+                    'query': {
+                        'bool': {'should': [range_clause]}
+                    }
+                }
             }
 
+        query = {
+            'query': {
+                'bool': {
+                    'filter': filter_fish
+                }
+            },
+            '_source': snps,  # True is snps, False if regions
+        }
         # special SLOW query will return inner_hits positions
         if with_inner_hits:
             query['query']['bool']['filter']['nested']['inner_hits'] = {'size': max_results}
