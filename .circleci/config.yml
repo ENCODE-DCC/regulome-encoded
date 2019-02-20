@@ -55,6 +55,7 @@ commands:
 jobs:
   npm-non-bdd-tests:
     executor: encoded-executor
+    parallelism: 2
     steps:
       - buildout
       - run:
@@ -64,9 +65,8 @@ jobs:
             bin/test -m "not bdd" --collect-only -qq |
               while read test; do
                 [ -z "$test" ] && break
-                bin/test -v -v --timeout=400 -k ${test%:*}
-              done
-          no_output_timeout: 30m
+                echo ${test%:*}
+              done | sort | circleci tests split | xargs -n 1 -t bin/test -v -v --timeout=400 -k
   bdd-tests:
     executor: encoded-executor
     steps:
