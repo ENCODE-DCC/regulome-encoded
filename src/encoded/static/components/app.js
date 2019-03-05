@@ -713,7 +713,7 @@ class App extends React.Component {
         if (search.indexOf('%0D%0A') !== -1){
             summaryFlag = 1;
         }
-        search = search.split('%0D%0A').join('&region=');
+        search = search.split('%0D%0A').join('&regions=');
         let indexStart = search.indexOf('%23');
         let indexEnd = 0;
         let searchNew = search;

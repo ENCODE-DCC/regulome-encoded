@@ -126,7 +126,7 @@ class AdvSearch extends React.Component {
                         <div className="form-group">
                             <label htmlFor="annotation"><i className="icon icon-search"></i>Search by dbSNP ID or coordinate range (hg19)</label>
                             <div className="input-group input-group-region-input">
-                                <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="region">
+                                <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions">
                                 </textarea>
 
                                 <p className="example-inputs" onClick={this.handleExamples}>Click for example entry: <span className="example-input" id="example-snps">multiple dbSNPs</span> or <span className="example-input" id="example-coordinates">coordinates ranges</span></p>
