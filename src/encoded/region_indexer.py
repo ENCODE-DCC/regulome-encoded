@@ -58,33 +58,14 @@ RETRYABLE_STATUS = (500, 502, 504,)
 
 # TEMPORARY: limit SNPs to major chroms
 SUPPORTED_CHROMOSOMES = [
-    'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10',
-    'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
-    'chr21', 'chr22', 'chrX', 'chrY']  # chroms are lower case
+    'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
+    'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
+    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
+]  # chroms are lower case
 
 ALLOWED_FILE_FORMATS = ['bed']
 RESIDENT_REGIONSET_KEY = 'resident_regionsets'  # keeps track of what datsets are resident
-FOR_REGION_SEARCH = 'region_search'
 FOR_REGULOME_DB = 'regulomedb'
-FOR_DUAL_USE = 'region_regulomedb'  # doc_type = region*  or *regulomedb
-
-ENCODED_SUPPORTED_ASSEMBLIES = ['hg19', 'mm10', 'mm9', 'GRCh38']
-ENCODED_ALLOWED_STATUSES = ['released']
-ENCODED_DATASET_TYPES = ['Experiment']
-ENCODED_REGION_REQUIREMENTS = {
-    'ChIP-seq': {
-        'output_type': ['optimal idr thresholded peaks'],
-        'file_format': ['bed']
-    },
-    'DNase-seq': {
-        'file_type': ['bed narrowPeak'],
-        'file_format': ['bed']
-    },
-    'eCLIP': {
-        'file_type': ['bed narrowPeak'],
-        'file_format': ['bed']
-    }
-}
 
 REGULOME_SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived', 'in progress']  # no 'in progress' permission!
@@ -101,14 +82,12 @@ REGULOME_REGION_REQUIREMENTS = {
         'file_format': ['bed']
     },
     'DNase-seq': {
+        'output_type': ['peaks'],
         'file_type': ['bed narrowPeak'],
         'file_format': ['bed']
     },
     'FAIRE-seq': {
         'file_type': ['bed narrowPeak'],
-        'file_format': ['bed']
-    },
-    'chromatin state': {
         'file_format': ['bed']
     },
     'PWMs': {
@@ -145,13 +124,6 @@ SNP_INDEX_PREFIX = 'snp141_'
 # If files are too large then they will be copied locally and read
 MAX_IN_MEMORY_FILE_SIZE = (700 * 1024 * 1024)  # most files will be below this and index faster
 TEMPORARY_REGIONS_FILE = '/tmp/region_temp.bed.gz'
-
-# On local instance, these are the only files that can be downloaded and regionalizable.
-# '/static/test/peak_indexer/ENCFF002COS.bed.gz']
-# '/static/test/peak_indexer/ENCFF296FFD.tsv',     # tsv's some day?
-# '/static/test/peak_indexer/ENCFF000PAR.bed.gz']
-# Currently only one is!
-TESTABLE_FILES = ['ENCFF002COS']
 
 
 def includeme(config):
@@ -193,7 +165,7 @@ def get_chrom_index_mapping(assembly_name='hg19'):
 
 
 # Files are also put in the resident: index: RESIDENT_REGIONSET_KEY, doc_type: use_type, _id=uuid
-def get_resident_mapping(use_type=FOR_DUAL_USE):
+def get_resident_mapping(use_type=FOR_REGULOME_DB):
     return {use_type: {"enabled": False}}
     # True map: IF we ever want to query by anything other than uuid...
     # return {
@@ -273,19 +245,6 @@ def index_settings():
             'max_result_window': SEARCH_MAX
         }
     }
-
-
-def encoded_regionable_datasets(request, restrict_to_assays=[]):
-    '''return list of all dataset uuids eligible for regions'''
-    # basics... only want uuids of experiments that are released
-    query = '/search/?type=Experiment&field=uuid&limit=all'
-    for status in ENCODED_ALLOWED_STATUSES:
-        query += '&status=' + status
-    # Restrict to just these assays
-    for assay in restrict_to_assays:
-        query += '&assay_title=' + assay
-    results = request.embed(query)['@graph']
-    return [result['uuid'] for result in results]
 
 
 def regulome_regionable_datasets(request):
@@ -427,10 +386,7 @@ class RegionIndexerState(IndexerState):
     @staticmethod
     def all_indexable_uuids_set(request):
         '''returns set of uuids. allowing intersections.'''
-        assays = list(ENCODED_REGION_REQUIREMENTS.keys())
-        uuids = set(encoded_regionable_datasets(request, assays))
-        uuids |= set(regulome_regionable_datasets(request))
-        return uuids  # Uses elasticsearch query
+        return set(regulome_regionable_datasets(request))  # Uses elasticsearch query
 
     def all_indexable_uuids(self, request):
         '''returns list of uuids pertinant to this indexer.'''
@@ -539,17 +495,13 @@ class RegionIndexerState(IndexerState):
     @staticmethod
     def counts(region_es, assemblies=None):
         '''returns counts (region files, regulome files, snp files and all files)'''
-        counts = {'all_files': 0}
-        for use in [FOR_REGION_SEARCH, FOR_REGULOME_DB, FOR_DUAL_USE]:
-            try:
-                counts[use] = region_es.count(index=RESIDENT_REGIONSET_KEY,
-                                              doc_type=use).get('count', 0)
-            except Exception:
-                counts[use] = 0
-            counts['all_files'] += counts[use]
-        counts[FOR_REGION_SEARCH] += counts[FOR_DUAL_USE]
-        counts[FOR_REGULOME_DB] += counts[FOR_DUAL_USE]
-        counts.pop(FOR_DUAL_USE, None)
+        counts = {}
+        try:
+            counts['all_files'] = region_es.count(
+                index=RESIDENT_REGIONSET_KEY,
+            ).get('count', 0)
+        except Exception:
+            counts['all_files'] = 0
 
         if assemblies:
             counts['SNPs'] = {}
@@ -599,8 +551,6 @@ def regionindexer_state_show(request):
 
     display = state.display(uuids=request.params.get("uuids"))
     counts = state.counts(regions_es, REGULOME_SUPPORTED_ASSEMBLIES)
-    display['files_for_region_search'] = counts.get(FOR_REGION_SEARCH, 0)
-    display['files_for_regulomedb'] = counts.get(FOR_REGULOME_DB, 0)
     display['files_in_index'] = counts.get('all_files', 0)
     display['snps_in_index'] = counts.get('SNPs', 0)
 
@@ -638,7 +588,7 @@ def index_regions(request):
     # Note: if reindex=all_uuids then maybe we should delete the entire index
     # On the otherhand, that should probably be left for extreme cases done by hand
     # curl -XDELETE http://region-search-test-v5.instance.encodedcc.org:9200/resident_datasets/
-    #if force == 'all':  # Unfortunately force is a simple boolean
+    # if force == 'all':  # Unfortunately force is a simple boolean
     #    try:
     #        r = indexer.regions_es.indices.delete(index='chr*')  # Note region_es and encoded_es may be the same!
     #        r = indexer.regions_es.indices.delete(index=self.residents_index)
@@ -695,9 +645,7 @@ class RegionIndexer(Indexer):
             log.warn("dataset is not found for uuid: %s", dataset_uuid)
             last_exc = repr(e)
 
-        if last_exc is None:
-            dataset_region_uses = self.candidate_dataset(dataset)
-            if not dataset_region_uses:
+        if last_exc is None and not self.is_candidate_dataset(dataset):
                 return  # Note if dataset is NO LONGER a candidate its files won't get removed.
 
         if last_exc is None:
@@ -723,7 +671,7 @@ class RegionIndexer(Indexer):
 
                 file_uuid = afile['uuid']
 
-                file_doc = self.candidate_file(request, afile, dataset, dataset_region_uses)
+                file_doc = self.candidate_file(request, afile, dataset)
                 if file_doc:
 
                     using = ""
@@ -787,32 +735,28 @@ class RegionIndexer(Indexer):
         return None
 
     @staticmethod
-    def candidate_dataset(dataset):
+    def is_candidate_dataset(dataset):
         '''returns None, or a list of uses which may include region search and/or regulome.'''
         if 'Experiment' not in dataset['@type'] and 'FileSet' not in dataset['@type']:
-            return None
+            return False
 
         if len(dataset.get('files', [])) == 0:
-            return None
+            return False
 
-        dataset_uses = []
-        assay = dataset.get('assay_term_name')
-        if assay is not None and assay in list(ENCODED_REGION_REQUIREMENTS.keys()):
-            dataset_uses.append(FOR_REGION_SEARCH)
         if 'RegulomeDB' in dataset.get('internal_tags', []):
             collection_type = regulome_collection_type(dataset)
             if collection_type is not None and \
                collection_type in list(REGULOME_REGION_REQUIREMENTS.keys()):
-                dataset_uses.append(FOR_REGULOME_DB)
+                return True
 
-        return dataset_uses
+        return False
 
     @staticmethod
-    def metadata_doc(afile, dataset, assembly, uses):
+    def metadata_doc(afile, dataset, assembly):
         '''returns file and dataset metadata document'''
         meta_doc = {
             'uuid': str(afile['uuid']),
-            'uses': uses,
+            'uses': FOR_REGULOME_DB,
             'file': {
                 'uuid': str(afile['uuid']),
                 '@id': afile['@id'],
@@ -856,7 +800,7 @@ class RegionIndexer(Indexer):
             meta_doc['snps'] = True
         return meta_doc
 
-    def candidate_file(self, request, afile, dataset, dataset_uses):
+    def candidate_file(self, request, afile, dataset):
         '''returns None or a document with file details to save in the residence index'''
         if afile.get('href') is None:
             return None
@@ -865,8 +809,6 @@ class RegionIndexer(Indexer):
 
         file_status = afile.get('status', 'imagined')
         assembly = afile.get('assembly', 'unknown')
-        if assembly == 'mm10-minimal':        # Treat mm10-minimal as mm10
-            assembly = 'mm10'
 
         # dataset passed in can be file's dataset OR file_set, with each file pointing elsewhere
         if isinstance(afile['dataset'], dict) and afile['dataset']['@id'] != dataset['@id']:
@@ -881,50 +823,23 @@ class RegionIndexer(Indexer):
         if target is not None:
             dataset['target'] = target
 
-        assay_term_name = dataset.get('assay_term_name')
+        is_candidate_file = False
 
-        file_uses = []
-        if FOR_REGION_SEARCH in dataset_uses:  # encoded datasets must have encoded files
-            if assay_term_name is not None and \
-               file_status in ENCODED_ALLOWED_STATUSES and \
-               assembly in ENCODED_SUPPORTED_ASSEMBLIES:
-                required_properties = ENCODED_REGION_REQUIREMENTS.get(assay_term_name, {})
-                if required_properties:
-                    failed = False
-                    for prop in list(required_properties.keys()):
-                        val = afile.get(prop)
-                        if val is None:
-                            failed = True
-                            break
-                        if val not in required_properties[prop]:
-                            failed = True
-                            break
-                    if not failed:
-                        file_uses.append(FOR_REGION_SEARCH)
+        if file_status in REGULOME_ALLOWED_STATUSES \
+           and assembly in REGULOME_SUPPORTED_ASSEMBLIES:
+            required_properties = REGULOME_REGION_REQUIREMENTS.get(
+                regulome_collection_type(dataset)
+            )
+            if required_properties:
+                is_candidate_file = all(
+                    afile.get(prop) in vals
+                    for prop, vals in required_properties.items()
+                )
 
-        if FOR_REGULOME_DB in dataset_uses:  # regulome datasets must have regulome files
-            if file_status in REGULOME_ALLOWED_STATUSES \
-               and assembly in REGULOME_SUPPORTED_ASSEMBLIES:
-                collection_type = regulome_collection_type(dataset)
-                if collection_type is not None:
-                    required_properties = REGULOME_REGION_REQUIREMENTS[collection_type]
-                    if required_properties:
-                        failed = False
-                        for prop in list(required_properties.keys()):
-                            val = afile.get(prop)
-                            if val is None:
-                                failed = True
-                                break
-                            if val not in required_properties[prop]:
-                                failed = True
-                                break
-                        if not failed:
-                            file_uses.append(FOR_REGULOME_DB)
-
-        if not file_uses:
+        if is_candidate_file:
+            return self.metadata_doc(afile, dataset, assembly)
+        else:
             return None
-
-        return self.metadata_doc(afile, dataset, assembly, file_uses)
 
     def in_regions_es(self, uuid, use_type=None):
         '''returns True if a uuid is in regions es'''
@@ -948,7 +863,7 @@ class RegionIndexer(Indexer):
         try:
             result = self.regions_es.get(index=self.residents_index, id=str(uuid))
             doc = result.get('_source', {})
-            use_type = result.get('_type', FOR_DUAL_USE)
+            use_type = result.get('_type', FOR_REGULOME_DB)
             if not doc:
                 log.warn("Trying to drop file: %s  NOT FOUND", uuid)
                 return False
@@ -984,9 +899,7 @@ class RegionIndexer(Indexer):
         uuid = file_doc['uuid']
 
         # Only splitting on doc_type=use in order to easily count them
-        use_type = FOR_DUAL_USE
-        if len(file_doc['uses']) == 1:
-            use_type = file_doc['uses'][0]
+        use_type = FOR_REGULOME_DB
 
         # Make sure there is an index set up to handle whether uuids are resident
         if not self.regions_es.indices.exists(self.residents_index):
@@ -1098,8 +1011,8 @@ class RegionIndexer(Indexer):
                         log.error('%s - failure to parse row %s:%s:%s, skipping row',
                                   afile['href'], row[0], row[1], row[2])
                         continue
-                    if snp_set and chrom not in SUPPORTED_CHROMOSOMES:
-                        continue   # TEMPORARY: limit SNPs to major chroms
+                    if chrom not in SUPPORTED_CHROMOSOMES:
+                        continue   # TEMPORARY: limit both SNPs and regions to major chroms
                     if chrom not in file_data:
                         # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
                         if big_file and file_data and len(chroms) > 0:
