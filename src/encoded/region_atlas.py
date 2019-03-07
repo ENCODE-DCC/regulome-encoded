@@ -1,3 +1,6 @@
+import pickle
+from pkg_resources import resource_filename
+
 from operator import itemgetter
 
 from elasticsearch.exceptions import (
@@ -30,6 +33,11 @@ REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300,
 #    config.scan(__name__)
 #    registry = config.registry
 #    registry['region'+INDEXER] = RegionIndexer(registry)
+
+# Make prediction on query data with trained random forest model load trained model
+TRAINED_REG_MODEL = pickle.load(
+    open(resource_filename('encoded', 'rf_model.sav'), 'rb')
+)
 
 
 class RegulomeAtlas(object):
@@ -234,8 +242,10 @@ class RegulomeAtlas(object):
             return 'PWM'
         if collection_type == 'Footprints':
             return 'Footprint'
-        if collection_type in ['eQTLs', 'dsQTLs', 'curated SNVs']:
+        if collection_type in ['eQTLs', 'curated SNVs']:
             return 'eQTL'
+        if collection_type == 'dsQTLs':
+            return 'dsQTL'
         return None
 
     def _regulome_category(self, score_category=None, dataset=None):
@@ -340,43 +350,52 @@ class RegulomeAtlas(object):
     @staticmethod
     def _score(charactization):
         '''private: returns regulome score from characterization set'''
-        if 'eQTL' in charactization:
+        # Predict as probability of being a regulatory SNP from prediction
+        keys = ['ChIP', 'DNase', 'PWM', 'Footprint', 'eQTL', 'dsQTL',
+                'PWM_matched', 'Footprint_matched']
+        query = [[int(k in charactization) for k in keys]]
+        probability = str(round(TRAINED_REG_MODEL.predict_proba(query)[:, 1][0], 5))
+        ranking = '7'
+        if ('eQTL' in charactization) or ('dsQTL' in charactization):
             if 'ChIP' in charactization:
                 if 'DNase' in charactization:
                     if 'PWM_matched' in charactization and 'Footprint_matched' in charactization:
-                        return '1a'
-                    if 'PWM' in charactization and 'Footprint' in charactization:
-                        return '1b'
-                    if 'PWM_matched' in charactization:
-                        return '1c'
-                    if 'PWM' in charactization:
-                        return '1d'
+                        ranking = '1a'
+                    elif 'PWM' in charactization and 'Footprint' in charactization:
+                        ranking = '1b'
+                    elif 'PWM_matched' in charactization:
+                        ranking = '1c'
+                    elif 'PWM' in charactization:
+                        ranking = '1d'
                 elif 'PWM_matched' in charactization:
-                    return '1e'
-                return '1f'
-            if 'DNase' in charactization:
-                return '1f'
-        if 'ChIP' in charactization:
+                    ranking = '1e'
+                else:
+                    ranking = '1f'
+            elif 'DNase' in charactization:
+                ranking = '1f'
+        elif 'ChIP' in charactization:
             if 'DNase' in charactization:
                 if 'PWM_matched' in charactization and 'Footprint_matched' in charactization:
-                    return '2a'
-                if 'PWM' in charactization and 'Footprint' in charactization:
-                    return '2b'
-                if 'PWM_matched' in charactization:
-                    return '2c'
-                if 'PWM' in charactization:
-                    return '3a'
+                    ranking = '2a'
+                elif 'PWM' in charactization and 'Footprint' in charactization:
+                    ranking = '2b'
+                elif 'PWM_matched' in charactization:
+                    ranking = '2c'
+                elif 'PWM' in charactization:
+                    ranking = '3a'
             elif 'PWM_matched' in charactization:
-                return '3b'
-            if 'DNase' in charactization:
-                return '4'
-            return '5'
-        if 'DNase' in charactization:
-            return '5'
-        if 'PWM' in charactization or 'Footprint' in charactization or 'eQTL' in charactization:
-            return '6'
-
-        return None  # "Found: " + str(characterize)
+                ranking = '3b'
+            elif 'DNase' in charactization:
+                ranking = '4'
+            else:
+                ranking = '5'
+        elif 'DNase' in charactization:
+            ranking = '5'
+        elif ('PWM' in charactization
+              or 'Footprint' in charactization
+              or 'eQTL' in charactization):
+            ranking = '6'
+        return '{} (probability); {} (ranking v1.1)'.format(probability, ranking)
 
     def regulome_score(self, datasets, evidence=None):
         '''Calculate RegulomeDB score based upon hits and voodoo'''

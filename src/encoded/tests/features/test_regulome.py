@@ -23,7 +23,7 @@ def test_one_regulome(testapp, workbook):
     assert res.json['title'] == 'Regulome search'
     assert res.json['@type'] == ['region-search', 'Portal']
     assert res.json['notification'] == 'Success: 7 peaks in 7 files belonging to 7 datasets in this region'
-    assert res.json['regulome_score'] == '1a'
+    assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
     assert res.json['coordinates'] == 'chr1:39492462-39492462'
     assert {e['accession'] for e in res.json['@graph']} == {
         'ENCSR228TST', 'ENCSR061TST', 'ENCSR000DCE', 'ENCSR333TST',
@@ -42,7 +42,7 @@ def test_regulome_score(testapp, workbook):
     sleep(5)  # For some reason testing fails without some winks
 
     res = testapp.get('http://0.0.0.0:6543/regulome-search/?region=rs3768324&genome=GRCh37')
-    assert res.json['regulome_score'] == '1a'
+    assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
 
 
 def test_regulome_summary(testapp, workbook):

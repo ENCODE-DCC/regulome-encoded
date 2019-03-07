@@ -36,6 +36,7 @@ requires = [
     'rdflib',
     'rdflib-jsonld',
     'rfc3987',
+    'scikit-learn==0.20.3',
     'setuptools',
     'simplejson',
     'strict_rfc3339',
