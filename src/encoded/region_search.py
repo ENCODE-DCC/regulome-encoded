@@ -277,13 +277,14 @@ def get_coordinate(query_term, assembly='GRCh37', atlas=None):
         if query_match:
             chrom, start, end = get_rsid_coordinates(query_match.group(0),
                                                      assembly, atlas)
-    if not chrom or not start or not end:
+    try:
+        start, end = int(start), int(end)
+    except (ValueError, TypeError):
         raise ValueError('Region "{}" is not recognizable.'.format(query_term))
     chrom = chrom.replace('x', 'X').replace('y', 'Y')
     if int(start) > int(end):
         return chrom, int(end), int(start)
-    else:
-        return chrom, int(start), int(end)
+    return chrom, int(start), int(end)
 
 
 def get_rsids(atlas, assembly, chrom, start, end):
