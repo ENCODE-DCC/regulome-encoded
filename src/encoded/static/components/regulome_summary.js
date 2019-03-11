@@ -1,44 +1,35 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import url from 'url';
-import { BrowserSelector } from './objectutils';
-import { Panel, PanelBody } from '../libs/bootstrap/panel';
-// import { FacetList, Listing, ResultBrowser } from './search';
-// import { FetchedData, Param } from './fetched';
 import * as globals from './globals';
-// import _ from 'underscore';
 import { SortTablePanel, SortTable } from './sorttable';
 
 
 const SNPSummary = (props) => {
-
     const snps = props.context.summaries;
 
     const snpsColumns = {
         chrom: {
             title: 'Chromosome location',
             display: (item) => {
-                let href_score = '../regulome-search/?region='+item.chrom+':'+item.start+'-'+item.end+'&genome=GRCh37';
-                return <a href={href_score}>{item.chrom+":"+item.start+".."+item.end}</a>;
+                const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+                return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
             },
         },
         rsids: {
             title: 'dbSNP IDs',
             display: (item) => {
-                let href_score = '../regulome-search/?region='+item.chrom+':'+item.start+'-'+item.end+'&genome=GRCh37';
-                return <a href={href_score}>{item.rsids.join(', ')}</a>;
+                const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+                return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
             },
         },
         regulome_score: {
             title: 'Regulome score',
             display: (item) => {
-                if (item.regulome_score !== "N/A" && item.regulome_score !== null){
-                    let href_score = '../regulome-search/?region='+item.chrom+':'+item.start+'-'+item.end+'&genome=GRCh37';
-                    return <a href={href_score}>{item.regulome_score}</a>;
-                } else {
-                    let href_score = '../regulome-search/?region='+item.chrom+':'+item.start+'-'+item.end+'&genome=GRCh37';
-                    return <a href={href_score}>See related experiments</a>;
+                const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+                if (item.regulome_score !== 'N/A' && item.regulome_score !== null) {
+                    return <a href={hrefScore}>{item.regulome_score}</a>;
                 }
+                return <a href={hrefScore}>See related experiments</a>;
             },
         },
     };
@@ -49,31 +40,42 @@ const SNPSummary = (props) => {
             </SortTablePanel>
         </div>
     );
- }
+};
+
+SNPSummary.propTypes = {
+    context: React.PropTypes.object.isRequired,
+    summaries: React.PropTypes.array,
+};
+
+SNPSummary.defaultProps = {
+    summaries: [],
+};
 
 class RegulomeSummary extends React.Component {
-
     render() {
         const context = this.props.context;
         const summaries = context.summaries;
         const notifications = context.notifications;
         const coordinates = context.coordinates;
 
-        let snp_count = 0;
-        summaries.forEach(summary => {
-            snp_count += summary.rsids.length;
-        })
+        let snpCount = 0;
+        summaries.forEach((summary) => {
+            snpCount += summary.rsids.length;
+        });
 
         return (
             <div>
-                <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif"></img></a></div>
+                <div className="lead-logo">
+                    <a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a>
+                </div>
 
                 <div className="results-summary">
-                    <p>This search has evaluated {context.notifications.length} input lines and found {snp_count} SNP(s).</p>
-                    {notifications.map((notification,idx) => {
-                        if (notification[coordinates[idx]] !== "Success") {
-                            return (<p key={idx}>Region {coordinates[idx]} {notification[coordinates[idx]]}</p>)
+                    <p>This search has evaluated {context.notifications.length} input lines and found {snpCount} SNP(s).</p>
+                    {notifications.map((notification, idx) => {
+                        if (notification[coordinates[idx]] !== 'Success') {
+                            return (<p key={idx}>Region {coordinates[idx]} {notification[coordinates[idx]]}</p>);
                         }
+                        return null;
                     })}
 
                 </div>
@@ -85,7 +87,7 @@ class RegulomeSummary extends React.Component {
             </div>
         );
     }
-}
+};
 
 RegulomeSummary.propTypes = {
     context: PropTypes.object.isRequired,
