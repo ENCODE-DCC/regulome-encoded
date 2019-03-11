@@ -263,23 +263,28 @@ def update_viusalize(result, assembly, dataset_paths, file_statuses):
     return {assembly: vis_assembly}
 
 
-def get_coordinate(query_term, assembly, atlas):
-    query_term = query_term.lower()
-    if query_term.startswith('chr'):
-        chrom, start, end = sanitize_coordinates(query_term)
-    elif query_term.startswith('ens'):
-        chrom, start, end = get_ensemblid_coordinates(query_term, assembly)
-    elif query_term.startswith('rs'):
-        rsid = sanitize_rsid(query_term)
-        chrom, start, end = get_rsid_coordinates(rsid, assembly, atlas)
-    if not chrom or not start or not end:
-        return None, None, None
+def get_coordinate(query_term, assembly='GRCh37', atlas=None):
+    query_term_lower = query_term.lower()
+    chrom, start, end = None, None, None
+    query_match = re.match(
+        r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)',
+        query_term_lower
+    )
+    if query_match:
+        chrom, start, end = query_match.groups()
     else:
-        chrom = 'chr' + ''.join(filter(str.isdigit, chrom))
-        if int(start) > int(end):
-            return chrom, int(end), int(start)
-        else:
-            return chrom, int(start), int(end)
+        query_match = re.match(r'^rs\d+', query_term_lower)
+        if query_match:
+            chrom, start, end = get_rsid_coordinates(query_match.group(0),
+                                                     assembly, atlas)
+    try:
+        start, end = int(start), int(end)
+    except (ValueError, TypeError):
+        raise ValueError('Region "{}" is not recognizable.'.format(query_term))
+    chrom = chrom.replace('x', 'X').replace('y', 'Y')
+    if start > end:
+        return chrom, end, start
+    return chrom, start, end
 
 
 def get_rsids(atlas, assembly, chrom, start, end):
@@ -295,26 +300,32 @@ def parse_region_query(request):
     # TODO process "format", "frame" or other params
     if request.method == 'GET':
         assembly = request.params.get('genome', 'GRCh37')
-        region_queries = request.params.getall('region')
+        regions = request.params.getall('regions')
         from_ = request.params.get('from', 0)
         size = request.params.get('limit', 25)
     else:  # request.method == 'POST'
         assembly = request.json_body.get('genome', 'GRCh37')
-        region_queries = request.json_body.get('region', [])
-        if not isinstance(region_queries, list):
-            regions = [region_queries]
+        regions = request.json_body.get('regions', [])
+        if not isinstance(regions, list):
+            regions = [regions]
         from_ = request.json_body.get('from', 0)
         size = request.json_body.get('limit', 25)
 
     # Parse parameters
     if assembly not in _GENOME_TO_ALIAS.keys():
         assembly = 'GRCh37'
+    # Split lines and ignore lines here; `get_coordinate` raises ValueError and
+    # doesn't handle ignoring query_term.
+    region_queries = [region_query
+                      for query in regions
+                      for region_query in re.split(r'[\r\n]+', query)
+                      if not re.match(r'^(#.*)|(\s*)$', region_query)]
     try:
         from_ = int(from_)
     except ValueError:
         from_ = 0
     if size in ('all', ''):
-        size = len(regions)
+        size = len(region_queries)
     else:
         try:
             size = int(size)
@@ -328,9 +339,10 @@ def parse_region_query(request):
         if len(coordinates) >= size:
             break
         # Get coordinate for queried region
-        chrom, start, end = get_coordinate(region_query, assembly, atlas)
-        if chrom is None:
-            notifications.append({region_query: 'Failed: no valid coordinate'})
+        try:
+            chrom, start, end = get_coordinate(region_query, assembly, atlas)
+        except ValueError as e:
+            notifications.append({region_query: 'Failed: invalid region input'})
             continue
         # Skip if scored before
         coord = '{}:{}-{}'.format(chrom, start, end)
