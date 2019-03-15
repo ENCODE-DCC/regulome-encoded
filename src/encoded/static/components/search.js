@@ -986,15 +986,15 @@ export class FacetList extends React.Component {
 
         const facetsModified = facets;
         if (modifyFacetsFlag) {
-            const methodIndex = facetsModified.map(facet => facet.title).indexOf('Assay');
+            const methodIndex = facetsModified.findIndex(facet => facet.title === 'Assay');
             if (methodIndex > -1) {
                 facetsModified[methodIndex].title = 'Method';
             }
-            const annotationIndex = facetsModified.map(facet => facet.title).indexOf('Annotation type');
+            const annotationIndex = facetsModified.findIndex(facet => facet.title === 'Annotation type');
             if (annotationIndex > -1) {
                 facetsModified[annotationIndex].title = 'Method';
             }
-            const biosampleIndex = facetsModified.map(facet => facet.title).indexOf('Biosample term');
+            const biosampleIndex = facetsModified.findIndex(facet => facet.title === 'Biosample term');
             if (biosampleIndex > -1) {
                 facetsModified[biosampleIndex].title = 'Biosample';
             }
@@ -1043,7 +1043,10 @@ export class FacetList extends React.Component {
         const negationFilters = filters.filter(filter => filter.field.charAt(filter.field.length - 1) === '!');
 
         // If there are no assay terms, the annotation type facet will need the "Method" label
-        const assayTerms = facets.filter(facet => facet.field === 'assay_term_name').some(facet => facet.terms.some(f => f.doc_count > 0));
+        // First we will check to see if there is an "assay_term_name" facet
+        const assayFacet = facets.find(facet => facet.field === 'assay_term_name');
+        // Then we will check to make sure that there is at least one "assay_term_name" term with "doc_count" greater than 0
+        const assayTerms = assayFacet ? assayFacet.terms.some(f => f.doc_count > 0) : false;
 
         return (
             <div className={`box facets${addClasses ? ` ${addClasses}` : ''}`}>

@@ -410,7 +410,7 @@ class RegulomeSearch extends React.Component {
                             <div className="data-types-instructions"><h4>Use RegulomeDB to identify DNA features and regulatory elements in non-coding regions of the human genome by entering ...</h4></div>
                             <div className="data-types-block">
                                 {DataTypeStrings.map(d =>
-                                    <DataType type={d.type} explanation={d.explanation} />
+                                    <DataType type={d.type} explanation={d.explanation} key={d.type} />
                                 )}
                             </div>
                         </div>
