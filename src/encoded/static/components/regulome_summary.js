@@ -3,36 +3,35 @@ import PropTypes from 'prop-types';
 import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 
+const snpsColumns = {
+    chrom: {
+        title: 'Chromosome location',
+        display: (item) => {
+            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
+        },
+    },
+    rsids: {
+        title: 'dbSNP IDs',
+        display: (item) => {
+            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
+        },
+    },
+    regulome_score: {
+        title: 'Regulome score',
+        display: (item) => {
+            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            if (item.regulome_score !== 'N/A' && item.regulome_score !== null) {
+                return <a href={hrefScore}>{item.regulome_score}</a>;
+            }
+            return <a href={hrefScore}>See related experiments</a>;
+        },
+    },
+};
 
 const SNPSummary = (props) => {
     const snps = props.context.summaries;
-
-    const snpsColumns = {
-        chrom: {
-            title: 'Chromosome location',
-            display: (item) => {
-                const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-                return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
-            },
-        },
-        rsids: {
-            title: 'dbSNP IDs',
-            display: (item) => {
-                const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-                return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
-            },
-        },
-        regulome_score: {
-            title: 'Regulome score',
-            display: (item) => {
-                const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-                if (item.regulome_score !== 'N/A' && item.regulome_score !== null) {
-                    return <a href={hrefScore}>{item.regulome_score}</a>;
-                }
-                return <a href={hrefScore}>See related experiments</a>;
-            },
-        },
-    };
     return (
         <div>
             <SortTablePanel title="Summary of SNP analysis">
