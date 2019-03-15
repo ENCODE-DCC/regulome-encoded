@@ -50,42 +50,40 @@ SNPSummary.defaultProps = {
     summaries: [],
 };
 
-class RegulomeSummary extends React.Component {
-    render() {
-        const context = this.props.context;
-        const summaries = context.summaries;
-        const notifications = context.notifications;
-        const coordinates = context.coordinates;
+const RegulomeSummary = (props) => {
+    const context = props.context;
+    const summaries = context.summaries;
+    const notifications = context.notifications;
+    const coordinates = context.coordinates;
 
-        let snpCount = 0;
-        summaries.forEach((summary) => {
-            snpCount += summary.rsids.length;
-        });
+    let snpCount = 0;
+    summaries.forEach((summary) => {
+        snpCount += summary.rsids.length;
+    });
 
-        return (
-            <div>
-                <div className="lead-logo">
-                    <a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a>
-                </div>
+    return (
+        <div>
+            <div className="lead-logo">
+                <a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a>
+            </div>
 
-                <div className="results-summary">
-                    <p>This search has evaluated {context.notifications.length} input lines and found {snpCount} SNP(s).</p>
-                    {notifications.map((notification, idx) => {
-                        if (notification[coordinates[idx]] !== 'Success') {
-                            return (<p key={idx}>Region {coordinates[idx]} {notification[coordinates[idx]]}</p>);
-                        }
-                        return null;
-                    })}
-
-                </div>
-
-                <div className="summary-table-hoverable">
-                    <SNPSummary {...this.props} />
-                </div>
+            <div className="results-summary">
+                <p>This search has evaluated {context.notifications.length} input lines and found {snpCount} SNP(s).</p>
+                {notifications.map((notification, idx) => {
+                    if (notification[coordinates[idx]] !== 'Success') {
+                        return (<p key={idx}>Region {coordinates[idx]} {notification[coordinates[idx]]}</p>);
+                    }
+                    return null;
+                })}
 
             </div>
-        );
-    }
+
+            <div className="summary-table-hoverable">
+                <SNPSummary {...props} />
+            </div>
+
+        </div>
+    );
 };
 
 RegulomeSummary.propTypes = {
