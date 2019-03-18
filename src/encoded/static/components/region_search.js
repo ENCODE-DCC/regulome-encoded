@@ -87,8 +87,8 @@ ExampleEntry.propTypes = {
 };
 
 class AdvSearch extends React.Component {
-    constructor(props) {
-        super(props);
+    constructor() {
+        super();
 
         // Set intial React state.
         /* eslint-disable react/no-unused-state */
