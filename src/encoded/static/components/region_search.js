@@ -22,6 +22,17 @@ const DataTypeStrings = [
     },
 ];
 
+const ExampleEntries = [
+    {
+        label: 'multiple dbSNPs',
+        input: 'rs3768324\nrs75982468\nrs10905307\nrs10823321\nrs7745856',
+    },
+    {
+        label: 'coordinates ranges',
+        input: 'chr11:62607065-62607067\nchr10:5894500-5894501\nchr10:11741181-11741181\nchr1:39492463-39492463\nchr6:10695158-10695160',
+    },
+];
+
 class DataType extends React.Component {
     constructor() {
         super();
@@ -34,8 +45,14 @@ class DataType extends React.Component {
         this.handleInfo = this.handleInfo.bind(this);
     }
 
+    toggleOpenState() {
+        this.setState((state) => {
+            return { open: !state.open };
+        });
+    }
+
     handleInfo() {
-        this.setState({ open: !this.state.open });
+        this.toggleOpenState();
     }
 
     render() {
@@ -57,15 +74,21 @@ DataType.propTypes = {
     explanation: PropTypes.string.isRequired,
 };
 
-const replaceNewline = (input) => {
-    const replaceAll = (str, find, replace) => str.replace(new RegExp(find, 'g'), replace);
-    const newline = String.fromCharCode(13, 10);
-    return replaceAll(input, '\\n', newline);
+const ExampleEntry = (props) => {
+    return (
+        <button className="example-input" onClick={() => props.handleExample(props.input)}> {props.label} </button>
+    );
+};
+
+ExampleEntry.propTypes = {
+    label: PropTypes.string.isRequired,
+    input: PropTypes.string.isRequired,
+    handleExample: PropTypes.func.isRequired,
 };
 
 class AdvSearch extends React.Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
         // Set intial React state.
         /* eslint-disable react/no-unused-state */
@@ -81,7 +104,7 @@ class AdvSearch extends React.Component {
         // Bind this to non-React methods.
         this.handleChange = this.handleChange.bind(this);
         this.handleOnFocus = this.handleOnFocus.bind(this);
-        this.handleExamples = this.handleExamples.bind(this);
+        this.handleExample = this.handleExample.bind(this);
     }
 
     handleChange(e) {
@@ -90,14 +113,10 @@ class AdvSearch extends React.Component {
         });
     }
 
-    handleExamples(e) {
-        let exampleString = '';
-        if (e.target.id === 'example-snps') {
-            exampleString = 'rs3768324\nrs75982468\nrs10905307\nrs10823321\nrs7745856';
-        } else if (e.target.id === 'example-coordinates') {
-            exampleString = 'chr11:62607065-62607067\nchr10:5894500-5894501\nchr10:11741181-11741181\nchr1:39492463-39492463\nchr6:10695158-10695160';
-        }
-        this.setState({ searchInput: replaceNewline(exampleString) });
+    handleExample(exampleInput) {
+        this.setState({
+            searchInput: exampleInput,
+        });
     }
 
     handleOnFocus() {
@@ -119,9 +138,18 @@ class AdvSearch extends React.Component {
                             <div className="input-group input-group-region-input">
                                 <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />
 
-                                <p className="example-inputs">
-                                    Click for example entry: <span className="example-input" id="example-snps" onClick={e => this.handleExamples(e)} onKeyDown={this.handleExamples} role="button" tabIndex={0}>multiple dbSNPs</span> or <span className="example-input" id="example-coordinates" onClick={e => this.handleExamples(e)} onKeyDown={this.handleExamples} role="button" tabIndex={0}>coordinates ranges</span>
-                                </p>
+                                <div className="example-inputs">
+                                    Click for example entry:
+                                    {ExampleEntries.map((entry, entryIdx) =>
+                                        <span key={entry.label}>
+                                            <ExampleEntry label={entry.label} input={entry.input} handleExample={this.handleExample} />
+                                            { entryIdx !== (ExampleEntries.length - 1) ?
+                                                'or'
+                                            :
+                                            null}
+                                        </span>
+                                    )}
+                                </div>
 
                                 <input type="submit" value="Search" className="btn btn-sm btn-info" />
                                 <input type="hidden" name="genome" value={this.state.genome} />

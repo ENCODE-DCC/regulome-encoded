@@ -1046,7 +1046,7 @@ export class FacetList extends React.Component {
         // First we will check to see if there is an "assay_term_name" facet
         const assayFacet = facets.find(facet => facet.field === 'assay_term_name');
         // Then we will check to make sure that there is at least one "assay_term_name" term with "doc_count" greater than 0
-        const assayTerms = assayFacet ? assayFacet.terms.some(f => f.doc_count > 0) : false;
+        const assayTerms = assayFacet && assayFacet.terms.some(f => f.doc_count > 0);
 
         return (
             <div className={`box facets${addClasses ? ` ${addClasses}` : ''}`}>
