@@ -549,7 +549,7 @@ def region_search(context, request):
                 method = (dataset.get('assay_term_name')
                           or dataset.get('annotation_type', ''))
                 targets = dataset.get('target', [])
-                biosample_term_name = dataset.get('biosample_term_name', '')
+                biosample_term_name = dataset.get('biosample_ontology', {}).get('term_name', '')
                 # Get peak coordinates and assemble details
                 # assert 'inner_hits' in peak if peaks_too else False
                 peak_hits = peak['inner_hits']['positions']['hits']['hits']
