@@ -367,6 +367,8 @@ class RegulomeAtlas(object):
                         ranking = '1c'
                     elif 'PWM' in charactization:
                         ranking = '1d'
+                    else:
+                        ranking = '1f'
                 elif 'PWM_matched' in charactization:
                     ranking = '1e'
                 else:
@@ -383,10 +385,10 @@ class RegulomeAtlas(object):
                     ranking = '2c'
                 elif 'PWM' in charactization:
                     ranking = '3a'
+                else:
+                    ranking = '4'
             elif 'PWM_matched' in charactization:
                 ranking = '3b'
-            elif 'DNase' in charactization:
-                ranking = '4'
             else:
                 ranking = '5'
         elif 'DNase' in charactization:
