@@ -74,11 +74,23 @@ DataType.propTypes = {
     explanation: PropTypes.string.isRequired,
 };
 
-const ExampleEntry = (props) => {
-    return (
-        <button className="example-input" onClick={() => props.handleExample(props.input)}> {props.label} </button>
-    );
-};
+class ExampleEntry extends React.Component {
+    constructor() {
+        super();
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick(e) {
+        e.preventDefault();
+        this.props.handleExample(this.props.input);
+    }
+
+    render() {
+        return (
+            <button className="example-input" onClick={this.handleClick}> {this.props.label} </button>
+        );
+    }
+}
 
 ExampleEntry.propTypes = {
     label: PropTypes.string.isRequired,
