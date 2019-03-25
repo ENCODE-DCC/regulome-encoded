@@ -7,7 +7,7 @@ import { Panel, PanelBody } from '../libs/bootstrap/panel';
 import { FacetList, FilterList } from './search';
 import { SortTablePanel, SortTable } from './sorttable';
 
-const DataTypeStrings = [
+const dataTypeStrings = [
     {
         type: 'dbSNP IDs',
         explanation: 'Enter dbSNP ID(s) (example) or upload a list of dbSNP IDs to identify DNA features and regulatory elements that contain the coordinate of the SNP(s).',
@@ -22,7 +22,7 @@ const DataTypeStrings = [
     },
 ];
 
-const ExampleEntries = [
+const exampleEntries = [
     {
         label: 'multiple dbSNPs',
         input: 'rs3768324\nrs75982468\nrs10905307\nrs10823321\nrs7745856',
@@ -46,9 +46,9 @@ class DataType extends React.Component {
     }
 
     toggleOpenState() {
-        this.setState((state) => {
-            return { open: !state.open };
-        });
+        this.setState((state) => ({
+            open: !state.open
+        }));
     }
 
     handleInfo() {
@@ -152,10 +152,10 @@ class AdvSearch extends React.Component {
 
                                 <div className="example-inputs">
                                     Click for example entry:
-                                    {ExampleEntries.map((entry, entryIdx) =>
+                                    {exampleEntries.map((entry, entryIdx) =>
                                         <span key={entry.label}>
                                             <ExampleEntry label={entry.label} input={entry.input} handleExample={this.handleExample} />
-                                            { entryIdx !== (ExampleEntries.length - 1) ?
+                                            { entryIdx !== (exampleEntries.length - 1) ?
                                                 'or'
                                             :
                                             null}
@@ -449,7 +449,7 @@ class RegulomeSearch extends React.Component {
                         <div className="data-types">
                             <div className="data-types-instructions"><h4>Use RegulomeDB to identify DNA features and regulatory elements in non-coding regions of the human genome by entering ...</h4></div>
                             <div className="data-types-block">
-                                {DataTypeStrings.map(d =>
+                                {dataTypeStrings.map(d =>
                                     <DataType type={d.type} explanation={d.explanation} key={d.type} />
                                 )}
                             </div>
