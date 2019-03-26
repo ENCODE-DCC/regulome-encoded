@@ -12,7 +12,7 @@ import { FetchedData, Param } from './fetched';
 import GenomeBrowser from './genome_browser';
 import * as globals from './globals';
 import { Attachment } from './image';
-import { BrowserSelector, DisplayAsJson, requestSearch, DocTypeTitle } from './objectutils';
+import { BrowserSelector, DisplayAsJson, requestSearch } from './objectutils';
 import { DbxrefList } from './dbxref';
 import Status from './status';
 import { BiosampleSummaryString, BiosampleOrganismNames } from './typeutils';
@@ -622,7 +622,7 @@ function countSelectedTerms(terms, facet, filters) {
 
 // Display one term within a facet.
 const Term = (props) => {
-    const { filters, facet, total, canDeselect, searchBase, onFilter, statusFacet } = props;
+    const { filters, facet, total, canDeselect, searchBase, onFilter } = props;
     const term = props.term.key;
     const count = (props.term.doc_count > 999) ? props.term.doc_count.toPrecision(3) : props.term.doc_count;
     const title = props.title || term;
@@ -654,7 +654,7 @@ const Term = (props) => {
         href = `${searchBase}${field}=${globals.encodedURIComponent(term)}`;
         negationHref = `${searchBase}${field}!=${globals.encodedURIComponent(term)}`;
     }
-    
+
     const fieldVar = field === 'status' ? 'statusField' : field;
 
     return (
@@ -666,7 +666,7 @@ const Term = (props) => {
                     {(!selected && !negated) ? <i className="icon icon-square-o" /> : null}
                     {em ? <em>{title}</em> : <span>{title}</span>}
                 </div>
-                {negated ? null : <div className="facet-term__count">{(count < 1000) ? count : count/1000+"k"}</div>}
+                {negated ? null : <div className="facet-term__count">{(count < 1000) ? count : `${count / 1000}k`}</div>}
                 {(selected || negated) ? null : <div className="facet-term__bar" style={barStyle} />}
             </a>
             <div className="facet-term__negator">
@@ -685,14 +685,12 @@ Term.propTypes = {
     canDeselect: PropTypes.bool,
     searchBase: PropTypes.string.isRequired, // Base URI for the search
     onFilter: PropTypes.func,
-    statusFacet: PropTypes.bool, // True if the facet displays statuses
 };
 
 Term.defaultProps = {
     title: '',
     canDeselect: true,
     onFilter: null,
-    statusFacet: false,
 };
 
 
@@ -715,43 +713,40 @@ TypeTerm.propTypes = {
     total: PropTypes.number.isRequired,
 };
 
-export class FilterList extends React.Component {
-    
-    constructor(){
-        super();
+// Display list of selected filters
+export const FilterList = (props) => {
+    const filters = props.context.filters;
+    const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
+
+    if (filters.length > 0 && filters.length < 15) {
+        return (
+            <div className="filter-container">
+                <div className="filter-hed">Selected filters:</div>
+                {filters.map((filter, filterIdx) =>
+                    <a href={filter.remove} key={filter.term} className={negationFilters[filterIdx] ? 'negationFilter' : ''}><div className="filter-link"><i className="icon icon-times-circle" /> {filter.term}</div></a>
+                )}
+            </div>
+        );
     }
-    
-    render() {
-        const filters = this.props.context.filters;
-        const context = this.props.context;
-        const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
-        
-        if (filters.length > 0 && filters.length < 15) {
-            
-            return(
-                <div className="filter-container">
-                    <div className="filter-hed">Selected filters:</div>
-                    {filters.map((filter, filterIdx) =>
-                        <a href={filter.remove} key={filter.term} className={negationFilters[filterIdx] ? "negationFilter" : ""}><div className="filter-link"><i className="icon icon-times-circle" /> {filter.term}</div></a>
-                    )}
-                </div>
-            );
-        } 
-        
-        return null;
-    };
+    return null;
+};
+
+FilterList.propTypes = {
+    context: PropTypes.object.isRequired,
 };
 
 // Display header of facet list
 const FacetLabel = (props) => {
-    if (props.termHeader === 0 || props.link !== props.termHeader){
-        if (props.link === undefined) {
-            return <div className="facet-label experiments">Experiments</div>;
-        } else if (props.link === "annotation_type"){
-            return <div className="facet-label annotations">Annotations</div>;
-        }
+    if (props.label === 'assay_term_name') {
+        return <div className="facet-label experiments">Experiments</div>;
+    } else if (props.label === 'annotation_type') {
+        return <div className="facet-label annotations">Annotations</div>;
     }
     return null;
+};
+
+FacetLabel.propTypes = {
+    label: PropTypes.string.isRequired,
 };
 
 class Facet extends React.Component {
@@ -772,7 +767,7 @@ class Facet extends React.Component {
     }
 
     render() {
-        const { facet, filters } = this.props;
+        const { facet, filters, assayTerms } = this.props;
         const title = facet.title;
         const field = facet.field;
         const total = facet.total;
@@ -824,20 +819,31 @@ class Facet extends React.Component {
                 titleComponent = <span>{title}</span>;
             }
         }
-        
+
         // if ((terms.length && terms.some(term => term.doc_count))) {
         if ((terms.length && terms.some(term => term.doc_count)) || (field.charAt(field.length - 1) === '!')) {
             return (
-                <div className="facet">
-                    <h5>{titleComponent}</h5>
+                <div className={`facet facet${facet.field.replace('/ /g', '')}`}>
+                    { (field === 'annotation_type' || field === 'assay_term_name') ?
+                        <div>
+                            { (field === 'assay_term_name' || assayTerms === false) ?
+                                <div>
+                                    <h5>{titleComponent}</h5>
+                                    <FacetLabel label={field} />
+                                </div>
+                            :
+                                <FacetLabel label={field} />
+                            }
+
+                        </div>
+                    :
+                        <h5>{titleComponent}</h5>
+                    }
                     <ul className={`facet-list nav${statusFacet ? ' facet-status' : ''}`}>
                         <div>
                             {/* Display the first five terms of the facet */}
-                            {terms.slice(0, 5).map((term,termIdx) =>
+                            {terms.slice(0, 5).map(term =>
                                 <div key={term.key} >
-                                    {(field === "assay_term_name") ? 
-                                        <FacetLabel {...this.props} field={field} link={term.linkKey} termHeader={(termIdx===0) ? termIdx : terms[termIdx-1]["linkKey"] }/>
-                                    : null}
                                     <TermComponent {...this.props} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
                                 </div>
                             )}
@@ -846,10 +852,10 @@ class Facet extends React.Component {
                             <div id={termID} className={moreSecClass}>
                                 {/* If the user has expanded the "+ See more" button, then display
                                      the rest of the terms beyond 5 */}
-                                {moreTerms.map((term,termIdx) =>
+                                {moreTerms.map(term =>
                                     <div key={term.key} >
-                                        {(field === "assay_term_name") ? 
-                                            <FacetLabel {...this.props} field={field} link={term.linkKey} termHeader={terms[termIdx+5-1]["linkKey"] }/>
+                                        {(field === 'assay_term_name') ?
+                                            <FacetLabel label={field} />
                                         : null}
                                         <TermComponent {...this.props} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
                                     </div>
@@ -877,10 +883,7 @@ class Facet extends React.Component {
 Facet.propTypes = {
     facet: PropTypes.object.isRequired,
     filters: PropTypes.array.isRequired,
-};
-
-Facet.defaultProps = {
-    width: 'inherit',
+    assayTerms: PropTypes.bool.isRequired,
 };
 
 
@@ -974,39 +977,27 @@ TextFilter.propTypes = {
 // Displays the entire list of facets. It contains a number of <Facet> cmoponents.
 /* eslint-disable react/prefer-stateless-function */
 export class FacetList extends React.Component {
-    
     shouldComponentUpdate(nextProps) {
-        console.log("should the facet list update?");
-        console.log(!_.isEqual(this.props, nextProps));
         return !_.isEqual(this.props, nextProps);
     }
-    
+
     render() {
         const { context, facets, filters, mode, orientation, hideTextFilter, addClasses, modifyFacetsFlag } = this.props;
-        
-        let facetsModified = facets;
-        if (modifyFacetsFlag){
-            console.log("we are modifying the facets for regulome results");
-            // eliminate facets that we do not want to enable search for
-            facetsModified = facets.filter( facet => (facet.field !== 'files.file_type' && facet.field !=='status' && facet.field !== 'replicates.library.biosample.donor.organism.scientific_name' && facet.field !== 'assembly' && facet.field !== 'annotation_type'));
-        
-            // this is an extremely long-winded approach but my more abbreviated attempts did not work
-            facetsModified[0].terms = facets[0].terms;
-            facets[1].terms.forEach(function(f){
-                let flag = 0;
-                facets[0].terms.forEach(function(ff){
-                    if (f === ff){
-                        flag = 1;
-                    }
-                });
-                if (flag === 0){
-                    f.linkKey = 'annotation_type';
-                    facetsModified[0].terms.push(f);
-                }
-            });
-        
-            facetsModified[0].title = 'Method';
-            facetsModified[1].title = 'Biosample';
+
+        const facetsModified = facets;
+        if (modifyFacetsFlag) {
+            const methodIndex = facetsModified.findIndex(facet => facet.title === 'Assay');
+            if (methodIndex > -1) {
+                facetsModified[methodIndex].title = 'Method';
+            }
+            const annotationIndex = facetsModified.findIndex(facet => facet.title === 'Annotation type');
+            if (annotationIndex > -1) {
+                facetsModified[annotationIndex].title = 'Method';
+            }
+            const biosampleIndex = facetsModified.findIndex(facet => facet.title === 'Biosample term');
+            if (biosampleIndex > -1) {
+                facetsModified[biosampleIndex].title = 'Biosample';
+            }
         }
 
         // Get "normal" facets, meaning non-audit facets.
@@ -1050,10 +1041,12 @@ export class FacetList extends React.Component {
         // are the negation facet terms that need to get merged into the regular facets that their
         // non-negated versions inhabit.
         const negationFilters = filters.filter(filter => filter.field.charAt(filter.field.length - 1) === '!');
-        
-        console.log("building facets");
-        
-        console.log(width);
+
+        // If there are no assay terms, the annotation type facet will need the "Method" label
+        // First we will check to see if there is an "assay_term_name" facet
+        const assayFacet = facets.find(facet => facet.field === 'assay_term_name');
+        // Then we will check to make sure that there is at least one "assay_term_name" term with "doc_count" greater than 0
+        const assayTerms = assayFacet && assayFacet.terms.some(f => f.doc_count > 0);
 
         return (
             <div className={`box facets${addClasses ? ` ${addClasses}` : ''}`}>
@@ -1071,6 +1064,7 @@ export class FacetList extends React.Component {
                                 filters={filters}
                                 width={width}
                                 negationFilters={negationFilters}
+                                assayTerms={assayTerms}
                             />
                         );
                     })}
@@ -1093,6 +1087,7 @@ FacetList.propTypes = {
     hideTextFilter: PropTypes.bool,
     docTypeTitleSuffix: PropTypes.string,
     addClasses: PropTypes.string, // CSS classes to use if the default isn't needed.
+    modifyFacetsFlag: PropTypes.bool,
 };
 
 FacetList.defaultProps = {
@@ -1102,6 +1097,7 @@ FacetList.defaultProps = {
     hideTextFilter: false,
     addClasses: '',
     docTypeTitleSuffix: 'search',
+    modifyFacetsFlag: false,
 };
 
 FacetList.contextTypes = {
@@ -1185,7 +1181,6 @@ BatchDownload.propTypes = {
 BatchDownload.defaultProps = {
     context: null,
     query: '',
-    downloadClickHandler: null,
 };
 
 BatchDownload.contextTypes = {
@@ -1525,7 +1520,6 @@ ResultTableList.defaultProps = {
 // Display a local genome browser in the ResultTable where search results would normally go. This
 // only gets displayed if the query string contains only one type and it's "File."
 export const ResultBrowser = (props) => {
-
     let visUrl = '';
     const datasetCount = props.datasets.length;
     let region = props.region; // optionally make a persistent region
