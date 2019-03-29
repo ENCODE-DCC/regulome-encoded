@@ -1049,7 +1049,9 @@ class App extends React.Component {
                     <div id="slot-application">
                         <div id="application" className={appClass}>
                             <div className="loading-spinner">
-                                <div className="loading-spinner-circle"><img src='/static/img/spinner1.gif'></img></div>
+                                <div className="loading-spinner-circle">
+                                    <img src="/static/img/spinner1.gif" alt="Still loading..." />
+                                </div>
                             </div>
                             <div id="layout">
                                 <Provider store={this.cartStore}>
