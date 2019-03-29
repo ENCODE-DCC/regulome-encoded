@@ -676,8 +676,6 @@ Graph.propTypes = {
 };
 
 Graph.defaultProps = {
-    selectedAssembly: '',
-    selectedAnnotation: '',
     schemas: null,
     colorize: false,
     children: null,
