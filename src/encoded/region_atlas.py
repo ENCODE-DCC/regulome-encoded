@@ -348,54 +348,54 @@ class RegulomeAtlas(object):
         return case
 
     @staticmethod
-    def _score(charactization):
+    def _score(characterization):
         '''private: returns regulome score from characterization set'''
         # Predict as probability of being a regulatory SNP from prediction
         keys = ['ChIP', 'DNase', 'PWM', 'Footprint', 'eQTL', 'dsQTL',
                 'PWM_matched', 'Footprint_matched']
-        query = [[int(k in charactization) for k in keys]]
+        query = [[int(k in characterization) for k in keys]]
         probability = str(round(TRAINED_REG_MODEL.predict_proba(query)[:, 1][0], 5))
         ranking = '7'
-        if ('eQTL' in charactization) or ('dsQTL' in charactization):
-            if 'ChIP' in charactization:
-                if 'DNase' in charactization:
-                    if 'PWM_matched' in charactization and 'Footprint_matched' in charactization:
+        if ('eQTL' in characterization) or ('dsQTL' in characterization):
+            if 'ChIP' in characterization:
+                if 'DNase' in characterization:
+                    if 'PWM_matched' in characterization and 'Footprint_matched' in characterization:
                         ranking = '1a'
-                    elif 'PWM' in charactization and 'Footprint' in charactization:
+                    elif 'PWM' in characterization and 'Footprint' in characterization:
                         ranking = '1b'
-                    elif 'PWM_matched' in charactization:
+                    elif 'PWM_matched' in characterization:
                         ranking = '1c'
-                    elif 'PWM' in charactization:
+                    elif 'PWM' in characterization:
                         ranking = '1d'
                     else:
                         ranking = '1f'
-                elif 'PWM_matched' in charactization:
+                elif 'PWM_matched' in characterization:
                     ranking = '1e'
                 else:
                     ranking = '1f'
-            elif 'DNase' in charactization:
+            elif 'DNase' in characterization:
                 ranking = '1f'
-        elif 'ChIP' in charactization:
-            if 'DNase' in charactization:
-                if 'PWM_matched' in charactization and 'Footprint_matched' in charactization:
+        elif 'ChIP' in characterization:
+            if 'DNase' in characterization:
+                if 'PWM_matched' in characterization and 'Footprint_matched' in characterization:
                     ranking = '2a'
-                elif 'PWM' in charactization and 'Footprint' in charactization:
+                elif 'PWM' in characterization and 'Footprint' in characterization:
                     ranking = '2b'
-                elif 'PWM_matched' in charactization:
+                elif 'PWM_matched' in characterization:
                     ranking = '2c'
-                elif 'PWM' in charactization:
+                elif 'PWM' in characterization:
                     ranking = '3a'
                 else:
                     ranking = '4'
-            elif 'PWM_matched' in charactization:
+            elif 'PWM_matched' in characterization:
                 ranking = '3b'
             else:
                 ranking = '5'
-        elif 'DNase' in charactization:
+        elif 'DNase' in characterization:
             ranking = '5'
-        elif ('PWM' in charactization
-              or 'Footprint' in charactization
-              or 'eQTL' in charactization):
+        elif ('PWM' in characterization
+              or 'Footprint' in characterization
+              or 'eQTL' in characterization):
             ranking = '6'
         return '{} (probability); {} (ranking v1.1)'.format(probability, ranking)
 
