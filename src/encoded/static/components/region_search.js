@@ -6,6 +6,7 @@ import * as globals from './globals';
 import { Panel, PanelBody } from '../libs/bootstrap/panel';
 import { FacetList, FilterList } from './search';
 import { SortTablePanel, SortTable } from './sorttable';
+import Motifs from './motifs';
 
 const dataTypeStrings = [
     {
@@ -46,8 +47,8 @@ class DataType extends React.Component {
     }
 
     toggleOpenState() {
-        this.setState((state) => ({
-            open: !state.open
+        this.setState(state => ({
+            open: !state.open,
         }));
     }
 
@@ -324,6 +325,7 @@ class RegulomeSearch extends React.Component {
         const results = context['@graph'];
         const notification = context.notification;
         const searchBase = url.parse(this.context.location_href).search || '';
+        const urlBase = this.context.location_href.split('/regulome-search')[0];
         const filters = context.filters;
         const facets = context.facets;
         const total = context.total;
@@ -424,7 +426,10 @@ class RegulomeSearch extends React.Component {
                                     : ''}
 
                                     <div className="wide-column">
+                                        <Motifs {...this.props} urlBase={urlBase} />
 
+                                        <h4>Detailed results</h4>
+                                        <div className="visualize-error">Showing {results.length} of {total}</div>
                                         <ResultsTable {...this.props} />
 
                                     </div>
