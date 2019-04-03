@@ -192,6 +192,11 @@ form.table-filter {
                     width: 100%;
                     height: 100%;
                 }
+                .file-table-accession {
+                    a {
+                        width: auto;
+                    }
+                }
             }
 
             &.file-restricted {
