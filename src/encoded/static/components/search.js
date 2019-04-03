@@ -767,7 +767,7 @@ class Facet extends React.Component {
     }
 
     render() {
-        const { facet, filters, assayTerms } = this.props;
+        const { facet, filters, assayTerms, modifyFacetsFlag } = this.props;
         const title = facet.title;
         const field = facet.field;
         const total = facet.total;
@@ -824,7 +824,7 @@ class Facet extends React.Component {
         if ((terms.length && terms.some(term => term.doc_count)) || (field.charAt(field.length - 1) === '!')) {
             return (
                 <div className={`facet facet${facet.field.replace('/ /g', '')}`}>
-                    { (field === 'annotation_type' || field === 'assay_term_name') ?
+                    { ((field === 'annotation_type' || field === 'assay_term_name') && modifyFacetsFlag) ?
                         <div>
                             { (field === 'assay_term_name' || assayTerms === false) ?
                                 <div>
@@ -880,10 +880,16 @@ class Facet extends React.Component {
     }
 }
 
+Facet.defaultProps = {
+    assayTerms: false,
+    modifyFacetsFlag: false,
+};
+
 Facet.propTypes = {
     facet: PropTypes.object.isRequired,
     filters: PropTypes.array.isRequired,
-    assayTerms: PropTypes.bool.isRequired,
+    assayTerms: PropTypes.bool,
+    modifyFacetsFlag: PropTypes.bool,
 };
 
 
@@ -1065,6 +1071,7 @@ export class FacetList extends React.Component {
                                 width={width}
                                 negationFilters={negationFilters}
                                 assayTerms={assayTerms}
+                                modifyFacetsFlag={modifyFacetsFlag}
                             />
                         );
                     })}

@@ -82,7 +82,6 @@ export default class Navigation extends React.Component {
                         <CartStatus />
                         <UserActions />
                         {this.props.isHomePage ? null : <ContextActions />}
-                        <Search />
                     </Navbar>
                 </div>
                 {this.state.testWarning ?

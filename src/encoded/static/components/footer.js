@@ -37,6 +37,7 @@ const Footer = ({ version }, reactContext) => {
                             <ul className="footer-logos">
                                 <li><a href="/regulome-search"><img src="/static/img/RegulomeLogoFinal_mixedcolors.png" alt="Regulome" id="encode-logo" height="35px" width="120px" /></a></li>
                                 <li><a href="http://www.stanford.edu"><img src="/static/img/su-logo-white-2x.png" alt="Stanford University" id="su-logo" width="105px" height="49px" /></a></li>
+                                <li><a href="https://umich.edu/"><img src="/static/img/umich-logo.png" alt="University of Michigan" id="umich-logo" width="75px" height="81px" /></a></li>
                             </ul>
                         </div>
                         <p className="copy-notice">&copy;{new Date().getFullYear()} Stanford University</p>
