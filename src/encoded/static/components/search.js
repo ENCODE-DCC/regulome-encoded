@@ -2,17 +2,17 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import _ from 'underscore';
+import moment from 'moment';
 import url from 'url';
 import { svgIcon } from '../libs/svg-icons';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/modal';
 import { TabPanel, TabPanelPane } from '../libs/bootstrap/panel';
 import { auditDecor } from './audit';
-import { CartToggle, CartSearchControls } from './cart';
 import { FetchedData, Param } from './fetched';
 import GenomeBrowser from './genome_browser';
 import * as globals from './globals';
 import { Attachment } from './image';
-import { BrowserSelector, DisplayAsJson, requestSearch } from './objectutils';
+import { BrowserSelector, DisplayAsJson, requestSearch, shadeOverflowOnScroll } from './objectutils';
 import { DbxrefList } from './dbxref';
 import Status from './status';
 import { BiosampleSummaryString, BiosampleOrganismNames } from './typeutils';
@@ -256,7 +256,6 @@ globals.listingViews.register(Biosample, 'Biosample');
 
 
 const ExperimentComponent = (props, reactContext) => {
-    const { activeCart } = props;
     const result = props.context;
     let synchronizations;
 
@@ -333,11 +332,6 @@ const ExperimentComponent = (props, reactContext) => {
                         <div><strong>Project: </strong>{result.award.project}</div>
                     </div>
                 </div>
-                {activeCart ?
-                    <div className="result-item__cart-control">
-                        <CartToggle element={result} />
-                    </div>
-                : null}
             </div>
             {props.auditDetail(result.audit, result['@id'], { session: reactContext.session, except: result['@id'], forcedEditLink: true })}
         </li>
@@ -346,13 +340,8 @@ const ExperimentComponent = (props, reactContext) => {
 
 ExperimentComponent.propTypes = {
     context: PropTypes.object.isRequired, // Experiment search results
-    activeCart: PropTypes.bool, // True if displayed in active cart
     auditIndicators: PropTypes.func.isRequired, // Audit decorator function
     auditDetail: PropTypes.func.isRequired,
-};
-
-ExperimentComponent.defaultProps = {
-    activeCart: false,
 };
 
 ExperimentComponent.contextTypes = {
@@ -661,9 +650,9 @@ const Term = (props) => {
         <li className={`facet-term${negated ? ' negated-selected' : (selected ? ' selected' : '')} ${fieldVar}`}>
             <a className="facet-term__item" href={href} onClick={href ? onFilter : null}>
                 <div className="facet-term__text">
-                    {(selected && !negated) ? <i className="icon icon-check-square-o" /> : null}
+                    {/* {(selected && !negated) ? <i className="icon icon-check-square-o" /> : null} */}
                     {negated ? <i className="icon icon-minus-circle" /> : null}
-                    {(!selected && !negated) ? <i className="icon icon-square-o" /> : null}
+                    {/* {(!selected && !negated) ? <i className="icon icon-square-o" /> : null} */}
                     {em ? <em>{title}</em> : <span>{title}</span>}
                 </div>
                 {negated ? null : <div className="facet-term__count">{(count < 1000) ? count : `${count / 1000}k`}</div>}
@@ -749,21 +738,31 @@ FacetLabel.propTypes = {
     label: PropTypes.string.isRequired,
 };
 
+// Sanitize user input and facet terms for comparison: convert to lowercase, remove white space and asterisks (which cause regular expression error)
+const sanitizedString = inputString => inputString.toLowerCase().replace(/ /g, '').replace(/[*]/g, '').replace(/\\|\//g, '');
+
 class Facet extends React.Component {
     constructor() {
         super();
 
         // Set initial React commponent state.
         this.state = {
-            facetOpen: false,
+            initialState: true,
+            searchTerm: '',
         };
 
         // Bind `this` to non-React methods.
-        this.handleClick = this.handleClick.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
     }
 
-    handleClick() {
-        this.setState(prevState => ({ facetOpen: !prevState.facetOpen }));
+    componentDidMount() {
+        this.setState({ initialState: false });
+    }
+
+    handleSearch(event) {
+        // Search term entered by the user
+        const filterVal = String(sanitizedString(event.target.value));
+        this.setState({ searchTerm: filterVal });
     }
 
     render() {
@@ -771,12 +770,30 @@ class Facet extends React.Component {
         const title = facet.title;
         const field = facet.field;
         const total = facet.total;
-        const termID = title.replace(/\s+/g, '');
+        const typeahead = facet.type === 'typeahead';
+
+        // Filter facet terms to create list of those matching the search term entered by the user
+        // Note: this applies only to Typeahead facets
+        let filteredList = null;
+        if (typeahead && this.state.searchTerm !== '') {
+            filteredList = facet.terms.filter(
+                (term) => {
+                    if (term.doc_count > 0) {
+                        const termKey = sanitizedString(term.key);
+                        if (termKey.match(this.state.searchTerm)) {
+                            return term;
+                        }
+                        return null;
+                    }
+                    return null;
+                }
+            );
+        }
 
         // Make a list of terms for this facet that should appear, by filtering out terms that
         // shouldn't. Any terms with a zero doc_count get filtered out, unless the term appears in
         // the search result filter list.
-        const terms = facet.terms.filter((term) => {
+        const unsortedTerms = facet.terms.filter((term) => {
             if (term.key) {
                 // See if the facet term also exists in the search result filters (i.e. the term
                 // exists in the URL query string).
@@ -791,14 +808,34 @@ class Facet extends React.Component {
             // The term exists, but without a key, so don't allow its display.'
             return false;
         });
+
+        // Sort numerical terms by value not by frequency
+        // This should ultimately be accomplished in the back end, but the front end fix is much simpler so we are starting with that
+        // We have to check the full list for now (until schema change) because some lists contain both numerical and string terms ('Encyclopedia version' under Annotations) and we do not want to sort those by value
+        const numericalTest = a => !isNaN(a.key);
+        // For date facets, sort by date
+        let terms = [];
+        if (field.match('date')) {
+            terms = _.sortBy(unsortedTerms, obj => moment(obj.key, 'YYYY-MM-DD').toISOString()).reverse();
+        } else if (field.match('month')) {
+            terms = _.sortBy(unsortedTerms, obj => moment(obj.key, 'MMMM, YYYY').toISOString()).reverse();
+        } else if (field.match('year')) {
+            terms = _.sortBy(unsortedTerms, obj => moment(obj.key, 'YYYY').toISOString()).reverse();
+        // For straightforward numerical facets, just sort by value
+        } else if (unsortedTerms.every(numericalTest)) {
+            terms = _.sortBy(unsortedTerms, obj => obj.key);
+        } else {
+            terms = unsortedTerms;
+        }
+
         const moreTerms = terms.slice(5);
         const TermComponent = field === 'type' ? TypeTerm : Term;
         const selectedTermCount = countSelectedTerms(moreTerms, facet, filters);
-        const moreTermSelected = selectedTermCount > 0;
         const canDeselect = (!facet.restrictions || selectedTermCount >= 2);
-        const moreSecClass = `collapse${(moreTermSelected || this.state.facetOpen) ? ' in' : ''}`;
-        const seeMoreClass = `btn btn-link facet-list__expander${(moreTermSelected || this.state.facetOpen) ? '' : ' collapsed'}`;
         const statusFacet = field === 'status' || field === 'lot_reviews.status';
+
+        // Number of terms to show, the rest will be viewable on scroll
+        const displayedTermsCount = 5;
 
         // Audit facet titles get mapped to a corresponding icon.
         let titleComponent = title;
@@ -828,7 +865,7 @@ class Facet extends React.Component {
                         <div>
                             { (field === 'assay_term_name' || assayTerms === false) ?
                                 <div>
-                                    <h5>{titleComponent}</h5>
+                                    <h5 className="extra-padding-header">{titleComponent}</h5>
                                     <FacetLabel label={field} />
                                 </div>
                             :
@@ -840,36 +877,68 @@ class Facet extends React.Component {
                         <h5>{titleComponent}</h5>
                     }
                     <ul className={`facet-list nav${statusFacet ? ' facet-status' : ''}`}>
-                        <div>
-                            {/* Display the first five terms of the facet */}
-                            {terms.slice(0, 5).map(term =>
-                                <div key={term.key} >
-                                    <TermComponent {...this.props} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
+                        {/* Display searchbar for typeahead facets if there are more than 5 terms */}
+                        {(typeahead && (terms.length >= displayedTermsCount)) ?
+                            <div className="typeahead-entry" role="search">
+                                <i className="icon icon-search" />
+                                <div className="searchform">
+                                    <input type="search" aria-label={`search to filter list of terms for facet ${titleComponent}`} placeholder="Search" value={this.state.value} onChange={this.handleSearch} name={`search${titleComponent.replace(/\s+/g, '')}`} />
                                 </div>
-                            )}
-                        </div>
-                        {terms.length > 5 ?
-                            <div id={termID} className={moreSecClass}>
-                                {/* If the user has expanded the "+ See more" button, then display
-                                     the rest of the terms beyond 5 */}
-                                {moreTerms.map(term =>
-                                    <div key={term.key} >
-                                        {(field === 'assay_term_name') ?
-                                            <FacetLabel label={field} />
-                                        : null}
-                                        <TermComponent {...this.props} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
+                            </div>
+                        : null}
+                        {/* If user has searched using the typeahead, we will not display the full set of facet terms, just those matching the search */}
+                        {(filteredList !== null) ?
+                            <div>
+                                {/* Display error message if there is a search but no results found */}
+                                {(filteredList.length === 0) ?
+                                    <div className="searcherror">
+                                        Try a different search term for results.
                                     </div>
-                                )}
+                                :
+                                    <div className="terms-block">
+                                        {/* List of results does not overflow top on initialization */}
+                                        <div className="top-shading hide-shading" />
+                                        {/* List of filtered terms */}
+                                        <div className={`term-list search${titleComponent.replace(/\s+/g, '')}`} onScroll={shadeOverflowOnScroll}>
+                                            {filteredList.map(term =>
+                                                <TermComponent {...this.props} key={term.key} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
+                                            )}
+                                        </div>
+                                        {/* Only show bottom shading when list of results overflows */}
+                                        <div className={`shading ${(filteredList.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
+                                    </div>
+                                }
                             </div>
-                        : null}
-                        {(terms.length > 5 && !moreTermSelected) ?
-                            <div className="fade-out-pull-right">
-                                {/* Display the "+ See more" button if more than five terms exist for this facet */}
-                                <small>
-                                    <button type="button" className={seeMoreClass} data-toggle="collapse" data-target={`#${termID}`} onClick={this.handleClick} />
-                                </small>
+                        :
+                            <div>
+                                {/* If the user has not searched, we will display the full set of facet terms */}
+                                {(((terms.length > 0) && terms.some(term => term.doc_count)) || (field.charAt(field.length - 1) === '!')) ?
+                                    <div className="terms-block">
+                                        {/* List of results does not overflow top on initialization */}
+                                        <div className="top-shading hide-shading" />
+                                        {/* List of terms */}
+                                        <div className={`term-list${typeahead ? ` search${titleComponent.replace(/\s+/g, '')}` : ''}`} onScroll={shadeOverflowOnScroll}>
+                                            {/* To prevent long render time, wait for component to mount to display all typeahead terms and display 50 terms in the interim. */}
+                                            {(this.state.initialState && typeahead) ?
+                                                <div>
+                                                    {terms.slice(0, 50).map(term =>
+                                                        <TermComponent {...this.props} key={term.key} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
+                                                    )}
+                                                </div>
+                                            :
+                                                <div>
+                                                    {terms.map(term =>
+                                                        <TermComponent {...this.props} key={term.key} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
+                                                    )}
+                                                </div>
+                                            }
+                                        </div>
+                                        {/* Only show bottom shading when list of results overflows */}
+                                        <div className={`shading ${(terms.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
+                                    </div>
+                                : null}
                             </div>
-                        : null}
+                        }
                     </ul>
                 </div>
             );
@@ -1444,7 +1513,6 @@ export class ResultTable extends React.Component {
                                     : null}
                                 </div>
                                 <hr />
-                                <CartSearchControls searchResults={context} />
                                 {browserAvail ?
                                     <TabPanel tabs={{ listpane: 'List', browserpane: <BrowserTabQuickView /> }} selectedTab={this.state.selectedTab} handleTabClick={this.handleTabClick} navCss="browser-tab-bg" tabFlange>
                                         <TabPanelPane key="listpane">
@@ -1456,7 +1524,7 @@ export class ResultTable extends React.Component {
                                         </TabPanelPane>
                                     </TabPanel>
                                 :
-                                    <ResultTableList results={results} columns={columns} activeCart />
+                                    <ResultTableList results={results} columns={columns} />
                                 }
                             </div>
                         :
@@ -1502,10 +1570,10 @@ const BrowserTabQuickView = function BrowserTabQuickView() {
 
 
 // Display the list of search results.
-export const ResultTableList = ({ results, columns, tabbed, activeCart }) => (
+export const ResultTableList = ({ results, columns, tabbed }) => (
     <ul className={`nav result-table${tabbed ? ' result-table-tabbed' : ''}`} id="result-table">
         {results.length ?
-            results.map(result => Listing({ context: result, columns, key: result['@id'], activeCart }))
+            results.map(result => Listing({ context: result, columns, key: result['@id'] }))
         : null}
     </ul>
 );
@@ -1514,13 +1582,11 @@ ResultTableList.propTypes = {
     results: PropTypes.array.isRequired, // Array of search results to display
     columns: PropTypes.object, // Columns from search results
     tabbed: PropTypes.bool, // True if table is in a tab
-    activeCart: PropTypes.bool, // True if items displayed in active cart
 };
 
 ResultTableList.defaultProps = {
     columns: null,
     tabbed: false,
-    activeCart: false,
 };
 
 
