@@ -60,29 +60,27 @@ export default class RichTextBlockView extends React.Component {
 
     // Clickable FAQs: hide and show answers corresponding to questions
     handleClickableFAQ() {
-        if (this.state.value.body.includes('faq')) {
-            const faqContainer = document.getElementsByClassName('faq')[0];
-            // One event listener on the 'faq' container handles all click events
-            faqContainer.addEventListener('click', (e) => {
-                // Determine which question the user clicked on
-                const target = e.target.closest('.faq-question');
-                if (target) {
-                    // Toggle whether corresponding answer is displayed or hidden
-                    const infoId = target.id.split('faq')[1].split('-question')[0];
-                    const infoElement = document.getElementById(`faq${infoId}-answer`);
-                    infoElement.classList.toggle('show');
-                    // Toggle direction caret is pointing
-                    const iconElement = target.getElementsByTagName('i')[0];
-                    if (iconElement.className.indexOf('icon-caret-right') > -1) {
-                        iconElement.classList.add('icon-caret-down');
-                        iconElement.classList.remove('icon-caret-right');
-                    } else {
-                        iconElement.classList.remove('icon-caret-down');
-                        iconElement.classList.add('icon-caret-right');
-                    }
+        const faqContainer = document.getElementsByClassName('faq')[0];
+        // One event listener on the 'faq' container handles all click events
+        faqContainer.addEventListener('click', (e) => {
+            // Determine which question the user clicked on
+            const target = e.target.closest('.faq-question');
+            if (target) {
+                // Toggle whether corresponding answer is displayed or hidden
+                const infoId = target.id.split('faq')[1].split('-question')[0];
+                const infoElement = document.getElementById(`faq${infoId}-answer`);
+                infoElement.classList.toggle('show');
+                // Toggle direction caret is pointing
+                const iconElement = target.getElementsByTagName('i')[0];
+                if (iconElement.className.indexOf('icon-caret-right') > -1) {
+                    iconElement.classList.add('icon-caret-down');
+                    iconElement.classList.remove('icon-caret-right');
+                } else {
+                    iconElement.classList.remove('icon-caret-down');
+                    iconElement.classList.add('icon-caret-right');
                 }
-            });
-        }
+            }
+        });
     }
 
     render() {
