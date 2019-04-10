@@ -2,6 +2,21 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from '../globals';
 
+if (!Element.prototype.matches) {
+    Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+}
+
+if (!Element.prototype.closest) {
+    console.log("using the polyfill");
+    Element.prototype.closest = function(s) {
+        let el = this;
+        do {
+            if (el.matches(s)) return el;
+            el = el.parentElement || el.parentNode;
+        } while (el !== null && el.nodeType === 1);
+        return null;
+    };
+}
 
 export default class RichTextBlockView extends React.Component {
     constructor(props) {
