@@ -67,7 +67,6 @@ export default class RichTextBlockView extends React.Component {
                     // Polyfill for 'closest' for IE
                     const elementPrototype = window.Element.prototype;
                     if (!elementPrototype.closest) {
-                        console.log('using the polyfill');
                         elementPrototype.closest = function(s) {
                             let el = this;
                             do {
