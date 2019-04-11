@@ -2,22 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from '../globals';
 
-if (!Element.prototype.matches) {
-    Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-}
-
-if (!Element.prototype.closest) {
-    console.log("using the polyfill");
-    Element.prototype.closest = function(s) {
-        let el = this;
-        do {
-            if (el.matches(s)) return el;
-            el = el.parentElement || el.parentNode;
-        } while (el !== null && el.nodeType === 1);
-        return null;
-    };
-}
-
 export default class RichTextBlockView extends React.Component {
     constructor(props) {
         super(props);
@@ -81,6 +65,23 @@ export default class RichTextBlockView extends React.Component {
             faqContainer.addEventListener('click', (e) => {
                 // Determine which question the user clicked on
                 const target = e.target.closest('.regulomehelp-question');
+
+                if (!target.prototype.matches) {
+                    target.prototype.matches = target.prototype.msMatchesSelector || target.prototype.webkitMatchesSelector;
+                }
+
+                if (!target.prototype.closest) {
+                    console.log("using the polyfill");
+                    target.prototype.closest = function(s) {
+                        let el = this;
+                        do {
+                            if (el.matches(s)) return el;
+                            el = el.parentElement || el.parentNode;
+                        } while (el !== null && el.nodeType === 1);
+                        return null;
+                    };
+                }
+
                 if (target) {
                     // Toggle whether corresponding answer is displayed or hidden
                     const infoId = target.id.split('regulomehelp-faq')[1].split('-question')[0];
