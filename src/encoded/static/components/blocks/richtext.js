@@ -61,43 +61,42 @@ export default class RichTextBlockView extends React.Component {
     handleClickableFAQ() {
         if (this.state.value.body.includes('faq')) {
             const faqContainer = document.getElementsByClassName('faq')[0];
-            // One event listener on the 'faq' container handles all click events
-            faqContainer.addEventListener('click', (e) => {
-                // Determine which question the user clicked on
-                const target = e.target.closest('.regulomehelp-question');
-
-                if (!target.prototype.matches) {
-                    target.prototype.matches = target.prototype.msMatchesSelector || target.prototype.webkitMatchesSelector;
-                }
-
-                if (!target.prototype.closest) {
-                    console.log("using the polyfill");
-                    target.prototype.closest = function(s) {
-                        let el = this;
-                        do {
-                            if (el.matches(s)) return el;
-                            el = el.parentElement || el.parentNode;
-                        } while (el !== null && el.nodeType === 1);
-                        return null;
-                    };
-                }
-
-                if (target) {
-                    // Toggle whether corresponding answer is displayed or hidden
-                    const infoId = target.id.split('regulomehelp-faq')[1].split('-question')[0];
-                    const infoElement = document.getElementById(`regulomehelp-faq${infoId}-answer`);
-                    infoElement.classList.toggle('show');
-                    // Toggle direction caret is pointing
-                    const iconElement = target.getElementsByTagName('i')[0];
-                    if (iconElement.className.indexOf('icon-caret-right') > -1) {
-                        iconElement.classList.add('icon-caret-down');
-                        iconElement.classList.remove('icon-caret-right');
-                    } else {
-                        iconElement.classList.remove('icon-caret-down');
-                        iconElement.classList.add('icon-caret-right');
+            if (faqContainer) {
+                // One event listener on the 'faq' container handles all click events
+                faqContainer.addEventListener('click', (e) => {
+                    // Polyfill for 'closest' for IE
+                    const elementPrototype = window.Element.prototype;
+                    if (!elementPrototype.closest) {
+                        console.log('using the polyfill');
+                        elementPrototype.closest = function(s) {
+                            let el = this;
+                            do {
+                                if (el.matches(s)) return el;
+                                el = el.parentElement || el.parentNode;
+                            } while (el !== null && el.nodeType === 1);
+                            return null;
+                        };
                     }
-                }
-            });
+                    // Determine which question the user clicked on
+                    const target = e.target.closest('.regulomehelp-question');
+
+                    if (target) {
+                        // Toggle whether corresponding answer is displayed or hidden
+                        const infoId = target.id.split('regulomehelp-faq')[1].split('-question')[0];
+                        const infoElement = document.getElementById(`regulomehelp-faq${infoId}-answer`);
+                        infoElement.classList.toggle('show');
+                        // Toggle direction caret is pointing
+                        const iconElement = target.getElementsByTagName('i')[0];
+                        if (iconElement.className.indexOf('icon-caret-right') > -1) {
+                            iconElement.classList.add('icon-caret-down');
+                            iconElement.classList.remove('icon-caret-right');
+                        } else {
+                            iconElement.classList.remove('icon-caret-down');
+                            iconElement.classList.add('icon-caret-right');
+                        }
+                    }
+                });
+            }
         }
     }
 
