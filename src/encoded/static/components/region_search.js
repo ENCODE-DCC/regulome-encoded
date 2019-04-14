@@ -259,6 +259,7 @@ const ResultsTable = (props) => {
 
         biosample_term_name: {
             title: 'Biosample',
+            getValue: (item) => item.biosample_ontology ? item.biosample_ontology.term_name : '',
         },
 
         target: {
@@ -268,7 +269,7 @@ const ResultsTable = (props) => {
 
         organ_slims: {
             title: 'Organ',
-            getValue: item => (item.organ_slims ? item.organ_slims.join(', ') : ''),
+            getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
         },
 
         accession: {
