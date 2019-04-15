@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from '../globals';
 
-
 export default class RichTextBlockView extends React.Component {
     constructor(props) {
         super(props);
@@ -21,6 +20,18 @@ export default class RichTextBlockView extends React.Component {
         const $script = require('scriptjs');
         if (this.context.editable) {
             $script('ckeditor/ckeditor', this.setupEditor);
+        }
+        // Polyfill for 'closest' for IE
+        const elementPrototype = window.Element.prototype;
+        if (!elementPrototype.closest) {
+            elementPrototype.closest = function(s) {
+                let el = this;
+                do {
+                    if (el.matches(s)) return el;
+                    el = el.parentElement || el.parentNode;
+                } while (el !== null && el.nodeType === 1);
+                return null;
+            };
         }
         this.handleClickableFAQ();
     }
@@ -58,32 +69,34 @@ export default class RichTextBlockView extends React.Component {
         });
     }
 
+    // Clickable FAQs: hide and show answers corresponding to questions
     handleClickableFAQ() {
-        document.getElementsByClassName("faq")[0].addEventListener("click", function(e) {
-            let target = null;
-            for (let i = 0; i < e.path.length; i++) {
-                let tempPath = e.path[i].className;
-                if (tempPath){
-                   if (tempPath.indexOf("regulomehelp-question") !== -1) {
-                        target = e.path[i];
-                        break;
+        if (this.state.value.body.includes('faq')) {
+            const faqContainer = document.getElementsByClassName('faq')[0];
+            if (faqContainer) {
+                // One event listener on the 'faq' container handles all click events
+                faqContainer.addEventListener('click', (e) => {
+                    // Determine which question the user clicked on
+                    const target = e.target.closest('.regulomehelp-question');
+
+                    if (target) {
+                        // Toggle whether corresponding answer is displayed or hidden
+                        const infoId = target.id.split('regulomehelp-faq')[1].split('-question')[0];
+                        const infoElement = document.getElementById(`regulomehelp-faq${infoId}-answer`);
+                        infoElement.classList.toggle('show');
+                        // Toggle direction caret is pointing
+                        const iconElement = target.getElementsByTagName('i')[0];
+                        if (iconElement.className.indexOf('icon-caret-right') > -1) {
+                            iconElement.classList.add('icon-caret-down');
+                            iconElement.classList.remove('icon-caret-right');
+                        } else {
+                            iconElement.classList.remove('icon-caret-down');
+                            iconElement.classList.add('icon-caret-right');
+                        }
                     }
-                }
+                });
             }
-            if (target !== null) {
-                let infoId = target.id.split("regulomehelp-faq")[1].split("-question")[0];
-                let infoElement = document.getElementById("regulomehelp-faq"+infoId+"-answer");
-                infoElement.classList.toggle("show");
-                let iconElement = e.target.getElementsByTagName("i")[0];
-                if (e.target.getElementsByTagName("i")[0].className.indexOf("icon-caret-right") > -1){
-                     iconElement.classList.add("icon-caret-down");
-                     iconElement.classList.remove("icon-caret-right");
-                } else {
-                     iconElement.classList.remove("icon-caret-down");
-                     iconElement.classList.add("icon-caret-right");
-                }
-            }
-        });
+        }
     }
 
     render() {
