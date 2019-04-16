@@ -375,6 +375,8 @@ class RegulomeAtlas(object):
                     ranking = '1f'
             elif 'DNase' in characterization:
                 ranking = '1f'
+            elif 'PWM' in characterization or 'Footprint' in characterization:
+                ranking = '6'
         elif 'ChIP' in characterization:
             if 'DNase' in characterization:
                 if 'PWM_matched' in characterization and 'Footprint_matched' in characterization:
@@ -394,8 +396,7 @@ class RegulomeAtlas(object):
         elif 'DNase' in characterization:
             ranking = '5'
         elif ('PWM' in characterization
-              or 'Footprint' in characterization
-              or 'eQTL' in characterization):
+              or 'Footprint' in characterization):
             ranking = '6'
         return '{} (probability); {} (ranking v1.1)'.format(probability, ranking)
 
