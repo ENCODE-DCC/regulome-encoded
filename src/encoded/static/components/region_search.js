@@ -6,7 +6,7 @@ import * as globals from './globals';
 import { Panel, PanelBody } from '../libs/bootstrap/panel';
 import { FacetList, FilterList } from './search';
 import { SortTablePanel, SortTable } from './sorttable';
-import Motifs from './motifs';
+import { Motifs } from './motifs';
 
 const dataTypeStrings = [
     {
