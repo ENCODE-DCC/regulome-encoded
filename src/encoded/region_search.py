@@ -402,20 +402,27 @@ def regulome_summary(context, request):
         # Get rsid for the coordinate
         rsids = get_rsids(atlas, assembly, chrom, start, end)
         # Only SNP or single nucleotide are considered as scorable
+        features = dict()
+        regulome_score = 'N/A'
         if rsids == [] and (int(end) - int(start)) > 1:
-            regulome_score = 'N/A'
             result['notifications'].append({coord: 'Failed: {}'.format(
                 'Non-SNP or multi-nucleotide region is not scorable')})
         else:  # Scorable
             try:
                 all_hits = region_get_hits(atlas, assembly, chrom, start, end)
-                regulome_score = atlas.regulome_score(all_hits['datasets'])
+                evidence = atlas.regulome_evidence(all_hits['datasets'])
+                features = {k: k in evidence
+                            for k in ['ChIP', 'DNase', 'PWM', 'Footprint',
+                                      'eQTL', 'dsQTL', 'PWM_matched',
+                                      'Footprint_matched']}
+                regulome_score = atlas.regulome_score(all_hits['datasets'],
+                                                      evidence)
                 result['notifications'].append({coord: 'Success'})
             except Exception as e:
-                regulome_score = 'N/A'
                 result['notifications'].append({coord: 'Failed: {}'.format(e)})
         summaries.append({'chrom': chrom, 'start': start, 'end': end,
-                          'rsids': rsids, 'regulome_score': regulome_score})
+                          'rsids': rsids, 'features': features,
+                          'regulome_score': regulome_score})
         result['timing'].append({coord: (time.time() - begin)})  # DEBUG timing
     result['summaries'] = summaries
     return result
@@ -587,9 +594,15 @@ def region_search(context, request):
             result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
             begin = time.time()                                              # DEBUG: timing
             # NOTE: Needs all hits rather than 'released' or set reduced by facet selection
-            regdb_score = atlas.regulome_score(all_hits['datasets'])
+            evidence = atlas.regulome_evidence(all_hits['datasets'])
+            features = {k: k in evidence
+                        for k in ['ChIP', 'DNase', 'PWM', 'Footprint',
+                                  'eQTL', 'dsQTL', 'PWM_matched',
+                                  'Footprint_matched']}
+            regdb_score = atlas.regulome_score(all_hits['datasets'], evidence)
             if regdb_score:
                 result['regulome_score'] = regdb_score
+                result['features'] = features
         result['timing'].append({'scoring': (time.time() - begin)})  # DEBUG: timing
 
     return result
