@@ -14,7 +14,7 @@
  *  (3) call entry_point with (1) and (2).
  */
 
-const d3 = require('d3');
+var d3 = require('d3');
 
 /**
  * For each index, get the transform needed so that things line up
@@ -26,19 +26,19 @@ const d3 = require('d3');
  *  be applied to all letters.
  */
 function getLetterBaseTransform(i) {
-    const baseTransform = [];
-    baseTransform[0] = -132.09;
-    baseTransform[1] = -20.32;
+  const baseTransform = [];
+  baseTransform[0] = -132.09;
+  baseTransform[1] = -20.32;
 
-    if (i === 3) { // letter T
-        baseTransform[0] += 3;
-        baseTransform[1] -= 0.0;
-    } else if (i === 1) { // letter A
-        baseTransform[0] += 1;
-        baseTransform[1] -= 0.5;
-    }
+  if (i === 3) { // letter T
+    baseTransform[0] += 3;
+    baseTransform[1] -= 0.0;
+  } else if (i === 1) { // letter A
+    baseTransform[0] += 1;
+    baseTransform[1] -= 0.5;
+  }
 
-    return baseTransform;
+  return baseTransform;
 }
 
 /**
@@ -49,24 +49,43 @@ function getLetterBaseTransform(i) {
  * @returns {string} SVG path corresponding to i.
  */
 function getLetterPath(i) {
-    const letterA = 'M142.59,54.29l-5,15.27h-6.48L147.55,21h7.56l16.56,48.53H165l-5.18-15.27Zm15.91-4.9-4.75-14c-1.08-3.17-1.8-6-2.52-8.86h-.14c-.72,2.88-1.51,5.83-2.45,8.78l-4.75,14Z';
+  const letterA = 'M142.59,54.29l-5,15.27h-6.48L147.55,21h7.56l16.56,48.53H165l-5.18-15.27Zm15.91-4.9-4.75-14c-1.08-3.17-1.8-6-2.52-8.86h-.14c-.72,2.88-1.51,5.83-2.45,8.78l-4.75,14Z';
 
-    const letterG = 'M171.68,67.39a45.22,45.22,0,0,1-14.91,2.66c-7.34,0-13.39-1.87-18.15-6.41-4.18-4-6.77-10.51-6.77-18.07.07-14.47,10-25.06,26.28-25.06a30,30,0,0,1,12.1,2.23l-1.51,5.11A25.15,25.15,0,0,0,158,25.77c-11.81,0-19.51,7.34-19.51,19.51s7.42,19.59,18.72,19.59c4.1,0,6.91-.58,8.35-1.3V49.1h-9.86v-5h16Z';
+  const letterG = 'M171.68,67.39a45.22,45.22,0,0,1-14.91,2.66c-7.34,0-13.39-1.87-18.15-6.41-4.18-4-6.77-10.51-6.77-18.07.07-14.47,10-25.06,26.28-25.06a30,30,0,0,1,12.1,2.23l-1.51,5.11A25.15,25.15,0,0,0,158,25.77c-11.81,0-19.51,7.34-19.51,19.51s7.42,19.59,18.72,19.59c4.1,0,6.91-.58,8.35-1.3V49.1h-9.86v-5h16Z';
 
-    const letterT = 'M144,26.35H129.19V21h35.93v5.33H150.29v43.2H144Z';
+  const letterT = 'M144,26.35H129.19V21h35.93v5.33H150.29v43.2H144Z';
 
-    const letterC = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
+  const letterC = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
 
-    if (i === 0) {
-        return letterA;
-    } else if (i === 1) {
-        return letterC;
-    } else if (i === 2) {
-        return letterG;
-    } else if (i === 3) {
-        return letterT;
-    }
-    return null;
+  if (i === 0) {
+    return letterA;
+  } else if (i === 1) {
+    return letterC;
+  } else if (i === 2) {
+    return letterG;
+  } else if (i === 3) {
+    return letterT;
+  }
+  return null;
+}
+
+/**
+ * @param {string[]} s - sequence data. An array of equal-length strings.
+ * @param {number} i - letter index. Range: [0,4)
+ * @returns {number[]} counts of each letter.
+ */
+function getLetterCnts(s, i) {
+  const dict = { A: 0,
+    C: 0,
+    G: 0,
+    T: 0 };
+
+  s.forEach((d) => {
+    dict[d[i]] += 1;
+  });
+
+  const out = Object.keys(dict).map(key => dict[key]);
+  return out;
 }
 
 /**
@@ -75,53 +94,54 @@ function getLetterPath(i) {
  * @returns {number[][]} counts of each letter.
  */
 function offsets(cnts, maxCount) {
-    const offs = [];
+  const offs = [];
 
-    let ctr = 0;
-    const en = 0;//1 / 0.69314718056 * (4 - 1) / (2 * maxCount);
+  let ctr = 0;
+  let en = 0;//1 / 0.69314718056 * (4 - 1) / (2 * maxCount);
 
-    let H = 0;
+  let H = 0;
 
-    cnts.forEach((d) => {
-        const relativeFrequency = d / maxCount;
-        if (relativeFrequency > 0) {
-            H -= relativeFrequency * Math.log2(relativeFrequency);
-        }
-    });
+  cnts.forEach((d,j) => {
+      let relative_frequency = d / maxCount;
+      if (relative_frequency > 0) {
+        H = H - relative_frequency * Math.log2(relative_frequency);
+      }
+  });
 
-    // add on the index so we can use it.
-    // determine heights of rects
-    let offsetFromTop = 0;
-    cnts.forEach((d, j) => {
-        let dnew = 0;
-        if (d > 0) {
-            const relativeFrequency = d / maxCount;
-            dnew = (2 - H) * relativeFrequency * (maxCount / 2); // maxCount/2 is scaling factor
-        }
-        offsetFromTop += dnew;
+  // add on the index so we can use it.
+  // determine heights of rects
+  let offsetFromTop = 0;
+  cnts.forEach((d, j) => {
 
-        const nextCtr = ctr + dnew;
+    let dnew = 0;
+    if (d > 0) {
+        let relative_frequency = d / maxCount;
+        dnew = (2 - H) * relative_frequency * (maxCount/2);//maxCount/2 is scaling factor
+    }
+    offsetFromTop = offsetFromTop + dnew;
 
-        // -(nextCtr-ctr) is for sorting
-        offs.push([ctr, nextCtr, (nextCtr - ctr), j]);
-        ctr = nextCtr;
-    });
+    const nextCtr = ctr + dnew;
+
+    // -(nextCtr-ctr) is for sorting
+    offs.push([ctr, nextCtr, (nextCtr - ctr), j]);
+    ctr = nextCtr;
+  });
 
 
-    // sort by heights of produced rects
-    offs.sort((a, b) => (b[2] - a[2]));
+  // sort by heights of produced rects
+  offs.sort((a, b) => (b[2] - a[2]));
 
-    // re-arrange data structure based on sort
-    const outOffsets = [];
-    ctr = maxCount - offsetFromTop;
+  // re-arrange data structure based on sort
+  const outOffsets = [];
+  ctr = maxCount - offsetFromTop;
 
-    offs.forEach((d) => {
-        const diff = d[2];
-        outOffsets.push([ctr, ctr + diff, d[3]]);
-        ctr += diff;
-    });
+  offs.forEach((d) => {
+    const diff = d[2];
+    outOffsets.push([ctr, ctr + diff, d[3]]);
+    ctr += diff;
+  });
 
-    return outOffsets;
+  return outOffsets;
 }
 
 /**
@@ -132,41 +152,41 @@ function offsets(cnts, maxCount) {
  * @returns {string} transform string to be applied to the SVG path object.
  */
 function calcPathTransform(path, d, yscale, colWidth) {
-    const pathBBox = path.getBBox();
+  const pathBBox = path.getBBox();
 
-    /**
-    * calculate scale factor based on height
-    * of bounding "rectangle" (imagine a stacked bar chart)
-    */
-    const rectHeight = yscale(d[1] - d[0]);
-    const rectWidth = colWidth;
+  /**
+   * calculate scale factor based on height
+   * of bounding "rectangle" (imagine a stacked bar chart)
+   */
+  const rectHeight = yscale(d[1] - d[0]);
+  const rectWidth = colWidth;
 
-    const scaleY = rectHeight / pathBBox.height;
-    const scaleX = rectWidth / pathBBox.width;
+  const scaleY = rectHeight / pathBBox.height;
+  const scaleX = rectWidth / pathBBox.width;
 
-    // transform to origin so scaling behaves as desired
-    const originX = pathBBox.x;
-    const originY = pathBBox.y;
+  // transform to origin so scaling behaves as desired
+  const originX = pathBBox.x;
+  const originY = pathBBox.y;
 
-    /**
-    * base transform required by font->path conversion
-    * (see getLetterBaseTransform comment)
-    */
-    const baseTransforms = getLetterBaseTransform(d[2]);
-    const baseTransformX = baseTransforms[0];
-    const baseTransformY = baseTransforms[1];
+  /**
+   * base transform required by font->path conversion
+   * (see getLetterBaseTransform comment)
+   */
+  const baseTransforms = getLetterBaseTransform(d[2]);
+  const baseTransformX = baseTransforms[0];
+  const baseTransformY = baseTransforms[1];
 
-    // apply scale in reverse to post-scale transforms
-    const postTY = (yscale(d[0]) / scaleY) + (baseTransformY / scaleY);
-    const postTX = baseTransformX / scaleX;
+  // apply scale in reverse to post-scale transforms
+  const postTY = (yscale(d[0]) / scaleY) + (baseTransformY / scaleY);
+  const postTX = baseTransformX / scaleX;
 
-    // pre-scale transforms
-    const preTX = -originX * (scaleX - 1);
-    const preTY = -originY * (scaleY - 1);
+  // pre-scale transforms
+  const preTX = -originX * (scaleX - 1);
+  const preTY = -originY * (scaleY - 1);
 
-    const out = `translate(${preTX},${preTY}) scale(${scaleX},${scaleY}) translate(${postTX},${postTY})`;
+  const out = `translate(${preTX},${preTY}) scale(${scaleX},${scaleY}) translate(${postTX},${postTY})`;
 
-    return out;
+  return out;
 }
 
 /**
@@ -183,24 +203,24 @@ function calcPathTransform(path, d, yscale, colWidth) {
  * @returns {boolean} true/false - does the data conform?
  */
 function isValidData(data, seqLenBounds, seqNumBounds) {
-    const n = data.length;
+  const n = data.length;
 
-    if (n > seqNumBounds[1] || n < seqNumBounds[0]) {
-        return false;
-    }
-    const m0 = d3.min(data, d => d.length);
-    const m1 = d3.max(data, d => d.length);
+  if (n > seqNumBounds[1] || n < seqNumBounds[0]) {
+    return false;
+  }
+  const m0 = d3.min(data, d => d.length);
+  const m1 = d3.max(data, d => d.length);
 
-    if (m0 !== m1) {
-        return false;
-    }
-    // m == m0 == m1
-    const m = m0;
+  if (m0 !== m1) {
+    return false;
+  }
+  // m == m0 == m1
+  const m = m0;
 
-    if (m > seqLenBounds[1] || m < seqLenBounds[0]) {
-        return false;
-    }
-    return true;
+  if (m > seqLenBounds[1] || m < seqLenBounds[0]) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -211,16 +231,16 @@ function isValidData(data, seqLenBounds, seqNumBounds) {
  */
 
 function intToLetter(i) {
-    if (i === 0) {
-        return 'A';
-    } else if (i === 1) {
-        return 'C';
-    } else if (i === 2) {
-        return 'G';
-    } else if (i === 3) {
-        return 'T';
-    }
-    return null;
+  if (i === 0) {
+    return 'A';
+  } else if (i === 1) {
+    return 'C';
+  } else if (i === 2) {
+    return 'G';
+  } else if (i === 3) {
+    return 'T';
+  }
+  return null;
 }
 
 /**
@@ -233,7 +253,7 @@ function intToLetter(i) {
  * @returns {number}
  */
 function getRandomInt(min, max) {
-    return Math.floor(Math.random() * ((max - min) + 1)) + min;
+  return Math.floor(Math.random() * ((max - min) + 1)) + min;
 }
 
 
@@ -250,22 +270,22 @@ function getRandomInt(min, max) {
  * @returns {string[]} seqData
  */
 function getRandomData(seqLenBounds, seqNumBounds) {
-    const seqLen = getRandomInt(seqLenBounds[0], seqLenBounds[1]);
-    const seqNum = getRandomInt(seqNumBounds[0], seqNumBounds[1]);
+  const seqLen = getRandomInt(seqLenBounds[0], seqLenBounds[1]);
+  const seqNum = getRandomInt(seqNumBounds[0], seqNumBounds[1]);
 
-    const seqData = [];
+  const seqData = [];
 
-    for (let i = 0; i < seqNum; i += 1) {
-        const thisSeq = [];
-        for (let j = 0; j < seqLen; j += 1) {
-            // upper bound is inclusive (getRandomInt)
-            const newLetter = intToLetter(getRandomInt(0, 3));
-            thisSeq.push(newLetter);
-        }
-        seqData.push(thisSeq.join(''));
+  for (let i = 0; i < seqNum; i += 1) {
+    const thisSeq = [];
+    for (let j = 0; j < seqLen; j += 1) {
+      // upper bound is inclusive (getRandomInt)
+      const newLetter = intToLetter(getRandomInt(0, 3));
+      thisSeq.push(newLetter);
     }
+    seqData.push(thisSeq.join(''));
+  }
 
-    return seqData;
+  return seqData;
 }
 
 /**
@@ -276,142 +296,149 @@ function getRandomData(seqLenBounds, seqNumBounds) {
  * @param {number[]} seqNumBounds
  */
 function entryPoint(logoSelector, PWM) {
-    // number of sequences
-    let n = 0;
-    PWM.forEach((pwm) => {
-        n = Math.max(n, Math.max(...pwm));
-    });
+  // skipping error checking for now
+  // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
+  //
+  // if (!isValid) {
+  //   return;
+  // }
 
-    // number of nucleotides per sequence
-    const m = PWM.length;
+  // number of sequences
+  let n = 0;
+  PWM.forEach(pwm => {
+      n = Math.max(n, Math.max(...pwm));
+  });
 
-    // range of (pwm)ter bounds at each nucleotide index position
-    const yz = d3.range(m).map(i => offsets(PWM[i], n));
+  // number of nucleotides per sequence
+  const m = PWM.length;
 
-    /**
-    * Next, we set local values that govern visual appearance.
-    *
-    * We define width/height here, rather than in the HTML,
-    * so one can easily switch the code to modify svg size
-    * based on the data if desired.
-    */
+  // range of letter bounds at each nucleotide index position
+  const yz = d3.range(m).map(i => offsets(PWM[i],n));
 
-    // width including endpoint markers
-    const svgFullWidth = 550;
+  /**
+   * Next, we set local values that govern visual appearance.
+   *
+   * We define width/height here, rather than in the HTML,
+   * so one can easily switch the code to modify svg size
+   * based on the data if desired.
+   */
 
-    // width of just the base letters + x-axis labels
-    const svgLetterWidth = 500;
+  // width including endpoint markers
+  const svgFullWidth = 550;
 
-    const endpointWidth = (svgFullWidth - svgLetterWidth) / 2;
+  // width of just the base letters + x-axis labels
+  const svgLetterWidth = 500;
 
-    // height including x-axis labels and endpoint markers
-    const svgFullHeight = 180;
-    const svgFullHeightWithMargin = 200;
+  const endpointWidth = (svgFullWidth - svgLetterWidth) / 2;
 
-    // height of just the base letters
-    const svgLetterHeight = 150;
+  // height including x-axis labels and endpoint markers
+  const svgFullHeight = 180;
+  const svgFullHeightWithMargin = 200;
 
-    function colors(i) {
-        if (i === 0) {
-            return '#489655';
-        } else if (i === 1) {
-            return '#335C95';
-        } else if (i === 2) {
-            return '#EFB549';
-        } else if (i === 3) {
-            return '#C13B42';
-        }
-        return null;
+  // height of just the base letters
+  const svgLetterHeight = 150;
+
+  function colors(i){
+    if (i === 0) {
+      return '#489655';
+    } else if (i === 1) {
+      return '#335C95';
+    } else if (i === 2) {
+      return '#EFB549';
+    } else if (i === 3) {
+      return '#C13B42';
     }
+    return null;
+  }
 
-    // map: sequence length -> innerSVG
-    const xscale = d3.scaleLinear().domain([0, m])
-        .range([endpointWidth, svgLetterWidth + endpointWidth]);
+  // map: sequence length -> innerSVG
+  const xscale = d3.scaleLinear().domain([0, m])
+    .range([endpointWidth, svgLetterWidth + endpointWidth]);
 
-    // get one unit of width from d3 scale (convenience)
-    const colWidth = (xscale(1) - xscale(0));
+  // get one unit of width from d3 scale (convenience)
+  const colWidth = (xscale(1) - xscale(0));
 
-    // map: number of sequences -> svg letter height
-    const yscale = d3.scaleLinear().domain([0, n]).range([0, svgLetterHeight]);
+  // map: number of sequences -> svg letter height
+  const yscale = d3.scaleLinear().domain([0, n]).range([0, svgLetterHeight]);
 
-    const svg = d3.select(logoSelector)
-        .append('svg')
-        .attr('width', svgFullWidth)
-        .attr('height', svgFullHeight)
-        .attr('viewBox', `0 0 ${svgFullWidth} ${svgFullHeightWithMargin}`)
-        .attr('preserveAspectRation', 'xMidYMid meet')
-        .append('g')
-        .attr('transform', 'translate(0, 10)');
+  const svg = d3.select(logoSelector)
+    .append('svg')
+    .attr('width', svgFullWidth)
+    .attr('height', svgFullHeight)
+    .attr('viewBox','0 0 '+svgFullWidth+' '+svgFullHeightWithMargin)
+    .attr('preserveAspectRation','xMidYMid meet')
+    .append('g')
+    .attr('transform', 'translate(0, 10)');
 
-    const endptFontSize = 20;
+  const endptFontSize = 20;
 
-    const endptTY = (svgFullHeight + svgLetterHeight) / 2;
+  const endptTY = (svgFullHeight + svgLetterHeight) / 2;
 
-    // Attach left endpoint to SVG
-    svg.append('text')
-        .text('5\'')
-        .style('text-anchor', 'begin')
-        .style('font-size', endptFontSize)
-        .attr('transform', `translate(0,${endptTY + 10})`);
+  // Attach left endpoint to SVG
+  svg.append('text')
+    .text('5\'')
+    .style('text-anchor', 'begin')
+    .style('font-size', endptFontSize)
+    .attr('transform', `translate(0,${endptTY + 10})`);
 
-    // Attach right endpoint to SVG
-    svg.append('text')
-        .text('3\'')
-        .style('text-anchor', 'end')
-        .style('font-size', endptFontSize)
-        .attr('transform', `translate(${svgFullWidth},${endptTY + 10})`);
+  // Attach right endpoint to SVG
+  svg.append('text')
+    .text('3\'')
+    .style('text-anchor', 'end')
+    .style('font-size', endptFontSize)
+    .attr('transform', `translate(${svgFullWidth},${endptTY + 10})`);
 
-    // Add the y axis
-    const y = d3.scaleLinear().range([svgLetterHeight, 0]);
-    y.domain([0, 2]);
-    svg.append('g')
-        .call(d3.axisLeft(y)
-            .ticks(4));
+  // Add the y axis
+  let y = d3.scaleLinear().range([svgLetterHeight, 0]);
+  y.domain([0, 2]);
+  svg.append("g")
+    .call(d3.axisLeft(y)
+    .ticks(4));
 
-    // text label for the y axis
-    svg.append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', -65)
-        .attr('x', 0 - (svgFullHeight / 2))
-        .attr('dy', '1em')
-        .style('text-anchor', 'middle')
-        .style('font-size', endptFontSize)
-        .text('Bits');
+  // text label for the y axis
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', -65)
+    .attr('x',0 - (svgFullHeight / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .style('font-size', endptFontSize)
+    .text('Bits');
 
 
-    /**
+  /**
    * Our groups are organized by columns--
    * each column gets an SVG group.
    *
    * The column is used to neatly handle all x-offsets and labels.
    */
-    const group = svg.selectAll('group')
-        .data(yz)
-        .enter()
-        .append('g')
-        .attr('class', 'column')
-        .attr('transform', (d, i) => `translate(${xscale(i)},0)`);
+  const group = svg.selectAll('group')
+    .data(yz)
+    .enter()
+    .append('g')
+    .attr('class', 'column')
+    .attr('transform', (d, i) => `translate(${xscale(i)},0)`);
 
-    /**
-    * Attach the number labels to the x-axis.
-    *
-    * A possible modification is to make xLabelFontSize
-    * data-dependent. As written its position will change
-    * with the column width (# of nucleotides), so
-    * visually it will look fine, but it may be
-    * desirable to alter font size as well.
-    */
-    const xLabelFontSize = 20;
-    const xLabelTX = (colWidth / 2) + (xLabelFontSize / 3);
-    const xLabelTY = svgLetterHeight + 10;
+  /**
+   * Attach the number labels to the x-axis.
+   *
+   * A possible modification is to make xLabelFontSize
+   * data-dependent. As written its position will change
+   * with the column width (# of nucleotides), so
+   * visually it will look fine, but it may be
+   * desirable to alter font size as well.
+   */
+  const xLabelFontSize = 20;
+  const xLabelTX = (colWidth / 2) + (xLabelFontSize / 3);
+  const xLabelTY = svgLetterHeight + 10;
 
-    group.append('text')
-        .text((d, i) => `${i + 1}`)
-        .style('font-size', xLabelFontSize)
-        .style('text-anchor', 'end')
-        .attr('transform', `translate(${xLabelTX}, ${xLabelTY}) rotate(270)`);
+  group.append('text')
+    .text((d, i) => `${i + 1}`)
+    .style('font-size', xLabelFontSize)
+    .style('text-anchor', 'end')
+    .attr('transform', `translate(${xLabelTX}, ${xLabelTY}) rotate(270)`);
 
-    /*
+  /*
    * For each column (group):
    *  Add the letter (represented as an SVG path, see above)
    *  if the calculated height is nonzero (the filter condition).
@@ -424,14 +451,14 @@ function entryPoint(logoSelector, PWM) {
    *  to the DOM. This filtering could optionally be performed
    *  earlier, when we build yz.
    */
-    group.selectAll('path')
-        .data(d => d)
-        .enter()
-        .filter(d => (d[1] - d[0] > 0))
-        .append('path')
-        .attr('d', d => getLetterPath(d[2]))
-        .style('fill', d => colors(d[2]))
-        .attr('transform', d => calcPathTransform(this, d, yscale, colWidth));
+  group.selectAll('path')
+    .data(d => d)
+    .enter()
+    .filter(d => (d[1] - d[0] > 0))
+    .append('path')
+    .attr('d', d => getLetterPath(d[2]))
+    .style('fill', d => colors(d[2]))
+    .attr('transform', function (d) { return calcPathTransform(this, d, yscale, colWidth); });
 }
 
 /**
@@ -441,16 +468,16 @@ function entryPoint(logoSelector, PWM) {
  * @param {number[]} seqNumBounds
  */
 function refreshSVG(seqLenBounds, seqNumBounds) {
-    const sequenceData = getRandomData(seqLenBounds, seqNumBounds);
+  const sequenceData = getRandomData(seqLenBounds, seqNumBounds);
 
-    // clear SVG if it exists
-    const svg = d3.select('svg');
+  // clear SVG if it exists
+  const svg = d3.select('svg');
 
-    if (svg) {
-        svg.remove();
-    }
+  if (svg) {
+    svg.remove();
+  }
 
-    entryPoint(sequenceData, seqLenBounds, seqNumBounds);
+  entryPoint(sequenceData, seqLenBounds, seqNumBounds);
 }
 
 module.exports.entryPoint = entryPoint;
