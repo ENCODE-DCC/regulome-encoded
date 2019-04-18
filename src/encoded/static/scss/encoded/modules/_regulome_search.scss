@@ -9,8 +9,12 @@ body {
 .navbar-inverse {
     .nav {
         li {
+            .solitary-link {
+                padding: 14px 15px 10px;
+                line-height: unset;
+            }
             button {
-                padding-top: 16px;
+                padding: 14px 15px 10px;
             }
             &:hover {
                 cursor: pointer;
@@ -362,7 +366,7 @@ a {
     -webkit-box-shadow: 0 0 6px 0 #333;
     -moz-box-shadow: 0 0 6px 0 #333;
     box-shadow: 0 0 6px 0 #333;
-    height: 50px;
+    height: 47px;
 }
 
 .auth0-lock-header-logo {
@@ -530,7 +534,8 @@ table {
 }
 
 .facet-term__text {
-    max-width: 50%;
+    max-width: 42%;
+    flex: 1;
 }
 
 .facet-term__bar {

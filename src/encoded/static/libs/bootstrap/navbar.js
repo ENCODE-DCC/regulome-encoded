@@ -128,13 +128,9 @@ export const NavItem = (props) => {
 
     if (props.children === null) {
         return (
-            <li className="dropdown linked-toggle">
+            <li className="dropdown">
                 {dropdownTitle ?
-                    <button
-                        className="dropdown-toggle"
-                    >
-                        <a href="/regulome-help/">{dropdownTitle}</a>
-                    </button>
+                    <a className="solitary-link" href="/regulome-help/">{dropdownTitle}</a>
                 : null}
             </li>
         );
