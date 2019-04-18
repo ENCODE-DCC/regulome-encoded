@@ -9,7 +9,6 @@ import * as globals from './globals';
 import { DbxrefList } from './dbxref';
 import { FetchedItems } from './fetched';
 import { FileGallery } from './filegallery';
-import { CartToggle } from './cart';
 import { ProjectBadge } from './image';
 import { Breadcrumbs } from './navigation';
 import { singleTreatment, AlternateAccession, DisplayAsJson, InternalTags } from './objectutils';
@@ -421,9 +420,6 @@ class ExperimentComponent extends React.Component {
                         <h2>Experiment summary for {context.accession}</h2>
                         <AlternateAccession altAcc={context.alternate_accessions} />
                         <Supersede context={context} />
-                        <div className="cart__toggle--header">
-                            <CartToggle element={context} />
-                        </div>
                         <DisplayAsJson />
                         {this.props.auditIndicators(context.audit, 'experiment-audit', { session: this.context.session })}
                     </div>

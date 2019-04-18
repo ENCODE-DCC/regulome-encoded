@@ -131,7 +131,16 @@ def includeme(config):
     config.scan(__name__)
     config.add_route('_regionindexer_state', '/_regionindexer_state')
     registry = config.registry
-    registry['region' + INDEXER] = RegionIndexer(registry)
+    is_region_indexer = registry.settings.get('regionindexer')
+    if is_region_indexer:
+        registry['region'+INDEXER] = RegionIndexer(registry)
+
+def tsvreader(file):
+    reader = csv.reader(file, delimiter='\t')
+    for row in reader:
+        yield row
+
+# Mapping should be generated dynamically for each assembly type
 
 
 # Region mapping: index: chr*, doc_type: assembly, _id=uuid
@@ -630,6 +639,18 @@ class RegionIndexer(Indexer):
         # WARNING: updating 'state' could lead to race conditions if more than 1 worker
         self.state = RegionIndexerState(self.encoded_es, self.encoded_INDEX)
         self.reader = RemoteReader()
+
+    def update_objects(self, request, uuids, force):
+        # pylint: disable=too-many-arguments, unused-argument
+        '''Run indexing process on uuids'''
+        errors = []
+        for i, uuid in enumerate(uuids):
+            error = self.update_object(request, uuid, force)
+            if error is not None:
+                errors.append(error)
+            if (i + 1) % 1000 == 0:
+                log.info('Indexing %d', i + 1)
+        return errors
 
     def update_object(self, request, dataset_uuid, force):
         request.datastore = 'elasticsearch'  # Let's be explicit

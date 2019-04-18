@@ -303,16 +303,19 @@
             "title": "Target(s) of assay"
         },
          "targets.label": {
-            "title": "Target(s) of assay"
+            "title": "Target(s) of assay",
+            "type": "typeahead"
         },
        "biosample_ontology.classification": {
             "title": "Biosample type"
         },
         "biosample_ontology.organ_slims": {
-            "title": "Organ"
+            "title": "Organ",
+            "type": "typeahead"
         },
         "biosample_ontology.cell_slims": {
-            "title": "Cell"
+            "title": "Cell",
+            "type": "typeahead"
         },
         "relevant_life_stage": {
             "title": "Life stage"
