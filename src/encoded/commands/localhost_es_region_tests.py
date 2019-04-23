@@ -84,10 +84,13 @@ end = 0
 start_cond = {'lte': end}
 end_cond = {'gte': start}
 SEARCH_MAX = 99999
+
+query_tim = {
+    'query': {
+        'bool': {
             'filter': {
+                'nested': {
                     'inner_hits': { 'size': SEARCH_MAX },
-=======
->>>>>>> REG-72 some timing
                     'path': 'positions',
                     'query': {
                         'bool': {
