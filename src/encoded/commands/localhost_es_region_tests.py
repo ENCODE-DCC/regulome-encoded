@@ -78,12 +78,14 @@ start = 0
 end = 0
 start_cond = {'lte': end}
 end_cond = {'gte': start}
+SEARCH_MAX = 99999
 
 query_tim = {
     'query': {
         'bool': {
             'filter': {
                 'nested': {
+                    'inner_hits': { 'size': SEARCH_MAX },
                     'path': 'positions',
                     'query': {
                         'bool': {
@@ -101,7 +103,7 @@ query_tim = {
             }
         }
     },
-    'size': 99999,
+    'size': SEARCH_MAX,
     '_source': False,  # True is snps, False if regions
 }
 
@@ -110,6 +112,7 @@ query_filter = {
         'bool': {
             'filter': {
                 'nested': {
+                    'inner_hits': { 'size': SEARCH_MAX },
                     'path': 'positions',
                     'query': {
                         'bool': {
@@ -123,13 +126,14 @@ query_filter = {
             }
         }
     },
-    'size': 99999,
+    'size': SEARCH_MAX,
     '_source': False,
 }
 
 query_no_filter = {
     'query': {
         'nested': {
+            'inner_hits': { 'size': SEARCH_MAX },
             'path': 'positions',
             'query': {
                 'bool': {
@@ -141,13 +145,14 @@ query_no_filter = {
             }
         }
     },
-    'size': 99999,
+    'size': SEARCH_MAX,
     '_source': False,
 }
 
 query_no_filter_with_uuid = {
     'query': {
         'nested': {
+            'inner_hits': { 'size': SEARCH_MAX },
             'path': 'positions',
             'query': {
                 'bool': {
@@ -159,7 +164,7 @@ query_no_filter_with_uuid = {
             }
         }
     },
-    'size': 99999,
+    'size': SEARCH_MAX,
     '_source': 'uuid',
 }
 
@@ -172,26 +177,35 @@ query_dict = {
 for label, query in query_dict.items():
     python_time = 0
     es_time = 0
+    tot_time = 0
     print('Clear all caches:', requests.post(clear_cache_url))
+    print("Rsid\tChr\tes_time\tnHits")
     for rsid, (chrom, start, end) in test_snp_dict.items():
         for i in range(n):
+            es_time = 0
             start_cond['lte'] = end
             end_cond['gte'] = start
             begin = time.time()
             res = requests.get(test_url.format(chrom), json=query).json()
             python_time += time.time() - begin
-            es_time += res['took']
-            # print(res['hits']['total'])
+            es_time = res['took']
+            tot_time += es_time
+            print('{rs}\t{ch}\t{time:4.2f}\t{nhit:5d}'.format(
+             rs=rsid, 
+             ch=chrom,
+             time=es_time,
+             nhit=len(res['hits']['hits'])))
     print(
-        'Average python time {} (ms): {}'.format(
+        '### Average python time {} (ms): {}'.format(
             label,
             1000*python_time/(n*len(test_snp_dict))
         )
     )
     print(
-        'Average elasticsearch time {} (ms): {}'.format(
+        '### Average elasticsearch time {} (ms): {}'.format(
             label,
-            es_time/(n*len(test_snp_dict))
+            tot_time/(n*len(test_snp_dict))
         )
     )
-    print(len(res['hits']['hits']))
+    import pprint
+    pprint.pprint(res['hits'])
