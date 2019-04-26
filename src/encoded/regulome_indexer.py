@@ -135,6 +135,10 @@ def includeme(config):
     if is_region_indexer:
         registry['region'+INDEXER] = RegionIndexer(registry)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> initial inversions
 def tsvreader(file):
     reader = csv.reader(file, delimiter='\t')
     for row in reader:
@@ -147,27 +151,23 @@ def tsvreader(file):
 def get_chrom_index_mapping(assembly_name='hg19'):
     return {
         assembly_name: {
-            '_all': {
-                'enabled': False
-            },
             '_source': {
                 'enabled': True
             },
+            # could eventually index biological metadata here
             'properties': {
                 'uuid': {
                     'type': 'keyword'  # WARNING: to add local files this must be 'type': 'string'
                 },
-                'positions': {
-                    'type': 'nested',
-                    'properties': {
-                        'start': {
-                            'type': 'long'
-                        },
-                        'end': {
-                            'type': 'long'
-                        }
-                    }
-                }
+                'coordinates': {
+                    'type': 'integer_range'
+                },
+                'strand': {
+                    'type': 'string'  # + - .
+                },
+                'value': {
+                    'type': 'string'  # some signal value
+                },
             }
         }
     }
@@ -342,9 +342,15 @@ class RemoteReader(object):
 
     @staticmethod
     def region(row):
-        '''Read a region from an in memory row and returns chrom and document to index.'''
+        '''Read a region from an in memory row and returns chrom and document to index.
+           Extend this to get store and strand properties, although the bed files vary by type
+        '''
         chrom, start, end = row[0], int(row[1]), int(row[2])
-        return (chrom, {'start': start + 1, 'end': end})  # bed loc 'half-open', but we close it !
+        return (chrom, {
+                        'gte': start + 1, 
+                        'lte': end
+                    }
+                )  # bed loc 'half-open', but we close it !
 
     @staticmethod
     def snp(row):
@@ -945,20 +951,21 @@ class RegionIndexer(Indexer):
         for chrom in list(regions.keys()):
             if len(regions[chrom]) == 0:
                 continue
-            doc = {
-                'uuid': uuid,
-                'positions': regions[chrom]
-            }
-            chrom_lc = chrom.lower()
-            # Could be a chrom never seen before!
-            if not self.regions_es.indices.exists(chrom_lc):
-                self.regions_es.indices.create(index=chrom_lc, body=index_settings())
+            for peak in regions[chrom]:
+                doc = {
+                    'uuid': uuid,
+                    'coordinates': peak
+                }
+                chrom_lc = chrom.lower()
+                # Could be a chrom never seen before!
+                if not self.regions_es.indices.exists(chrom_lc):
+                    self.regions_es.indices.create(index=chrom_lc, body=index_settings())
 
-            if not self.regions_es.indices.exists_type(index=chrom_lc, doc_type=assembly):
-                mapping = get_chrom_index_mapping(assembly)
-                self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
+                if not self.regions_es.indices.exists_type(index=chrom_lc, doc_type=assembly):
+                    mapping = get_chrom_index_mapping(assembly)
+                    self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
 
-            self.regions_es.index(index=chrom_lc, doc_type=assembly, body=doc, id=uuid)
+                self.regions_es.index(index=chrom_lc, doc_type=assembly, body=doc, id=uuid)
             file_doc['chroms'].append(chrom)
 
         return True
@@ -1035,6 +1042,7 @@ class RegionIndexer(Indexer):
                     if chrom not in SUPPORTED_CHROMOSOMES:
                         continue   # TEMPORARY: limit both SNPs and regions to major chroms
                     if chrom not in file_data:
+                        # we are done with current chromosome and move on
                         # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
                         if big_file and file_data and len(chroms) > 0:
                             if snp_set:
