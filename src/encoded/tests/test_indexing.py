@@ -115,7 +115,7 @@ def test_indexing_workbook(testapp, indexer_testapp):
 
     res = indexer_testapp.post_json('/index_region', {'record': True})
     assert res.json['cycle_took']
-    assert res.json['title'] == 'region_indexer'
+    assert res.json['title'] == 'regulome_indexer'
     assert res.json['indexed'] > 0
 
     res = testapp.get('/search/?type=Biosample')
@@ -165,9 +165,9 @@ def test_indexer_region_state(dummy_request):
     from encoded.regulome_indexer import RegionIndexerState
     INDEX = dummy_request.registry.settings['snovault.elasticsearch.index']
     es = dummy_request.registry['elasticsearch']
-    state = RegionIndexerState(es,INDEX)
+    state = RegionIndexerState(es, INDEX)
     result = state.get_initial_state()
-    assert result['title'] == 'region_indexer'
+    assert result['title'] == 'regulome_indexer'
     assert result['status'] == 'idle'
     display = state.display()
     assert 'files_added' in display
