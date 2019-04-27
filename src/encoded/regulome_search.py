@@ -19,7 +19,7 @@ from snovault.helpers.helper import (
     set_facets
 )
 from .batch_download import get_peak_metadata_links
-from .region_atlas import RegulomeAtlas
+from .regulome_atlas import RegulomeAtlas
 from .vis_defines import (
     vis_format_url
 )

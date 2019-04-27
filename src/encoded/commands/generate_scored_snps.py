@@ -6,7 +6,7 @@ from ..region_indexer import (
     SUPPORTED_CHROMOSOMES,
     REGULOME_SUPPORTED_ASSEMBLIES
 )
-from ..region_atlas import (
+from ..regulome_atlas import (
     RegulomeAtlas
 )
 

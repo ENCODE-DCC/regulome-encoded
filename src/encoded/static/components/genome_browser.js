@@ -61,7 +61,7 @@ function rAssemblyToSources(assembly, region) {
 
     if (region) {
         // console.log('region provided: %s', region);
-        // if a region was set (in region_search or regulome_search), then
+        // if a region was set (in regulome_search), then
         // parse the 'chr:start-end' format and set the browser window at the region
         const reg = region.split(':');
         browserCfg.chr = reg[0].substring(3, reg[0].length);

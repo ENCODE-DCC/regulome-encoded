@@ -15,7 +15,7 @@ a) peaks that intersect
 b) file uuids that define those peaks and a small object containing minimal file details including dataset uuid
 c) experments with facets ("aggegrations" in ES lingo) that those files belong to (via a secondary query on list of files).
 
-This region_search API is in src/encode/region_search.py, which calls into region_atlas.py which encapsulates access to the region_index.
+This regulome_search API is in src/encode/regulome_search.py, which calls into regulome_atlas.py which encapsulates access to the region_index.
 The process by which the BED files get into Elasticsearch is handled by the "region indexer" system.
 
 
@@ -23,10 +23,10 @@ Regulome-Search
 ---------------
 
 Access to the RegulomeDB feature is through the URL regulome-search/ (in production: https://www.encodeproject.org/regulome-search).
-This is near identical to region-search and is served by the same function defined in region_search.py.
-The set of files that are indexed for regulome and region_search are not identical but are overlapping.
+This is near identical to region-search and is served by the same function defined in regulome_search.py.
+The set of files that are indexed for regulome and regulome_search are not identical but are overlapping.
 Regulome is primarily focuses on SNPs and calculates a 'regulome score' for each single-base position, based on the types of regions the SNP intersects.
-Most of the subtle differences between region and regulome are defined in the two classes RegionAtlas and RegulomeAtlas found in region_atlas.py.
+Most of the subtle differences between region and regulome are defined in the two classes RegionAtlas and RegulomeAtlas found in regulome_atlas.py.
 
 Automatic Region Indexing
 -----------------------

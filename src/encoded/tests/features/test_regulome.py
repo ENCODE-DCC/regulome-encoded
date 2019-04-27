@@ -77,7 +77,7 @@ def test_regulome_summary(testapp, workbook):
     ('Invalid query term ', None, False),
 ])
 def test_get_coordinate(query_term, expected, valid):
-    from encoded.region_search import get_coordinate
+    from encoded.regulome_search import get_coordinate
     if valid:
         assert get_coordinate(query_term) == expected
     else:
