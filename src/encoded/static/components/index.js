@@ -36,7 +36,7 @@ require('./blocks');
 require('./user');
 require('./schema');
 require('./summary');
-require('./region_search');
+require('./regulome_search');
 require('./regulome_summary');
 require('./auditmatrix');
 require('./gene');
