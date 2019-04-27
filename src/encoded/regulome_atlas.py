@@ -8,7 +8,7 @@ from elasticsearch.exceptions import (
 )
 from snovault.elasticsearch.indexer_state import SEARCH_MAX
 
-from .region_indexer import (
+from .regulome_indexer import (
     snp_index_key,
     RESIDENT_REGIONSET_KEY,
     FOR_REGULOME_DB,

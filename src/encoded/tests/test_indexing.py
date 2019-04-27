@@ -162,7 +162,7 @@ def test_indexer_vis_state(dummy_request):
 
 
 def test_indexer_region_state(dummy_request):
-    from encoded.region_indexer import RegionIndexerState
+    from encoded.regulome_indexer import RegionIndexerState
     INDEX = dummy_request.registry.settings['snovault.elasticsearch.index']
     es = dummy_request.registry['elasticsearch']
     state = RegionIndexerState(es,INDEX)

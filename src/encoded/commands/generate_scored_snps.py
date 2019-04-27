@@ -2,7 +2,7 @@ from pyramid.paster import get_app
 import logging
 import json
 import time  # DEBUG: timing
-from ..region_indexer import (
+from ..regulome_indexer import (
     SUPPORTED_CHROMOSOMES,
     REGULOME_SUPPORTED_ASSEMBLIES
 )
