@@ -951,7 +951,7 @@ class RegionIndexer(Indexer):
         for chrom in list(regions.keys()):
             if len(regions[chrom]) == 0:
                 continue
-            for peak in regions[chrom]:
+            for idx, peak in enumerate(regions[chrom]):
                 doc = {
                     'uuid': uuid,
                     'coordinates': peak
@@ -965,7 +965,7 @@ class RegionIndexer(Indexer):
                     mapping = get_chrom_index_mapping(assembly)
                     self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
 
-                self.regions_es.index(index=chrom_lc, doc_type=assembly, body=doc, id=uuid)
+                self.regions_es.index(index=chrom_lc, doc_type=assembly, body=doc, id=uuid+'-'+str(idx))
             file_doc['chroms'].append(chrom)
 
         return True
