@@ -963,7 +963,7 @@ class RegionIndexer(Indexer):
         for chrom in list(regions.keys()):
             if len(regions[chrom]) == 0:
                 continue
-            for peak in regions[chrom]:
+            for idx, peak in enumerate(regions[chrom]):
                 doc = {
                     'uuid': uuid,
                     'coordinates': peak
