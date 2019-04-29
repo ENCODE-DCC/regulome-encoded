@@ -11,7 +11,7 @@ notifications:
 addons:
   apt:
     packages:
-      - oracle-java8-set-default
+      - oracle-java9-set-default
       - bsdtar
       - graphviz
       - redis-server
@@ -22,7 +22,7 @@ env:
     - secure: |-
         L8ACkdNWn1dg8GzEpJUbyKuEW+Ovek8bq8/sy//NySxh79UnXwcrU1Z2INmsnx16F7xKA1UuIRMeGciKq7N603QrPhNxZ/r4f1R4ifryFkiZcnpFBw+X5iXNByAY1gHDdm8ZlINE9ST/yEZLV7IbBkg5LSHElKCPG+Ncww8EAC0QJWnn34D6YiROjdc+WfRgyQyiktP7s8VwYuHm/XugydTjGxr6B4Jt8l9Edm/WuOlj3U98ioRG2ZSXUYNHdkf5uCeOADujbjvhAfPZq0uHWf22Mmh0Q5fL8H9dRayiZcIik03VNpDV1+20Urjz55GuUILikRzquavp0uATDeqi9sGvUbjnCeOuNnWfNnw7FjFTjO8/yqce/VlOYWsoFSE4sTFgIDr+k/lx28pYftHcfLq96KRdppEcrOagwQSHpKCRgJ1HetJWmF0YBU054bZFdPy7BlI3ixtEhSJQCOPCZ0vf4rd5OyzE2/uhEmC/9D8gbXdfYySDRLAIEIzwgZQr0xLQhDLK2HJYqRsKEz3FqR29JfAqAWxtYgKBEy4tPj8GJclh4xoFV+V4FbVN557HbMa8Pm21pza1XamfUSZ1pwHIWCJoRQ/kqRC2vKWwkHPT5jFTXQypvLUrNs88zluDK2Bzlu5mUO8iVxyS1xMHaXrsrFcMFUA+Hu4d/tebcpA=
     - BOTO_CONFIG=tmp/bogusvalue
-    - JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    - JAVA_HOME=/usr/lib/jvm/java-9-oracle
     - ES_VERSION=5.6.1
     - ES_DOWNLOAD_URL=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VERSION}.deb
     - PATH="/usr/share/elasticsearch/bin:/usr/lib/postgresql/9.3/bin:$PATH"
