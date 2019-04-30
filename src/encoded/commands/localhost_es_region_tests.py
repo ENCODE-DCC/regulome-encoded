@@ -192,7 +192,7 @@ def main():
                          ch=chrom,
                          time=es_time,
                          nhit=nhits))
-                        #pprint.pprint(res.get('hits', ""), indent=4)
+                        pprint.pprint(res.get('hits', ""), indent=4)
                 except KeyError:
                     print("query failed: {}".format(res['error']['reason']))
         print(
