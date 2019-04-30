@@ -4,6 +4,7 @@
 import time
 
 import requests
+import pprint
 
 n = 1
 test_snp_dict = {'rs4385801': ('chr10', 127511789, 127511790),
@@ -70,7 +71,11 @@ test_snp_dict = {'rs4385801': ('chr10', 127511789, 127511790),
                  'rs112631212': ('chr19', 12996928, 12996929),
                  'rs10407416': ('chr19', 12997732, 12997733),
                  'rs3817621': ('chr19', 12998204, 12998205),
-                 'rs11101993': ('chr1', 110269187, 110269188)}
+                 'rs11101993': ('chr1', 110269187, 110269188),
+                 'test1':  ('chr10', 11741181, 11741181),
+                 'test2': ('chr10', 64353900, 64353900),
+                 'test3': ('chr1', 39492462, 39492462),
+                 }
 
 test_url = 'http://localhost:9201/{}/_search'
 clear_cache_url = 'http://localhost:9201/_cache/clear'
@@ -109,25 +114,11 @@ query_tim = {
 
 query_filter = {
     'query': {
-        'bool': {
-            'filter': {
-                'nested': {
-                    'inner_hits': { 'size': SEARCH_MAX },
-                    'path': 'positions',
-                    'query': {
-                        'bool': {
-                            'must': [
-                                {'range': {'positions.start': start_cond}},
-                                {'range': {'positions.end': end_cond}},
-                            ]
-                        }
-                    }
-                }
+        'term': {
+            'coordinates': {
             }
         }
-    },
-    'size': SEARCH_MAX,
-    '_source': False,
+    }
 }
 
 query_no_filter = {
@@ -177,7 +168,7 @@ query_dict = {
 
 
 def main():
-    for label, query in query_dict.items():
+    for label, query in {'Filter': query_filter}.items():
         python_time = 0
         es_time = 0
         tot_time = 0
@@ -186,18 +177,24 @@ def main():
         for rsid, (chrom, start, end) in test_snp_dict.items():
             for i in range(n):
                 es_time = 0
-                start_cond['lte'] = end
-                end_cond['gte'] = start
+                #start_cond['lte'] = end
+                query['query']['term']['coordinates']['value'] = end
                 begin = time.time()
                 res = requests.get(test_url.format(chrom), json=query).json()
                 python_time += time.time() - begin
-                es_time = res['took']
-                tot_time += es_time
-                print('{rs}\t{ch}\t{time:4.2f}\t{nhit:5d}'.format(
-                    rs=rsid, 
-                    ch=chrom,
-                    time=es_time,
-                    nhit=len(res['hits']['hits'])))
+                try:
+                    es_time = res['took']
+                    tot_time += es_time
+                    nhits = len(res['hits']['hits'])
+                    if nhits > 0:
+                        print('{rs}\t{ch}\t{time:4.2f}\t{nhit:5d}'.format(
+                         rs=rsid,
+                         ch=chrom,
+                         time=es_time,
+                         nhit=nhits))
+                        pprint.pprint(res.get('hits', ""), indent=4)
+                except KeyError:
+                    print("query failed: {}".format(res['error']['reason']))
         print(
             '### Average python time {} (ms): {}'.format(
                 label,
@@ -210,8 +207,7 @@ def main():
                 tot_time/(n*len(test_snp_dict))
             )
         )
-        import pprint
-        pprint.pprint(res['hits'])
+        pprint.pprint(query, indent=4)
 
 
 if __name__ == '__main__':
