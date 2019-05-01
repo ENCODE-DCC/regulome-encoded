@@ -439,7 +439,7 @@ def region_search(context, request):
     result = {
         '@id': '/' + page + '/' + ('?' + request.query_string.split('&referrer')[0]
                                    if request.query_string else ''),
-        '@type': ['region-search', 'Portal'],
+        '@type': ['regulome-search', 'Portal'],
         'title': 'Regulome search',
         'facets': [],
         '@graph': [],
