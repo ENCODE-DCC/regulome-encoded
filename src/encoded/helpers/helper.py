@@ -82,7 +82,7 @@ def search_result_actions(request, doc_types, es_results, position=None):
     # generate batch download URL for experiments
     # TODO we could enable them for Datasets as well here, but not sure how well it will work
     # batch download disabled for region-search results
-    if '/region-search/' not in request.url:
+    if ('/region-search/' not in request.url) and ('/regulome-search/' not in request.url):
         #if (doc_types == ['Experiment'] or doc_types == ['Annotation']) and any(
         if (doc_types == ['Experiment']) and any(
                 bucket['doc_count'] > 0

@@ -40,15 +40,11 @@ _ENSEMBL_URL_GRCH37 = 'http://grch37.rest.ensembl.org/'
 _REGULOME_FACETS = [
     ('assay_term_name', {'title': 'Assay'}),
     ('annotation_type', {'title': 'Annotation type'}),
-    ('status', {'title': 'Status'}),
-    ('biosample_term_name', {'title': 'Biosample term', 'type': 'typeahead'}),
+    ('biosample_ontology.classification', {'title': 'Biosample classification'}),
+    ('biosample_ontology.term_name', {'title': 'Biosample term name', 'type': 'typeahead'}),
     ('target.label', {'title': 'Target', 'type': 'typeahead', 'length': 'long'}),
-    ('replicates.library.biosample.donor.organism.scientific_name', {
-        'title': 'Organism'
-    }),
     ('organ_slims', {'title': 'Organ', 'type': 'typeahead'}),
     ('assembly', {'title': 'Genome assembly'}),
-    ('files.file_type', {'title': 'Available data'})
 ]
 
 _GENOME_TO_SPECIES = {

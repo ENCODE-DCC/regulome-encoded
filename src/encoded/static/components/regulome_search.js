@@ -325,7 +325,7 @@ class RegulomeSearch extends React.Component {
         const notification = context.notification;
         const searchBase = url.parse(this.context.location_href).search || '';
         const filters = context.filters;
-        const facets = context.facets;
+        const facets = context.facets.filter(facet => facet.title !== "Genome assembly");;
         const total = context.total;
         const visualizeDisabled = total > visualizeLimit;
 
