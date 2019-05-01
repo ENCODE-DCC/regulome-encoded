@@ -937,6 +937,16 @@ class RegionIndexer(Indexer):
                               id=str(uuid))
         return True
 
+    @staticmethod
+    def region_bulk_iterator(chrom, assembly, uuid, peaks_for_chrom):
+        '''Given yields peaks packaged for bulk indexing'''
+        for idx, peak in enumerate(peaks_for_chrom):
+            doc = {
+                'uuid': uuid,
+                'coordinates': peak,
+            }
+            yield {'_index': chrom, '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
+
     def index_regions(self, assembly, regions, file_doc, chroms):
         '''Given regions from some source (most likely encoded file)
            loads the data into region search es'''
@@ -944,25 +954,28 @@ class RegionIndexer(Indexer):
 
         if chroms is None:
             chroms = list(regions.keys())
+
         for chrom in list(regions.keys()):
+            chrom_lc = chrom.lower()
+            # Could be a chrom never seen before!
+            if not self.regions_es.indices.exists(chrom_lc):
+                self.regions_es.indices.create(index=chrom_lc, body=index_settings())
+
+            if not self.regions_es.indices.exists_type(index=chrom_lc, doc_type=assembly):
+                mapping = get_chrom_index_mapping(assembly)
+                self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
+
             if len(regions[chrom]) == 0:
                 continue
-            for idx, peak in enumerate(regions[chrom]):
-                doc = {
-                    'uuid': uuid,
-                    'coordinates': peak
-                }
-                chrom_lc = chrom.lower()
-                # Could be a chrom never seen before!
-                if not self.regions_es.indices.exists(chrom_lc):
-                    self.regions_es.indices.create(index=chrom_lc, body=index_settings())
+            bulk(self.regions_es,
+                 self.region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=500000)
 
-                if not self.regions_es.indices.exists_type(index=chrom_lc, doc_type=assembly):
-                    mapping = get_chrom_index_mapping(assembly)
-                    self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
-
-                self.regions_es.index(index=chrom_lc, doc_type=assembly, body=doc, id=uuid+'-'+str(idx))
             file_doc['chroms'].append(chrom)
+
+            try:  # likely millions per chrom, so
+                self.regions_es.indices.flush_synced(index=chrom)
+            except Exception:
+                pass
 
         return True
 
