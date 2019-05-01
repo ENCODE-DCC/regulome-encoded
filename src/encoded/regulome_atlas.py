@@ -76,6 +76,7 @@ class RegulomeAtlas(object):
         '''private: return peak query'''
         # get all peaks that overlap requested region:
         #     peak.start <= requested.end and peak.end >= requested.start
+        '''
         prefix = 'positions.'
         if snps:
             prefix = ''
@@ -99,18 +100,22 @@ class RegulomeAtlas(object):
                     }
                 }
             }
-
+        '''
+        # only single point intersection
         query = {
             'query': {
-                'bool': {
-                    'filter': filter_fish
+                'term': {
+                    'coordinates': end
                 }
             },
-            '_source': snps,  # True is snps, False if regions
         }
         # special SLOW query will return inner_hits positions
+        # unncessary now - results in source.
+        # can toggle with _source=False if we need to
+        '''
         if with_inner_hits:
             query['query']['bool']['filter']['nested']['inner_hits'] = {'size': max_results}
+        '''
         return query
 
     def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX):
@@ -131,11 +136,11 @@ class RegulomeAtlas(object):
     # Using suggest with 60M of rsids leads to es crashing during SNP indexing
 
     def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
-        '''Return all peaks in a region.  NOTE: peaks are not filtered by use.'''
+        '''Return all peaks intersecting a point'''
         range_query = self._range_query(start, end, False, peaks_too, max_results)
 
         try:
-            results = self.region_es.search(index=chrom.lower(), doc_type=assembly, _source=False,
+            results = self.region_es.search(index=chrom.lower(), doc_type=assembly, _source=True,
                                             body=range_query, size=max_results)
         except NotFoundError:
             return None
@@ -152,11 +157,10 @@ class RegulomeAtlas(object):
                                         doc_type=[FOR_REGULOME_DB], size=max_results)
         except Exception:
             return None
-
         details = {}
         hits = res.get("hits", {}).get("hits", [])
         for hit in hits:
-            details[hit["_id"]] = hit["_source"]
+            details[hit["_source"]["uuid"]] = hit["_source"]
 
         return details
 
@@ -165,14 +169,14 @@ class RegulomeAtlas(object):
         peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
         if not peaks:
             return (peaks, None)
-        uuids = list(set([peak['_id'] for peak in peaks]))
+        uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
         details = self._resident_details(uuids)
         if not details:
             return ([], details)
         filtered_peaks = []
         while peaks:
             peak = peaks.pop(0)
-            uuid = peak['_id']
+            uuid = peak['_source']['uuid']
             if uuid in details:
                 peak['resident_detail'] = details[uuid]
                 filtered_peaks.append(peak)
@@ -186,10 +190,11 @@ class RegulomeAtlas(object):
 
         overlap = set()
         for peak in peaks:
-            for hit in peak['inner_hits']['positions']['hits']['hits']:
-                if chrom == peak['_index'] and start <= hit['_source']['end'] \
-                   and end >= hit['_source']['start']:
-                    overlap.add(peak['_id'])
+            for hit in peak['_source']['coordinates']:
+                if chrom == peak['_index'] and \
+                      start <= hit['lte'] and \
+                      end >= hit['gte']:
+                    overlap.add(peak['_source']['uuid'])
                     break
 
         return overlap
@@ -199,7 +204,7 @@ class RegulomeAtlas(object):
         '''private: returns only the details that match the uuids'''
         if uuids is None:
             assert(peaks is not None)
-            uuids = list(set([peak['_id'] for peak in peaks]))
+            uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
         filtered = {}
         for uuid in uuids:
             if uuid in details:  # region peaks may not be in regulome only details

@@ -13,7 +13,7 @@ def test_one_regulome(testapp, workbook):
     res = testapp.post_json('/index', {'record': True})
     assert res.json['title'] == 'primary_indexer'
     res = testapp.post_json('/index_region', {'record': True})
-    assert res.json['title'] == 'regulome_indexer'
+    assert res.json['title'] == 'region_indexer'
     sleep(5)  # For some reason testing fails without some winks
 
     res = testapp.get('http://0.0.0.0:6543/regulome-search/?region=rs3768324&genome=GRCh37')

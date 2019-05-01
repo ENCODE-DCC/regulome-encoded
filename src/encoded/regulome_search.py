@@ -347,7 +347,7 @@ def parse_region_query(request):
         # Skip if scored before
         coord = '{}:{}-{}'.format(chrom, start, end)
         if coord in coordinates:
-            notifications.append({region_query: 'Skiped: scored before'})
+            notifications.append({region_query: 'Skipped: scored before'})
             continue
         else:
             coordinates.add(coord)
@@ -419,7 +419,7 @@ def regulome_summary(context, request):
                                                       evidence)
                 result['notifications'].append({coord: 'Success'})
             except Exception as e:
-                result['notifications'].append({coord: 'Failed: {}'.format(e)})
+                result['notifications'].append({coord: 'Failed: (exception) {}'.format(e)})
         summaries.append({'chrom': chrom, 'start': start, 'end': end,
                           'rsids': rsids, 'features': features,
                           'regulome_score': regulome_score})

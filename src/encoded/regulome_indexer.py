@@ -135,10 +135,6 @@ def includeme(config):
     if is_region_indexer:
         registry['region'+INDEXER] = RegionIndexer(registry)
 
-<<<<<<< HEAD
-=======
-
->>>>>>> initial inversions
 def tsvreader(file):
     reader = csv.reader(file, delimiter='\t')
     for row in reader:
@@ -347,7 +343,7 @@ class RemoteReader(object):
         '''
         chrom, start, end = row[0], int(row[1]), int(row[2])
         return (chrom, {
-                        'gte': start + 1, 
+                        'gte': start + 1,
                         'lte': end
                     }
                 )  # bed loc 'half-open', but we close it !
