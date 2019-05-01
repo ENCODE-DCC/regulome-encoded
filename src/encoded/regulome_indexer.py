@@ -961,21 +961,19 @@ class RegionIndexer(Indexer):
             chroms = list(regions.keys())
 
         for chrom in list(regions.keys()):
+            chrom_lc = chrom.lower()
+            # Could be a chrom never seen before!
+            if not self.regions_es.indices.exists(chrom_lc):
+                self.regions_es.indices.create(index=chrom_lc, body=index_settings())
+
+            if not self.regions_es.indices.exists_type(index=chrom_lc, doc_type=assembly):
+                mapping = get_chrom_index_mapping(assembly)
+                self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
+
             if len(regions[chrom]) == 0:
                 continue
-            for idx, peak in enumerate(regions[chrom]):
-                doc = {
-                    'uuid': uuid,
-                    'coordinates': peak
-                }
-                chrom_lc = chrom.lower()
-                # Could be a chrom never seen before!
-                if not self.regions_es.indices.exists(chrom_lc):
-                    self.regions_es.indices.create(index=chrom_lc, body=index_settings())
-
-                if not self.regions_es.indices.exists_type(index=chrom_lc, doc_type=assembly):
-                    mapping = get_chrom_index_mapping(assembly)
-                    self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
+            bulk(self.regions_es,
+                 self.region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=500000)
 
             if len(regions[chrom]) == 0:
                 continue
