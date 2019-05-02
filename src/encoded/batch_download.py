@@ -17,7 +17,7 @@ import io
 import json
 import time  # DEBUG: timing
 import datetime
-from .region_atlas import RegulomeAtlas
+from .regulome_atlas import RegulomeAtlas
 
 import logging
 log = logging.getLogger(__name__)

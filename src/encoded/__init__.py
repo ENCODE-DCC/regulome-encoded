@@ -242,8 +242,8 @@ def main(global_config, **local_config):
             timeout=60,
             maxsize=50
         )
-        config.include('.region_search')
-        config.include('.region_indexer')
+        config.include('.regulome_search')
+        config.include('.regulome_indexer')
     config.include(static_resources)
     config.include(changelogs)
     config.registry['ontology'] = json_from_path(settings.get('ontology_path'), {})
