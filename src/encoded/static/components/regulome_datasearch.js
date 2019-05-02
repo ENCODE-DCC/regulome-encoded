@@ -1729,3 +1729,5 @@ Search.lastRegion = {
     assembly: React.PropTypes.string,
     region: React.PropTypes.string,
 };
+
+globals.contentViews.register(Search, 'regulome-datasearch');

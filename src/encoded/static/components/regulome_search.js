@@ -4,7 +4,7 @@ import _ from 'underscore';
 import url from 'url';
 import * as globals from './globals';
 import { Panel, PanelBody } from '../libs/bootstrap/panel';
-import { FacetList, FilterList } from './search';
+import { FacetList, FilterList } from './regulome_datasearch';
 import { SortTablePanel, SortTable } from './sorttable';
 
 const dataTypeStrings = [
