@@ -45,7 +45,6 @@ export class MotifElement extends React.Component {
     constructor() {
         super();
 
-        // this.drawMotifs = this.drawMotifs.bind(this);
         this.addMotifElement = this.addMotifElement.bind(this);
     }
 
