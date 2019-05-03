@@ -41,104 +41,119 @@ export function getMotifData(pwmLink, fetch) {
 }
 
 // Display information on page as JSON formatted data
-export class Motifs extends React.Component {
+export class MotifElement extends React.Component {
     constructor() {
         super();
 
-        this.drawMotifs = this.drawMotifs.bind(this);
+        // this.drawMotifs = this.drawMotifs.bind(this);
         this.addMotifElement = this.addMotifElement.bind(this);
     }
 
     componentDidMount() {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
-            if (this.chartdisplay) {
-                this.d3 = require('d3');
-                this.sequenceLogos = require('d3-sequence-logo'); // logos This is for local development when changes are needed to d3-sequence-logo.
-                const targetElement = this.chartdisplay;
-                this.drawMotifs(targetElement);
-            }
+            this.d3 = require('d3');
+            this.sequenceLogos = require('d3-sequence-logo'); // logos This is for local development when changes are needed to d3-sequence-logo.
+
+            const targetElement = this.chartdisplay;
+            const entryPoint = this.sequenceLogos.entryPoint;
+
+            getMotifData(this.pwmLink, this.context.fetch).then((response) => {
+                this.addMotifElement(targetElement, response, entryPoint);
+            });
         });
     }
 
     // Redraw charts when window changes
     componentDidUpdate() {
-        if (this.chartdisplay) {
-            this.chartdisplay.innerHTML = '';
-            const targetElement = this.chartdisplay;
-            this.drawMotifs(targetElement);
-        }
+        this.d3 = require('d3');
+        this.sequenceLogos = require('d3-sequence-logo'); // logos This is for local development when changes are needed to d3-sequence-logo.
+
+        const targetElement = this.chartdisplay;
+        const entryPoint = this.sequenceLogos.entryPoint;
+
+        // Need to remove current logo or another logo will be appended to original
+        this.chartdisplay.innerHTML = '';
+
+        getMotifData(this.pwmLink, this.context.fetch).then((response) => {
+            this.addMotifElement(targetElement, response, entryPoint);
+        });
     }
 
-    addMotifElement(targetElement, response, d, entryPoint) {
+    addMotifElement(targetElement, response, entryPoint) {
         // Convert PWM text data to object
         const PWM = convertTextToObj(response);
-        // Append information about the PWM including Biosample, Organ, and Targets
-        targetElement.insertAdjacentHTML('afterbegin', `<div class="motif-element" id="motif${d.accession}"></div>`);
-        const targetList = d.targets.map(t => t.label);
-        const targetListLabel = targetList.length > 1 ? 'Targets' : 'Target';
-        const htmlStr = `
-            <div class='motif-description'>
-                <p><a href=${d['@id']}>${d.accession}</a></p>
-                ${d.biosample_term_name ? `<p>Biosample: ${d.biosample_term_name}</p>` : ''}
-                ${d.organ_slims ? `<p>Organ: ${d.organ_slims.join(', ')}</p>` : ''}
-                ${targetList ? `<p>${targetListLabel}: ${targetList.join(', ')}</p>` : ''}
-            </div>`;
-        targetElement.insertAdjacentHTML('afterbegin', htmlStr);
         // Generate the logo from the PWM object
-        entryPoint(`#motif${d.accession}`, PWM, this.d3);
-    }
-
-    drawMotifs(targetElement) {
-        const results = this.props.context['@graph'];
-        const urlBase = this.props.urlBase;
-
-        // Keep track of whether or not a PWM document has been identified
-        let emptyFlag = 1;
-
-        const entryPoint = this.sequenceLogos.entryPoint;
-        const d3 = this.d3;
-
-        let pwmLink = '';
-        // Check each element of @graph to see if it has documents and if the available documents are of the type "position weight matrix"
-        // If so, fetch PWM data and insert logo and associated PWM information to a list
-        results.forEach((d) => {
-            if (d.documents[0]) {
-                emptyFlag = 0;
-                if (d.documents[0].document_type === 'position weight matrix') {
-                    pwmLink = urlBase + d.documents[0]['@id'] + d.documents[0].attachment.href;
-
-                    getMotifData(pwmLink, this.context.fetch, entryPoint, d3).then((response) => {
-                        targetElement.insertAdjacentHTML('afterbegin', `<div class="element" id="element${d.accession}"></div>`);
-                        const targetElement2 = document.getElementById(`element${d.accession}`);
-                        this.addMotifElement(targetElement2, response, d, entryPoint, d3);
-                    });
-                }
-            }
-        });
-
-        // If none of the elements of @graph have a PWM document, display notification
-        if (emptyFlag) {
-            targetElement.insertAdjacentHTML('afterbegin', '<div class="visualize-error">Choose other datasets. These do not include PWM data.</div>');
-        }
+        entryPoint(targetElement, PWM, this.d3);
     }
 
     render() {
+        const element = this.props.element;
+        const targetList = element.targets.map(t => t.label);
+        const targetListLabel = targetList.length > 1 ? 'Targets' : 'Target';
+        const pwmLink = `${this.props.urlBase}${element.documents[0]['@id']}${element.documents[0].attachment.href}`;
+
         return (
-            <div>
-                <div className="sequence-logo-table">
-                    <h4>Motifs</h4>
-                    <div ref={(div) => { this.chartdisplay = div; }} className="sequence-logo" />
+            <div className="element" id={`element${element.accession}`}>
+                <div className="motif-description">
+                    <p><a href={element['@id']}>{element.accession}</a></p>
+                    {element.biosample_term_name ?
+                        <p>Biosample: {element.biosample_term_name}</p>
+                    : null}
+                    {element.organ_slims ?
+                        <p>Organ: {element.organ_slims.join(', ')}</p>
+                    : null}
+                    {targetList ?
+                        <p>{targetListLabel}: {targetList.join(', ')}</p>
+                    : null}
                 </div>
+                <div ref={(div) => { this.chartdisplay = div; this.pwmLink = pwmLink; }} className="motif-element" />
             </div>
         );
     }
 }
 
-Motifs.propTypes = {
-    context: PropTypes.object.isRequired,
+MotifElement.propTypes = {
+    element: PropTypes.object.isRequired,
     urlBase: PropTypes.string.isRequired,
 };
 
-Motifs.contextTypes = {
+MotifElement.contextTypes = {
     fetch: PropTypes.func,
+};
+
+export const Motifs = (props) => {
+    const results = props.context['@graph'];
+    const urlBase = props.urlBase;
+    const pwmLinkList = [];
+
+    // Iterate through results to see which have associated PWM data
+    results.forEach((d) => {
+        if (d.documents[0]) {
+            if (d.documents[0].document_type === 'position weight matrix') {
+                pwmLinkList.push(d);
+            }
+        }
+    });
+
+    return (
+        <div>
+            <div className="sequence-logo-table">
+                <h4>Motifs</h4>
+                <div className="sequence-logo">
+                    {(pwmLinkList.length === 0) ?
+                        <div className="visualize-error">Choose other datasets. These do not include PWM data.</div>
+                    :
+                        <div>
+                            {pwmLinkList.map(d => <MotifElement key={d.accession} element={d} urlBase={urlBase} />)}
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    );
+};
+
+Motifs.propTypes = {
+    context: PropTypes.object.isRequired,
+    urlBase: PropTypes.string.isRequired,
 };
