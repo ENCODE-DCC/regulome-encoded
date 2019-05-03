@@ -218,30 +218,29 @@ def peak_metadata(context, request):
         if row['_id'] in uuids_in_results:
             file_json = request.embed(row['_id'])
             experiment_json = request.embed(file_json['dataset'])
-            for hit in row['inner_hits']['positions']['hits']['hits']:
-                data_row = []
-                coordinates = '{}:{}-{}'.format(row['_index'], hit['_source']['start'],
-                                                hit['_source']['end'])
-                file_accession = file_json['accession']
-                experiment_accession = experiment_json['accession']
-                assay_name = experiment_json.get('assay_term_name', '')
-                if assay_name == '' and regulome:
-                    assay_name = experiment_json.get('annotation_type', '')
-                target_name = experiment_json.get('target', {}).get('label', '')
-                biosample_accession = get_biosample_accessions(file_json, experiment_json)
-                data_row.extend([assay_name, coordinates, target_name, biosample_accession,
-                                 file_accession, experiment_accession])
-                rows.append(data_row)
-                if assay_name not in json_doc:
-                    json_doc[assay_name] = []
-                else:
-                    json_doc[assay_name].append({
-                        'coordinates': coordinates,
-                        'target.name': target_name,
-                        'biosample.accession': list(biosample_accession.split(', ')),
-                        'file.accession': file_accession,
-                        'experiment.accession': experiment_accession
-                    })
+            data_row = []
+            coordinates = '{}:{}-{}'.format(row['_index'], row['_source']['cooordinate']['gte'],
+                                            row['_source']['coordinates']['lte'])
+            file_accession = file_json['accession']
+            experiment_accession = experiment_json['accession']
+            assay_name = experiment_json.get('assay_term_name', '')
+            if assay_name == '' and regulome:
+                assay_name = experiment_json.get('annotation_type', '')
+            target_name = experiment_json.get('target', {}).get('label', '')
+            biosample_accession = get_biosample_accessions(file_json, experiment_json)
+            data_row.extend([assay_name, coordinates, target_name, biosample_accession,
+                                file_accession, experiment_accession])
+            rows.append(data_row)
+            if assay_name not in json_doc:
+                json_doc[assay_name] = []
+            else:
+                json_doc[assay_name].append({
+                    'coordinates': coordinates,
+                    'target.name': target_name,
+                    'biosample.accession': list(biosample_accession.split(', ')),
+                    'file.accession': file_accession,
+                    'experiment.accession': experiment_accession
+                })
     if 'peak_metadata.json' in request.url:
         return Response(
             content_type='text/plain',

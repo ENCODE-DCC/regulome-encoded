@@ -74,33 +74,7 @@ class RegulomeAtlas(object):
     @staticmethod
     def _range_query(start, end, snps=False, with_inner_hits=False, max_results=SEARCH_MAX):
         '''private: return peak query'''
-        # get all peaks that overlap requested region:
-        #     peak.start <= requested.end and peak.end >= requested.start
-        '''
-        prefix = 'positions.'
-        if snps:
-            prefix = ''
-
-        range_clause = {
-            'bool': {
-                'must': [
-                    {'range': {prefix + 'start': {'lte': end}}},
-                    {'range': {prefix + 'end':   {'gte': start}}}
-                ]
-            }
-        }
-        if snps:
-            filter_fish = {'bool': {'should': [range_clause]}}
-        else:
-            filter_fish = {
-                'nested': {
-                    'path': 'positions',
-                    'query': {
-                        'bool': {'should': [range_clause]}
-                    }
-                }
-            }
-        '''
+        # get all peaks that overlap requested point
         # only single point intersection
         query = {
             'query': {
@@ -109,13 +83,7 @@ class RegulomeAtlas(object):
                 }
             },
         }
-        # special SLOW query will return inner_hits positions
-        # unncessary now - results in source.
-        # can toggle with _source=False if we need to
-        '''
-        if with_inner_hits:
-            query['query']['bool']['filter']['nested']['inner_hits'] = {'size': max_results}
-        '''
+
         return query
 
     def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX):

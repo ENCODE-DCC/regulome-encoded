@@ -558,15 +558,14 @@ def region_search(context, request):
                 targets = dataset.get('target', [])
                 biosample_term_name = dataset.get('biosample_ontology', {}).get('term_name', '')
                 # Get peak coordinates and assemble details
-                # assert 'inner_hits' in peak if peaks_too else False
-                peak_hits = peak['inner_hits']['positions']['hits']['hits']
-                peak_detail = [{'method': method,
+                peak_detail = [{
+                                'method': method,
                                 'targets': targets,
                                 'biosample_term_name': biosample_term_name,
-                                'chrom': hit['_index'],
-                                'start': hit['_source']['start'],
-                                'end': hit['_source']['end']}
-                               for hit in peak_hits]
+                                'chrom': peak['_index'],
+                                'start': peak['_source']['coordinates']['gte'],
+                                'end': peak['_source']['coordinates']['lte']
+                                }]
                 peak_details += peak_detail
             result['peak_details'] = peak_details
 
