@@ -76,10 +76,11 @@ class RegulomeAtlas(object):
         '''private: return peak query'''
         # get all peaks that overlap requested point
         # only single point intersection
+        # use start not end for 0-base open ended
         query = {
             'query': {
                 'term': {
-                    'coordinates': end
+                    'coordinates': start
                 }
             },
         }

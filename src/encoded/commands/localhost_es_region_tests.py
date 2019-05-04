@@ -177,8 +177,7 @@ def main():
         for rsid, (chrom, start, end) in test_snp_dict.items():
             for i in range(n):
                 es_time = 0
-                #start_cond['lte'] = end
-                query['query']['term']['coordinates']['value'] = end
+                query['query']['term']['coordinates']['value'] = start
                 begin = time.time()
                 res = requests.get(test_url.format(chrom), json=query).json()
                 python_time += time.time() - begin
