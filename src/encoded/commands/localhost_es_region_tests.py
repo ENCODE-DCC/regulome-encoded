@@ -118,7 +118,8 @@ query_filter = {
             'coordinates': {
             }
         }
-    }
+    },
+    'size': SEARCH_MAX,
 }
 
 query_no_filter = {
