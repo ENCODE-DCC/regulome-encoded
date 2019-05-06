@@ -53,28 +53,22 @@ export class MotifElement extends React.Component {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
             this.sequenceLogos = require('d3-sequence-logo'); // logos This is for local development when changes are needed to d3-sequence-logo.
-
-            const targetElement = this.chartdisplay;
-            const entryPoint = this.sequenceLogos.entryPoint;
             const pwmLink = this.generatePWMLink();
 
             getMotifData(pwmLink, this.context.fetch).then((response) => {
-                this.addMotifElement(targetElement, response, entryPoint);
+                this.addMotifElement(response);
             });
         });
     }
 
     // Redraw charts when window changes
     componentDidUpdate() {
-        const targetElement = this.chartdisplay;
-        const entryPoint = this.sequenceLogos.entryPoint;
-
         // Need to remove current logo or another logo will be appended to original
         this.chartdisplay.innerHTML = '';
         const pwmLink = this.generatePWMLink();
 
         getMotifData(pwmLink, this.context.fetch).then((response) => {
-            this.addMotifElement(targetElement, response, entryPoint);
+            this.addMotifElement(response);
         });
     }
 
@@ -85,11 +79,11 @@ export class MotifElement extends React.Component {
         return `${urlBase}${element.documents[0]['@id']}${element.documents[0].attachment.href}`;
     }
 
-    addMotifElement(targetElement, response, entryPoint) {
+    addMotifElement(response) {
         // Convert PWM text data to object
         const PWM = convertTextToObj(response);
         // Generate the logo from the PWM object
-        entryPoint(targetElement, PWM, this.d3);
+        this.sequenceLogos.entryPoint(this.chartdisplay, PWM, this.d3);
     }
 
     render() {
