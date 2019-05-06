@@ -45,6 +45,7 @@ export class MotifElement extends React.Component {
     constructor() {
         super();
 
+        this.generatePWMLink = this.generatePWMLink.bind(this);
         this.addMotifElement = this.addMotifElement.bind(this);
     }
 
@@ -55,8 +56,9 @@ export class MotifElement extends React.Component {
 
             const targetElement = this.chartdisplay;
             const entryPoint = this.sequenceLogos.entryPoint;
+            const pwmLink = this.generatePWMLink();
 
-            getMotifData(this.pwmLink, this.context.fetch).then((response) => {
+            getMotifData(pwmLink, this.context.fetch).then((response) => {
                 this.addMotifElement(targetElement, response, entryPoint);
             });
         });
@@ -64,18 +66,23 @@ export class MotifElement extends React.Component {
 
     // Redraw charts when window changes
     componentDidUpdate() {
-        this.d3 = require('d3');
-        this.sequenceLogos = require('d3-sequence-logo'); // logos This is for local development when changes are needed to d3-sequence-logo.
-
         const targetElement = this.chartdisplay;
         const entryPoint = this.sequenceLogos.entryPoint;
 
         // Need to remove current logo or another logo will be appended to original
         this.chartdisplay.innerHTML = '';
+        const pwmLink = this.generatePWMLink();
 
-        getMotifData(this.pwmLink, this.context.fetch).then((response) => {
+        getMotifData(pwmLink, this.context.fetch).then((response) => {
             this.addMotifElement(targetElement, response, entryPoint);
         });
+    }
+
+    // Generate PWM link from url and document
+    generatePWMLink() {
+        const element = this.props.element;
+        const urlBase = this.props.urlBase;
+        return `${urlBase}${element.documents[0]['@id']}${element.documents[0].attachment.href}`;
     }
 
     addMotifElement(targetElement, response, entryPoint) {
@@ -89,7 +96,6 @@ export class MotifElement extends React.Component {
         const element = this.props.element;
         const targetList = element.targets.map(t => t.label);
         const targetListLabel = targetList.length > 1 ? 'Targets' : 'Target';
-        const pwmLink = `${this.props.urlBase}${element.documents[0]['@id']}${element.documents[0].attachment.href}`;
 
         return (
             <div className="element" id={`element${element.accession}`}>
@@ -105,7 +111,7 @@ export class MotifElement extends React.Component {
                         <p>{targetListLabel}: {targetList.join(', ')}</p>
                     : null}
                 </div>
-                <div ref={(div) => { this.chartdisplay = div; this.pwmLink = pwmLink; }} className="motif-element" />
+                <div ref={(div) => { this.chartdisplay = div; }} className="motif-element" />
             </div>
         );
     }
@@ -123,16 +129,9 @@ MotifElement.contextTypes = {
 export const Motifs = (props) => {
     const results = props.context['@graph'];
     const urlBase = props.urlBase;
-    const pwmLinkList = [];
 
-    // Iterate through results to see which have associated PWM data
-    results.forEach((d) => {
-        if (d.documents[0]) {
-            if (d.documents[0].document_type === 'position weight matrix') {
-                pwmLinkList.push(d);
-            }
-        }
-    });
+    // Filter results to find ones with associated PWM data
+    const pwmLinkList = results.filter(d => d.documents[0] && d.documents[0].document_type === 'position weight matrix');
 
     return (
         <div>
