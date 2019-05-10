@@ -69,7 +69,6 @@ def region_index(app, workbook):
     testapp = TestApp(app, environ)
 
     res = testapp.post_json('/index_region', {'record': True})
-    # sleep(5)  # For some reason testing fails without some winks
     yield
 
 @pytest.fixture(scope='session')
