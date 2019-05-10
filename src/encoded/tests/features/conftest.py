@@ -52,10 +52,25 @@ def workbook(app):
     docsdir = [resource_filename('encoded', 'tests/data/documents/')]
     load_all(testapp, inserts, docsdir, log_level=log_level)
 
-    testapp.post_json('/index', {})
+    res = testapp.post_json('/index', {'record': True})
     yield
     # XXX cleanup
 
+
+@pytest.mark.fixture_cost(500)
+@pytest.yield_fixture(scope='session')
+def region_index(app, workbook):
+    # need can't use function testapp
+    from webtest import TestApp
+    environ = {
+        'HTTP_ACCEPT': 'application/json',
+        'REMOTE_USER': 'TEST',
+    }
+    testapp = TestApp(app, environ)
+
+    res = testapp.post_json('/index_region', {'record': True})
+    # sleep(5)  # For some reason testing fails without some winks
+    yield
 
 @pytest.fixture(scope='session')
 def wsgi_server_app(app):
