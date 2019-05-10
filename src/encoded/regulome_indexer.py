@@ -208,6 +208,7 @@ def get_resident_mapping(use_type=FOR_REGULOME_DB):
 
 
 # SNP mapping index: snp141_hg19, doc_type: chr*, _id=rsid
+# this might need strand too for visualization
 def get_snp_index_mapping(chrom='chr1'):
     return {
         chrom: {
@@ -224,12 +225,9 @@ def get_snp_index_mapping(chrom='chr1'):
                 'chrom': {
                     'type': 'keyword'
                 },
-                'start': {
-                    'type': 'long'
+                'coordinates': {
+                    'type': 'integer_range'
                 },
-                'end': {
-                    'type': 'long'
-                }
             }
         }
     }
@@ -354,7 +352,14 @@ class RemoteReader(object):
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]
         if start == end:
             end = end + 1
-        return (chrom, {'rsid': rsid, 'chrom': chrom, 'start': start + 1, 'end': end})
+        return (chrom, {
+              'rsid': rsid, 
+              'chrom': chrom, 
+              'coordinates': { 
+                  'gte': start + 1,
+                  'lte': end
+                }
+        })
 
     # TODO: support bigBeds
     # def bb_region(self, row):

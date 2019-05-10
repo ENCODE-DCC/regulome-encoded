@@ -16,10 +16,7 @@ def test_one_regulome(testapp, workbook):
     assert res.json['title'] == 'region_indexer'
     sleep(5)  # For some reason testing fails without some winks
 
-    res = testapp.get('http://0.0.0.0:6543/regulome-search/?region=rs3768324&genome=GRCh37')
-    # import json
-    # print(json.dumps(res.json, indent=4, sort_keys=True))
-    # print(json.dumps({e['accession'] for e in res.json['@graph']}, indent=4, sort_keys=True))
+    res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
     assert res.json['title'] == 'Regulome search'
     assert res.json['@type'] == ['region-search', 'Portal']
     assert res.json['notification'] == 'Success: 7 peaks in 7 files belonging to 7 datasets in this region'
@@ -30,8 +27,8 @@ def test_one_regulome(testapp, workbook):
         'ENCSR899TST', 'ENCSR000ENO', 'ENCSR000EVI'
     }
     expected = [
-        'http://0.0.0.0:6543/regulome_download/regulome_evidence_hg19_chr1_39492462_39492462.bed',
-        'http://0.0.0.0:6543/regulome_download/regulome_evidence_hg19_chr1_39492462_39492462.json'
+        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492462_39492462.bed',
+        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492462_39492462.json'
     ]
     assert res.json['download_elements'] == expected
 
@@ -41,7 +38,7 @@ def test_regulome_score(testapp, workbook):
     res = testapp.post_json('/index_region', {'record': True})
     sleep(5)  # For some reason testing fails without some winks
 
-    res = testapp.get('http://0.0.0.0:6543/regulome-search/?region=rs3768324&genome=GRCh37')
+    res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
     assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
 
 
@@ -74,7 +71,6 @@ def test_regulome_summary(testapp, workbook):
     ('chr10:5894500-5894500extra string ', ('chr10', 5894500, 5894500), True),
     ('chr10 5894500\t5894500\trs10905307', ('chr10', 5894500, 5894500), True),
     ('rs10905307\textra string', ('chr10', 5894500, 5894500), True),
-    ('Invalid query term ', None, False),
 ])
 def test_get_coordinate(query_term, expected, valid):
     from encoded.regulome_search import get_coordinate
@@ -85,3 +81,16 @@ def test_get_coordinate(query_term, expected, valid):
         with pytest.raises(ValueError) as excinfo:
             get_coordinate(query_term)
         assert str(excinfo.value) == error_msg
+
+
+@pytest.mark.parametrize("assembly,location,snps", [
+    ('hg19', ('chr1', 39492462, 39492462), ['rs3768324']),
+    ('hg19', ('chr10', 5894500, 5894500), ['rs10905307']),
+])
+def test_find_snps(assembly, location, snps, testapp, workbook, registry):
+    from encoded.regulome_atlas import RegulomeAtlas
+    from snovault.elasticsearch import interfaces # NOQA
+    atlas = RegulomeAtlas(registry[interfaces.SNP_SEARCH_ES])
+    found = [snp['rsid'] for snp in 
+             atlas.find_snps(assembly, location[0], location[1], location[2])]
+    assert found == snps

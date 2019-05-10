@@ -170,7 +170,10 @@ def get_rsid_coordinates(rsid, assembly, atlas=None):
     if atlas and assembly in ['GRCh38', 'hg19', 'GRCh37']:
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
-            return (snp['chrom'], snp.get('start', ''), snp.get('end', ''))
+            try:
+                return(snp['chrm'], snp['coordinates']['gte'], snp['coordinate']['lte'])
+            except KeyError:
+                log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
 
     species = _GENOME_TO_SPECIES.get(assembly, 'homo_sapiens')
     ensembl_url = _ENSEMBL_URL
