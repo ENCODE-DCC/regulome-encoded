@@ -83,6 +83,7 @@ class RegulomeAtlas(object):
                     'coordinates': start
                 }
             },
+            'size': max_results,
         }
 
         return query
@@ -135,6 +136,7 @@ class RegulomeAtlas(object):
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
         '''Return peaks in a region and resident details'''
+        #TODO I don't know why this also returns details it's not ever used productively
         peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
         if not peaks:
             return (peaks, None)
