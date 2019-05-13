@@ -78,6 +78,18 @@ def test_find_peaks_filtered(assembly, location, dbdetails, region_index, regulo
         assert fpeaks[1]['resident_detail'][part] == dbdetails[0][part] \
             or fpeaks[1]['resident_detail'][part] == dbdetails[1][part]
 
+
+@pytest.mark.parametrize("assembly,rsid,location", [
+    ('hg19', 'rs3768324', ('chr1', 39492462, 39492462)),
+    ('hg19', 'rs10905307', ('chr10', 5894500, 5894500)),
+])
+def test_snp(assembly, rsid, location, region_index, regulome_atlas):
+    snp = regulome_atlas.snp(assembly, rsid)
+    assert snp['chrom'] == location[0]
+    assert snp['coordinates']['gte'] == location[1]
+    assert snp['coordinates']['lte'] == location[2]
+
+
 def test_resident_details():
     pass
 

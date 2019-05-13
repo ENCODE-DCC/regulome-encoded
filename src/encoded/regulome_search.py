@@ -171,7 +171,7 @@ def get_rsid_coordinates(rsid, assembly, atlas=None):
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
             try:
-                return(snp['chrm'], snp['coordinates']['gte'], snp['coordinate']['lte'])
+                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinate']['lte'])
             except KeyError:
                 log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
 
