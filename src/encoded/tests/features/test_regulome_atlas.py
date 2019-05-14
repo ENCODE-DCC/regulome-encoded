@@ -41,6 +41,7 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
     for dbp in dbpeaks:
         assert dbp in foundpeaks
 
+
 @pytest.mark.parametrize("assembly,location,dbdetails", [
     ('hg19', ('chr10', 5894500, 5894500), [
         {'dataset': 
@@ -71,7 +72,8 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
     ]),
 ])
 def test_find_peaks_filtered(assembly, location, dbdetails, region_index, regulome_atlas):
-    fpeaks, details = regulome_atlas.find_peaks_filtered(assembly, location[0], location[1], location[2])
+    ''' this essentially tests _resident_details as well '''
+    fpeaks, _ = regulome_atlas.find_peaks_filtered(assembly, location[0], location[1], location[2])
     for part in ('dataset', 'file'): 
         assert fpeaks[0]['resident_detail'][part] == dbdetails[0][part] \
             or fpeaks[0]['resident_detail'][part] == dbdetails[1][part]
@@ -90,17 +92,23 @@ def test_snp(assembly, rsid, location, region_index, regulome_atlas):
     assert snp['coordinates']['lte'] == location[2]
 
 
-def test_resident_details():
-    pass
+@pytest.mark.parametrize("assembly,chrom,pos,rsids", [
+    ('hg19', 'chr1', 39492462, ['rs3768324']),
+    ('hg19', 'chr10', 104574063, ['rs7092340', 'rs284857'])
+])
+def test_nearby_snps(assembly, chrom, pos, rsids, region_index, regulome_atlas):
+
+    snps = regulome_atlas.nearby_snps(assembly, chrom, pos, window=100000)
+    assert [r['rsid'] for r in snps].sort() == rsids.sort()
 
 
-def details_breakdown():
-    pass
+@pytest.mark.xfail()
+@pytest.mark.parametrize("assembly,chrom,pos", [
+    ('hg19', 'chr1', 39492462),
+    ('hg19', 'chr10', 104574063),
+])
+def test_nearby_snps_scores(assembly, chrom, pos, region_index, regulome_atlas):
 
-
-def test_regulome_evidence():
-    pass
-
-
-def test_nearby_snps():
-    pass
+    snps = regulome_atlas.nearby_snps(assembly, chrom, pos, window=100000, scores=True)
+    # this returns empty generator which seems wrong.
+    assert False
