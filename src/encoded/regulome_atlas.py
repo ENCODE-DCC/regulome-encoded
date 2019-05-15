@@ -404,7 +404,7 @@ class RegulomeAtlas(object):
         if len(snps) <= window:
             return snps
 
-        snps = sorted(snps, key=lambda s: s['coordinates']['start'])
+        snps = sorted(snps, key=lambda s: s['coordinates']['gte'])
         ix = 0
         for snp in snps:
             if snp['coordinates']['gte'] >= center_pos:
@@ -526,7 +526,7 @@ class RegulomeAtlas(object):
             range_start = 0
 
         if scores:
-            snps = self._scored_snps(assembly, chrom, range_start, range_end, max_snps, pos)
+            snps = self._scored_snps(assembly, chrom, range_start, range_end)
             for snp in snps:
                 snp.pop('evidence', None)  # don't need this much detail
         else:
