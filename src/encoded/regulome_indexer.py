@@ -147,27 +147,23 @@ def tsvreader(file):
 def get_chrom_index_mapping(assembly_name='hg19'):
     return {
         assembly_name: {
-            '_all': {
-                'enabled': False
-            },
             '_source': {
                 'enabled': True
             },
+            # could eventually index biological metadata here
             'properties': {
                 'uuid': {
                     'type': 'keyword'  # WARNING: to add local files this must be 'type': 'string'
                 },
-                'positions': {
-                    'type': 'nested',
-                    'properties': {
-                        'start': {
-                            'type': 'long'
-                        },
-                        'end': {
-                            'type': 'long'
-                        }
-                    }
-                }
+                'coordinates': {
+                    'type': 'integer_range'
+                },
+                'strand': {
+                    'type': 'string'  # + - .
+                },
+                'value': {
+                    'type': 'string'  # some signal value
+                },
             }
         }
     }
@@ -212,6 +208,7 @@ def get_resident_mapping(use_type=FOR_REGULOME_DB):
 
 
 # SNP mapping index: snp141_hg19, doc_type: chr*, _id=rsid
+# this might need strand too for visualization
 def get_snp_index_mapping(chrom='chr1'):
     return {
         chrom: {
@@ -228,12 +225,9 @@ def get_snp_index_mapping(chrom='chr1'):
                 'chrom': {
                     'type': 'keyword'
                 },
-                'start': {
-                    'type': 'long'
+                'coordinates': {
+                    'type': 'integer_range'
                 },
-                'end': {
-                    'type': 'long'
-                }
             }
         }
     }
@@ -342,9 +336,15 @@ class RemoteReader(object):
 
     @staticmethod
     def region(row):
-        '''Read a region from an in memory row and returns chrom and document to index.'''
+        '''Read a region from an in memory row and returns chrom and document to index.
+           Extend this to get store and strand properties, although the bed files vary by type
+        '''
         chrom, start, end = row[0], int(row[1]), int(row[2])
-        return (chrom, {'start': start + 1, 'end': end})  # bed loc 'half-open', but we close it !
+        return (chrom, {
+                        'gte': start + 1,
+                        'lte': end
+                    }
+                )  # bed loc 'half-open', but we close it !
 
     @staticmethod
     def snp(row):
@@ -352,7 +352,14 @@ class RemoteReader(object):
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]
         if start == end:
             end = end + 1
-        return (chrom, {'rsid': rsid, 'chrom': chrom, 'start': start + 1, 'end': end})
+        return (chrom, {
+              'rsid': rsid, 
+              'chrom': chrom, 
+              'coordinates': { 
+                  'gte': start + 1,
+                  'lte': end
+                }
+        })
 
     # TODO: support bigBeds
     # def bb_region(self, row):
@@ -935,6 +942,16 @@ class RegionIndexer(Indexer):
                               id=str(uuid))
         return True
 
+    @staticmethod
+    def region_bulk_iterator(chrom, assembly, uuid, peaks_for_chrom):
+        '''Given yields peaks packaged for bulk indexing'''
+        for idx, peak in enumerate(peaks_for_chrom):
+            doc = {
+                'uuid': uuid,
+                'coordinates': peak,
+            }
+            yield {'_index': chrom, '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
+
     def index_regions(self, assembly, regions, file_doc, chroms):
         '''Given regions from some source (most likely encoded file)
            loads the data into region search es'''
@@ -942,13 +959,8 @@ class RegionIndexer(Indexer):
 
         if chroms is None:
             chroms = list(regions.keys())
+
         for chrom in list(regions.keys()):
-            if len(regions[chrom]) == 0:
-                continue
-            doc = {
-                'uuid': uuid,
-                'positions': regions[chrom]
-            }
             chrom_lc = chrom.lower()
             # Could be a chrom never seen before!
             if not self.regions_es.indices.exists(chrom_lc):
@@ -958,8 +970,17 @@ class RegionIndexer(Indexer):
                 mapping = get_chrom_index_mapping(assembly)
                 self.regions_es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
 
-            self.regions_es.index(index=chrom_lc, doc_type=assembly, body=doc, id=uuid)
+            if len(regions[chrom]) == 0:
+                continue
+            bulk(self.regions_es,
+                 self.region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=500000)
+
             file_doc['chroms'].append(chrom)
+
+            try:  # likely millions per chrom, so
+                self.regions_es.indices.flush_synced(index=chrom)
+            except Exception:
+                pass
 
         return True
 
@@ -1035,6 +1056,7 @@ class RegionIndexer(Indexer):
                     if chrom not in SUPPORTED_CHROMOSOMES:
                         continue   # TEMPORARY: limit both SNPs and regions to major chroms
                     if chrom not in file_data:
+                        # we are done with current chromosome and move on
                         # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
                         if big_file and file_data and len(chroms) > 0:
                             if snp_set:

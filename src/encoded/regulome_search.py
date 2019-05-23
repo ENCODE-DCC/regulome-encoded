@@ -170,7 +170,10 @@ def get_rsid_coordinates(rsid, assembly, atlas=None):
     if atlas and assembly in ['GRCh38', 'hg19', 'GRCh37']:
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
-            return (snp['chrom'], snp.get('start', ''), snp.get('end', ''))
+            try:
+                return(snp['chrm'], snp['coordinates']['gte'], snp['coordinate']['lte'])
+            except KeyError:
+                log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
 
     species = _GENOME_TO_SPECIES.get(assembly, 'homo_sapiens')
     ensembl_url = _ENSEMBL_URL
@@ -347,7 +350,7 @@ def parse_region_query(request):
         # Skip if scored before
         coord = '{}:{}-{}'.format(chrom, start, end)
         if coord in coordinates:
-            notifications.append({region_query: 'Skiped: scored before'})
+            notifications.append({region_query: 'Skipped: scored before'})
             continue
         else:
             coordinates.add(coord)
@@ -419,7 +422,7 @@ def regulome_summary(context, request):
                                                       evidence)
                 result['notifications'].append({coord: 'Success'})
             except Exception as e:
-                result['notifications'].append({coord: 'Failed: {}'.format(e)})
+                result['notifications'].append({coord: 'Failed: (exception) {}'.format(e)})
         summaries.append({'chrom': chrom, 'start': start, 'end': end,
                           'rsids': rsids, 'features': features,
                           'regulome_score': regulome_score})
@@ -558,15 +561,14 @@ def region_search(context, request):
                 targets = dataset.get('target', [])
                 biosample_term_name = dataset.get('biosample_ontology', {}).get('term_name', '')
                 # Get peak coordinates and assemble details
-                # assert 'inner_hits' in peak if peaks_too else False
-                peak_hits = peak['inner_hits']['positions']['hits']['hits']
-                peak_detail = [{'method': method,
+                peak_detail = [{
+                                'method': method,
                                 'targets': targets,
                                 'biosample_term_name': biosample_term_name,
-                                'chrom': hit['_index'],
-                                'start': hit['_source']['start'],
-                                'end': hit['_source']['end']}
-                               for hit in peak_hits]
+                                'chrom': peak['_index'],
+                                'start': peak['_source']['coordinates']['gte'],
+                                'end': peak['_source']['coordinates']['lte']
+                                }]
                 peak_details += peak_detail
             result['peak_details'] = peak_details
 
