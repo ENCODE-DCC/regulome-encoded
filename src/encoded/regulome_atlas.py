@@ -527,8 +527,6 @@ class RegulomeAtlas(object):
 
         if scores:
             snps = self._scored_snps(assembly, chrom, range_start, range_end)
-            for snp in snps:
-                snp.pop('evidence', None)  # don't need this much detail
         else:
             snps = self.find_snps(assembly, chrom, range_start, range_end)
             snps = self._snp_window(snps, max_snps, pos)
