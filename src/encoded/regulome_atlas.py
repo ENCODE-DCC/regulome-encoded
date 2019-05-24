@@ -66,6 +66,7 @@ class RegulomeAtlas(object):
         '''Return single SNP by rsid and assembly'''
         try:
             res = self.region_es.get(index=snp_index_key(assembly), doc_type='_all', id=rsid)
+            #TODO _all is deprecated
         except Exception:
             return None
 
@@ -77,13 +78,29 @@ class RegulomeAtlas(object):
         # get all peaks that overlap requested point
         # only single point intersection
         # use start not end for 0-base open ended
-        query = {
-            'query': {
-                'term': {
-                    'coordinates': start
-                }
-            },
-        }
+        if start == end:
+            query = {
+                'query': {
+                    'term': {
+                        'coordinates': start
+                    }
+                },
+                'size': max_results,
+            }
+        else:
+            query = {
+                'query': {
+                    'range': {
+                        'coordinates': {
+                            'gte': start,
+                            'lte': end,
+                            'relation': 'within',
+                        }
+                    }
+                },
+                'size': max_results,
+            }
+
 
         return query
 
@@ -135,6 +152,7 @@ class RegulomeAtlas(object):
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
         '''Return peaks in a region and resident details'''
+        #TODO I don't know why this also returns details it's not ever used productively
         peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
         if not peaks:
             return (peaks, None)
@@ -159,12 +177,10 @@ class RegulomeAtlas(object):
 
         overlap = set()
         for peak in peaks:
-            for hit in peak['_source']['coordinates']:
-                if chrom == peak['_index'] and \
-                      start <= hit['lte'] and \
-                      end >= hit['gte']:
-                    overlap.add(peak['_source']['uuid'])
-                    break
+            if chrom == peak['_index'] and \
+                    start <= peak['_source']['coordinates']['lte'] and \
+                    end >= peak['_source']['coordinates']['gte']:
+                overlap.add(peak['_source']['uuid'])
 
         return overlap
 
@@ -388,10 +404,10 @@ class RegulomeAtlas(object):
         if len(snps) <= window:
             return snps
 
-        snps = sorted(snps, key=itemgetter('start', 'end', 'rsid'))
+        snps = sorted(snps, key=lambda s: s['coordinates']['gte'])
         ix = 0
         for snp in snps:
-            if snp['start'] >= center_pos:
+            if snp['coordinates']['gte'] >= center_pos:
                 break
             ix += 1
 
@@ -408,8 +424,8 @@ class RegulomeAtlas(object):
         if window > 0:
             snps = self._snp_window(snps, window, center_pos)
 
-        start = snps[0]['start']  # SNPs must be in location order!
-        end = snps[-1]['end']                                        # MUST do SLOW peaks_too
+        start = snps[0]['coordinates']['gte']  # SNPs must be in location order!
+        end = snps[-1]['coordinates']['lte']                                        # MUST do SLOW peaks_too
         (peaks, details) = self.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
         if not peaks or not details:
             for snp in snps:
@@ -422,7 +438,7 @@ class RegulomeAtlas(object):
         for snp in snps:
             snp['score'] = None  # default
             snp['assembly'] = assembly
-            snp_uuids = self._peak_uuids_in_overlap(peaks, snp['chrom'], snp['start'])
+            snp_uuids = self._peak_uuids_in_overlap(peaks, snp['chrom'], snp['coordinates']['gte'])
             if snp_uuids:
                 if snp_uuids == last_uuids:  # good chance evidence hasn't changed
                     if last_snp:
@@ -510,9 +526,7 @@ class RegulomeAtlas(object):
             range_start = 0
 
         if scores:
-            snps = self._scored_snps(assembly, chrom, range_start, range_end, max_snps, pos)
-            for snp in snps:
-                snp.pop('evidence', None)  # don't need this much detail
+            snps = self._scored_snps(assembly, chrom, range_start, range_end)
         else:
             snps = self.find_snps(assembly, chrom, range_start, range_end)
             snps = self._snp_window(snps, max_snps, pos)

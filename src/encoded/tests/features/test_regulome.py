@@ -4,18 +4,11 @@
 """
 
 import pytest
-from time import sleep
 
 pytestmark = [pytest.mark.indexing]
 
 
-def test_one_regulome(testapp, workbook):
-    res = testapp.post_json('/index', {'record': True})
-    assert res.json['title'] == 'primary_indexer'
-    res = testapp.post_json('/index_region', {'record': True})
-    assert res.json['title'] == 'region_indexer'
-    sleep(5)  # For some reason testing fails without some winks
-
+def test_one_regulome(testapp, workbook, region_index):
     res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
     assert res.json['title'] == 'Regulome search'
     assert res.json['@type'] == ['region-search', 'Portal']
@@ -33,19 +26,12 @@ def test_one_regulome(testapp, workbook):
     assert res.json['download_elements'] == expected
 
 
-def test_regulome_score(testapp, workbook):
-    res = testapp.post_json('/index', {'record': True})
-    res = testapp.post_json('/index_region', {'record': True})
-    sleep(5)  # For some reason testing fails without some winks
-
+def test_regulome_score(testapp, workbook, region_index):
     res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
     assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
 
 
-def test_regulome_summary(testapp, workbook):
-    res = testapp.post_json('/index', {'record': True})
-    res = testapp.post_json('/index_region', {'record': True})
-    sleep(5)  # For some reason testing fails without some winks
+def test_regulome_summary(testapp, workbook, region_index):
     summary_query_url = 'http://0.0.0.0:6543/regulome-summary/?regions={}&genome=GRCh37'
 
     region_query = ('%23This is a comment line %0A'
@@ -81,16 +67,3 @@ def test_get_coordinate(query_term, expected, valid):
         with pytest.raises(ValueError) as excinfo:
             get_coordinate(query_term)
         assert str(excinfo.value) == error_msg
-
-
-@pytest.mark.parametrize("assembly,location,snps", [
-    ('hg19', ('chr1', 39492462, 39492462), ['rs3768324']),
-    ('hg19', ('chr10', 5894500, 5894500), ['rs10905307']),
-])
-def test_find_snps(assembly, location, snps, testapp, workbook, registry):
-    from encoded.regulome_atlas import RegulomeAtlas
-    from snovault.elasticsearch import interfaces # NOQA
-    atlas = RegulomeAtlas(registry[interfaces.SNP_SEARCH_ES])
-    found = [snp['rsid'] for snp in 
-             atlas.find_snps(assembly, location[0], location[1], location[2])]
-    assert found == snps
