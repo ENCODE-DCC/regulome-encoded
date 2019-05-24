@@ -159,6 +159,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
     for idx, snp in enumerate(scored_snps):
         assert snp == result[idx]
         idx = idx + 1
+    assert len(result) == idx
 
 
 @pytest.mark.parametrize("assembly,chrom,pos,window,result", [
@@ -195,7 +196,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
 def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, regulome_atlas):
 
     import pprint
-    range_start = int(pos - (window / 2))
+    '''range_start = int(pos - (window / 2))
     range_end = int(pos + (window / 2))
     if range_start < 0:
         range_end += 0 - range_start
@@ -220,7 +221,7 @@ def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, 
         snp['assembly'] = assembly
         snp_uuids = regulome_atlas._peak_uuids_in_overlap(peaks, snp['chrom'], snp['coordinates']['gte'])
         if snp_uuids:
-            if snp_uuids == last_uuids:  
+            if snp_uuids == last_uuids:
                 if last_snp:
                     snp['score'] = last_snp['score']
                     if 'evidence' in last_snp:
@@ -236,6 +237,12 @@ def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, 
                             snp['score'] = regulome_atlas.regulome_score(snp_datasets, snp_evidence)
                             snp['evidence'] = snp_evidence
                             last_snp = snp
-    # this returns empty generator which seems wrong.
     assert result[0] == snps[0]
+    '''
 
+    scored_snps = regulome_atlas.nearby_snps(assembly, chrom, pos, window=window, scores=True)
+    #  sthis returns empty generator which seems wrong.
+    for idx, snp in enumerate(scored_snps):
+        assert snp == result[idx]
+        idx = idx + 1
+    assert len(result) == idx
