@@ -816,7 +816,7 @@ class RegionIndexer(Indexer):
                                               for gene in genes])
                 if len(target_labels) > 0:
                     meta_doc['dataset']['target'] = target_labels
-        biosample = dataset.get('biosample_term_name')
+        biosample = dataset.get('biosample_ontology', {}).get('term_name', "None")
         if biosample:
             meta_doc['dataset']['biosample_term_name'] = biosample
 
