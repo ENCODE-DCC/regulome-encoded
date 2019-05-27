@@ -45,14 +45,14 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
 @pytest.mark.parametrize("assembly,location,dbdetails", [
     ('hg19', ('chr10', 5894499, 5894500), {
         '5f921aa5-5758-4ead-846a-26af87e1a098-28':
-        {'dataset': 
+        {'dataset':
             {   '@id': '/annotations/ENCSR061TST/',
                 'annotation_type': 'dsQTLs',
                 'collection_type': 'dsQTLs',
                 'biosample_term_name': 'lymphoblastoid cell line',
                 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0',
             },
-         'file': 
+         'file':
             {   '@id': '/files/ENCFF122TST/',
                 'assembly': 'hg19',
                 'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098',
@@ -122,13 +122,13 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
     ('hg19', 'chr1', 39492462, 1600,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'eQTL': [{'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
-                'Footprint': [{'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
-                'DNase': [{'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
+                'ChIP': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
+                'eQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
+                'Footprint': [{'biosample_term_name': 'HeLa-S3','collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
+                'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
                 'Footprint_matched': ['ELK4'],
-                'PWM': [{'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
+                'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
                 'PWM_matched': ['ELK4']
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
@@ -140,8 +140,8 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
     ('hg19', 'chr10', 5894500, 100000,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
+                'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
+                'dsQTL': [{ 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
             'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
@@ -168,13 +168,13 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
     ('hg19', 'chr1', 39492462, 1600,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'eQTL': [{'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
-                'Footprint': [{'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
-                'DNase': [{'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
+                'ChIP': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
+                'eQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
+                'Footprint': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
+                'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
                 'Footprint_matched': ['ELK4'],
-                'PWM': [{'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
+                'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
                 'PWM_matched': ['ELK4']
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
@@ -186,8 +186,8 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
     ('hg19', 'chr10', 5894500, 100000,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
+                'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'assay_term_name': 'ChIP-seq'}],
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
             'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
