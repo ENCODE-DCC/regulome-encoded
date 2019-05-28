@@ -16,7 +16,8 @@ from encoded.helpers.helper import (
 from snovault.helpers.helper import (
     get_filtered_query,
     set_filters,
-    set_facets
+    set_facets,
+    list_result_fields,
 )
 from .batch_download import get_peak_metadata_links
 from .regulome_atlas import RegulomeAtlas
@@ -533,7 +534,13 @@ def region_search(context, request):
         allowed_status = atlas.allowed_statuses()
         facets = _REGULOME_FACETS
 
-        query = get_filtered_query('Dataset', [], set(), principals, atlas.set_type())
+        query = get_filtered_query(
+            'Dataset',
+            [],
+            sorted(list_result_fields(request, ['Experiment', 'Annotation'])),
+            principals,
+            atlas.set_type()
+        )
         del query['query']
         query['post_filter']['bool']['must'].append({'terms':
                                                     {'embedded.@id': all_hits['dataset_paths']}})
