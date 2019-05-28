@@ -246,3 +246,23 @@ def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, 
         assert snp == result[idx]
         idx = idx + 1
     assert len(result) == idx
+
+
+@pytest.mark.parametrize("assembly,rsid,location", [
+    ('GRCh37', 'rs3768324',  ('chr1', '39492462', '39492462')),
+    ('GRCh37', 'rs10905307', ('chr10', '5894500', '5894500')),
+])
+def test_get_rsid_coordinates(rsid, assembly, location, regulome_atlas):
+    from encoded import regulome_search
+    coords = regulome_search.get_rsid_coordinates(rsid, assembly, atlas=regulome_atlas, webfetch=False)
+    assert coords == location
+
+
+@pytest.mark.parametrize("assembly,rsid,location", [
+    ('GRCh37', 'rs3768324',  ('chr1', '39492462', '39492462')),
+    ('GRCh37', 'rs10905307', ('chr10', '5894500', '5894500')),
+])
+def test_get_rsid_coordinates_internet(rsid, assembly, location):
+    from encoded import regulome_search
+    coords = regulome_search.get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True)
+    assert coords == location
