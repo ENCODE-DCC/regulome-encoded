@@ -78,7 +78,7 @@ class RegulomeAtlas(object):
         # get all peaks that overlap requested point
         # only single point intersection
         # use start not end for 0-base open ended
-        if start == end:
+        if abs(int(end) - int(start)) == 1:
             query = {
                 'query': {
                     'term': {
@@ -93,8 +93,8 @@ class RegulomeAtlas(object):
                     'range': {
                         'coordinates': {
                             'gte': start,
-                            'lte': end,
-                            'relation': 'within',
+                            'lt': end,
+                            'relation': 'intersect',
                         }
                     }
                 },
@@ -178,7 +178,7 @@ class RegulomeAtlas(object):
         overlap = set()
         for peak in peaks:
             if chrom == peak['_index'] and \
-                    start <= peak['_source']['coordinates']['lte'] and \
+                    start <= peak['_source']['coordinates']['lt'] and \
                     end >= peak['_source']['coordinates']['gte']:
                 overlap.add(peak['_source']['uuid'])
 
@@ -425,7 +425,7 @@ class RegulomeAtlas(object):
             snps = self._snp_window(snps, window, center_pos)
 
         start = snps[0]['coordinates']['gte']  # SNPs must be in location order!
-        end = snps[-1]['coordinates']['lte']                                        # MUST do SLOW peaks_too
+        end = snps[-1]['coordinates']['lt']                                        # MUST do SLOW peaks_too
         (peaks, details) = self.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
         if not peaks or not details:
             for snp in snps:

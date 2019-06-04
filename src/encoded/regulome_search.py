@@ -171,7 +171,7 @@ def get_rsid_coordinates(rsid, assembly, atlas=None):
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
             try:
-                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinate']['lte'])
+                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinate']['lt'])
             except KeyError:
                 log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
 
@@ -567,7 +567,7 @@ def region_search(context, request):
                                 'biosample_term_name': biosample_term_name,
                                 'chrom': peak['_index'],
                                 'start': peak['_source']['coordinates']['gte'],
-                                'end': peak['_source']['coordinates']['lte']
+                                'end': peak['_source']['coordinates']['lt']
                                 }]
                 peak_details += peak_detail
             result['peak_details'] = peak_details

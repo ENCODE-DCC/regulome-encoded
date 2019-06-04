@@ -341,10 +341,10 @@ class RemoteReader(object):
         '''
         chrom, start, end = row[0], int(row[1]), int(row[2])
         return (chrom, {
-                        'gte': start + 1,
-                        'lte': end
+                        'gte': start,
+                        'lt': end
                     }
-                )  # bed loc 'half-open', but we close it !
+                )  # Stored as BED 0-based half open
 
     @staticmethod
     def snp(row):
@@ -356,8 +356,8 @@ class RemoteReader(object):
               'rsid': rsid, 
               'chrom': chrom, 
               'coordinates': { 
-                  'gte': start + 1,
-                  'lte': end
+                  'gte': start,
+                  'lt': end
                 }
         })
 

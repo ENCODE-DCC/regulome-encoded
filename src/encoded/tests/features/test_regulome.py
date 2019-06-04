@@ -14,14 +14,14 @@ def test_one_regulome(testapp, workbook, region_index):
     assert res.json['@type'] == ['region-search', 'Portal']
     assert res.json['notification'] == 'Success: 7 peaks in 7 files belonging to 7 datasets in this region'
     assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
-    assert res.json['coordinates'] == 'chr1:39492462-39492462'
+    assert res.json['coordinates'] == 'chr1:39492462-39492464'
     assert {e['accession'] for e in res.json['@graph']} == {
         'ENCSR228TST', 'ENCSR061TST', 'ENCSR000DCE', 'ENCSR333TST',
         'ENCSR899TST', 'ENCSR000ENO', 'ENCSR000EVI'
     }
     expected = [
-        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492462_39492462.bed',
-        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492462_39492462.json'
+        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492462_39492463.bed',
+        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492462_39492463.json'
     ]
     assert res.json['download_elements'] == expected
 

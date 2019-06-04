@@ -81,7 +81,7 @@ test_url = 'http://localhost:9201/{}/_search'
 clear_cache_url = 'http://localhost:9201/_cache/clear'
 start = 0
 end = 0
-start_cond = {'lte': end}
+start_cond = {'lt': end}
 end_cond = {'gte': start}
 SEARCH_MAX = 99999
 
