@@ -171,13 +171,8 @@ def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
             try:
-<<<<<<< HEAD
-                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinate']['lt'])
-            except KeyError:
-=======
-                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinates']['lte'])
+                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinates']['lt'])
             except KeyError as e:
->>>>>>> REG-108-bad-snp-lookup
                 log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
                 if not webfetch:
                     log.error("Do not lookup: %s", e)
