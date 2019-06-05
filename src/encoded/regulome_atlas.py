@@ -94,13 +94,12 @@ class RegulomeAtlas(object):
                         'coordinates': {
                             'gte': start,
                             'lt': end,
-                            'relation': 'intersect',
+                            'relation': 'intersects',
                         }
                     }
                 },
                 'size': max_results,
             }
-
 
         return query
 

@@ -27,7 +27,7 @@ def test_find_snps(assembly, location, snps, region_index, regulome_atlas):
 
 @pytest.mark.parametrize("assembly,location,dbpeaks", [
     ('hg19', ('chr10', 5894499, 5894500), [
-        {'coordinates': {'gte': 5894433, 'lt': 5894748},
+        {'coordinates': {'gte': 5894432, 'lt': 5894748},
          'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572'},
         {'coordinates': {'gte': 5894499, 'lt': 5894500},
          'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098'}
@@ -43,7 +43,7 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
 
 
 @pytest.mark.parametrize("assembly,location,dbdetails", [
-    ('hg19', ('chr10', 5894500, 5894500), [
+    ('hg19', ('chr10', 5894499, 5894500), [
         {'dataset': 
             {   '@id': '/annotations/ENCSR061TST/',
                 'annotation_type': 'dsQTLs',
@@ -129,7 +129,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 'PWM': [{'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
                 'PWM_matched': ['ELK4']
             },
-            'coordinates': {'lt': 39492462, 'gte': 39492462},
+            'coordinates': {'lt': 39492462, 'gte': 39492461},
             'score': '0.8136 (probability); 1a (ranking v1.1)',
             'rsid': 'rs3768324',
             'assembly': 'hg19',
@@ -140,7 +140,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
             'evidence': {
                 'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
                 'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
-            'coordinates': {'lt': 5894500, 'gte': 5894500},
+            'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
             'assembly': 'hg19',
@@ -175,7 +175,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 'PWM': [{'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
                 'PWM_matched': ['ELK4']
             },
-            'coordinates': {'lt': 39492462, 'gte': 39492462},
+            'coordinates': {'lt': 39492462, 'gte': 39492461},
             'score': '0.8136 (probability); 1a (ranking v1.1)',
             'rsid': 'rs3768324',
             'assembly': 'hg19',
@@ -186,7 +186,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
             'evidence': {
                 'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
                 'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
-            'coordinates': {'lt': 5894500, 'gte': 5894500},
+            'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
             'assembly': 'hg19',
