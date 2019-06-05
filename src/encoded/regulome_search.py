@@ -166,14 +166,22 @@ def assembly_mapper(location, species, input_assembly, output_assembly):
         return(chromosome, start, end)
 
 
-def get_rsid_coordinates(rsid, assembly, atlas=None):
+def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
     if atlas and assembly in ['GRCh38', 'hg19', 'GRCh37']:
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
             try:
+<<<<<<< HEAD
                 return(snp['chrom'], snp['coordinates']['gte'], snp['coordinate']['lt'])
             except KeyError:
+=======
+                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinates']['lte'])
+            except KeyError as e:
+>>>>>>> REG-108-bad-snp-lookup
                 log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
+                if not webfetch:
+                    log.error("Do not lookup: %s", e)
+                    raise
 
     species = _GENOME_TO_SPECIES.get(assembly, 'homo_sapiens')
     ensembl_url = _ENSEMBL_URL
