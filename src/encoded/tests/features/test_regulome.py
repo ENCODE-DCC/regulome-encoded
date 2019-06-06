@@ -35,9 +35,9 @@ def test_regulome_summary(testapp, workbook, region_index):
     summary_query_url = 'http://0.0.0.0:6543/regulome-summary/?regions={}&genome=GRCh37'
 
     region_query = ('%23This is a comment line %0A'
-                    'chr1:39492462-39492462 rs3768324 %0A'
+                    'chr1:39492461-39492462 rs3768324 %0A'
                     'rs75982468 %0D'
-                    'chr10 5894500 %09 5894500 rs10905307 %0A%0D'
+                    'chr10 5894499 %09 5894500 rs10905307 %0A%0D'
                     'This is an invalid region query %0D%0A')
     res = testapp.get(summary_query_url.format(region_query))
     import json
