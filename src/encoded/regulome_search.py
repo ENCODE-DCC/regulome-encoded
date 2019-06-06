@@ -198,7 +198,8 @@ def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
             if 'PATCH' not in mapping['location']:
                 if mapping['assembly_name'] == assembly:
                     chromosome, start, end = re.split(':|-', mapping['location'])
-                    return('chr' + chromosome, start, end)
+                    # must convert to 0-base
+                    return('chr' + chromosome, str(int(start)-1), end)
                 elif assembly == 'GRCh37':
                     return assembly_mapper(mapping['location'], species, 'GRCh38', assembly)
                 elif assembly == 'GRCm37':

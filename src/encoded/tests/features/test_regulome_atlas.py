@@ -247,12 +247,10 @@ def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, 
         idx = idx + 1
     assert len(result) == idx
 
-<<<<<<< HEAD
-=======
 
 @pytest.mark.parametrize("assembly,rsid,location", [
-    ('GRCh37', 'rs3768324',  ('chr1', '39492462', '39492462')),
-    ('GRCh37', 'rs10905307', ('chr10', '5894500', '5894500')),
+    ('GRCh37', 'rs3768324',  ('chr1', '39492461', '39492462')),
+    ('GRCh37', 'rs10905307', ('chr10', '5894499', '5894500')),
 ])
 def test_get_rsid_coordinates(rsid, assembly, location, regulome_atlas):
     from encoded import regulome_search
@@ -261,11 +259,10 @@ def test_get_rsid_coordinates(rsid, assembly, location, regulome_atlas):
 
 
 @pytest.mark.parametrize("assembly,rsid,location", [
-    ('GRCh37', 'rs3768324',  ('chr1', '39492462', '39492462')),
-    ('GRCh37', 'rs10905307', ('chr10', '5894500', '5894500')),
+    ('GRCh37', 'rs3768324',  ('chr1', '39492461', '39492462')),
+    ('GRCh37', 'rs10905307', ('chr10', '5894499', '5894500')),
 ])
 def test_get_rsid_coordinates_internet(rsid, assembly, location):
     from encoded import regulome_search
     coords = regulome_search.get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True)
     assert coords == location
->>>>>>> REG-108-bad-snp-lookup
