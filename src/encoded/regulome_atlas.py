@@ -78,7 +78,9 @@ class RegulomeAtlas(object):
         # get all peaks that overlap requested point
         # only single point intersection
         # use start not end for 0-base open ended
-        if abs(int(end) - int(start)) == 1:
+        start = int(start)
+        end = int(end)
+        if abs(end - start) == 1:
             query = {
                 'query': {
                     'term': {
