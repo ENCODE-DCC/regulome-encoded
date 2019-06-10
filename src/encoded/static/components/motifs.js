@@ -63,10 +63,7 @@ export class MotifElement extends React.Component {
 
     // Redraw charts when window changes
     componentDidUpdate() {
-        // Need to remove current logo or another logo will be appended to original
-        this.chartdisplay.innerHTML = '';
         const pwmLink = this.generatePWMLink();
-
         getMotifData(pwmLink, this.context.fetch).then((response) => {
             this.addMotifElement(response);
         });
@@ -94,15 +91,25 @@ export class MotifElement extends React.Component {
         return (
             <div className="element" id={`element${element.accession}`}>
                 <div className="motif-description">
-                    <p><a href={element['@id']}>{element.accession}</a></p>
-                    {element.biosample_term_name ?
-                        <p>Biosample: {element.biosample_term_name}</p>
+                    {!(this.props.shortened) ?
+                        <p><a href={element['@id']}>{element.accession}</a></p>
                     : null}
                     {element.organ_slims ?
-                        <p>Organ: {element.organ_slims.join(', ')}</p>
+                        <p><span className="motif-label">Organ</span>{element.organ_slims.join(', ')}</p>
                     : null}
                     {targetList ?
-                        <p>{targetListLabel}: {targetList.join(', ')}</p>
+                        <p><span className="motif-label">{targetListLabel}</span>{targetList.join(', ')}</p>
+                    : null}
+                    {element.assay_title ?
+                        <p><span className="motif-label">Method</span>{element.assay_title}</p>
+                    :
+                        <p><span className="motif-label">Method</span>{element.annotation_type}</p>
+                    }
+                    {element.biosample_ontology ?
+                        <p><span className="motif-label">Biosample</span>{element.biosample_ontology.term_name}</p>
+                    : null}
+                    {element.description && !(this.props.shortened) ?
+                        <p><span className="motif-label">Description</span>{element.description}</p>
                     : null}
                 </div>
                 <div ref={(div) => { this.chartdisplay = div; }} className="motif-element" />
@@ -114,6 +121,7 @@ export class MotifElement extends React.Component {
 MotifElement.propTypes = {
     element: PropTypes.object.isRequired,
     urlBase: PropTypes.string.isRequired,
+    shortened: PropTypes.bool.isRequired,
 };
 
 MotifElement.contextTypes = {
@@ -123,20 +131,26 @@ MotifElement.contextTypes = {
 export const Motifs = (props) => {
     const results = props.context['@graph'];
     const urlBase = props.urlBase;
+    const limit = +props.limit;
+    const classList = props.classList;
 
     // Filter results to find ones with associated PWM data
-    const pwmLinkList = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
-
+    const pwmLinkListFull = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
+    let pwmLinkList = [];
+    if (limit > 0 && pwmLinkListFull !== []) {
+        pwmLinkList = pwmLinkListFull.slice(0, limit);
+    } else {
+        pwmLinkList = pwmLinkListFull;
+    }
     return (
         <div>
-            <div className="sequence-logo-table">
-                <h4>Motifs</h4>
+            <div className={`sequence-logo-table ${classList}`}>
                 <div className="sequence-logo">
                     {(pwmLinkList.length === 0) ?
-                        <div className="visualize-error">Choose other datasets. These do not include PWM data.</div>
+                        <div className="visualize-error">There are no results that include PWM data. Try a different search.</div>
                     :
                         <div>
-                            {pwmLinkList.map(d => <MotifElement key={d.accession} element={d} urlBase={urlBase} />)}
+                            {pwmLinkList.map(d => <MotifElement key={d.accession} element={d} urlBase={urlBase} shortened={limit > 0} />)}
                         </div>
                     }
                 </div>
@@ -148,4 +162,10 @@ export const Motifs = (props) => {
 Motifs.propTypes = {
     context: PropTypes.object.isRequired,
     urlBase: PropTypes.string.isRequired,
+    limit: PropTypes.number.isRequired,
+    classList: PropTypes.string,
+};
+
+Motifs.defaultProps = {
+    classList: '',
 };

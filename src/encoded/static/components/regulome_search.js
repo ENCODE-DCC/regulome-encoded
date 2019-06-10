@@ -3,10 +3,9 @@ import PropTypes from 'prop-types';
 import _ from 'underscore';
 import url from 'url';
 import * as globals from './globals';
-import { Panel, PanelBody } from '../libs/bootstrap/panel';
-import { FacetList, FilterList } from './search';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
+import { BarChart, ChartTable } from './visualizations';
 
 const dataTypeStrings = [
     {
@@ -141,62 +140,60 @@ class AdvSearch extends React.Component {
         const searchBase = url.parse(this.context.location_href).search || '';
 
         return (
-            <Panel>
-                <PanelBody>
-                    <form id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
-                        <div className="form-group">
-                            <label htmlFor="annotation">
-                                <i className="icon icon-search" />Search by dbSNP ID or coordinate range (hg19)
-                            </label>
-                            <div className="input-group input-group-region-input">
-                                <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />
+            <div>
+                <form id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
+                    <div className="form-group">
+                        <label htmlFor="annotation">
+                            <i className="icon icon-search" />Search by dbSNP ID or coordinate range (hg19)
+                        </label>
+                        <div className="input-group input-group-region-input">
+                            <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />
 
-                                <div className="example-inputs">
-                                    Click for example entry:
-                                    {exampleEntries.map((entry, entryIdx) =>
-                                        <span key={entry.label}>
-                                            <ExampleEntry label={entry.label} input={entry.input} handleExample={this.handleExample} />
-                                            { entryIdx !== (exampleEntries.length - 1) ?
-                                                'or'
-                                            :
-                                            null}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <input type="submit" value="Search" className="btn btn-sm btn-info" />
-                                <input type="hidden" name="genome" value={this.state.genome} />
+                            <div className="example-inputs">
+                                Click for example entry:
+                                {exampleEntries.map((entry, entryIdx) =>
+                                    <span key={entry.label}>
+                                        <ExampleEntry label={entry.label} input={entry.input} handleExample={this.handleExample} />
+                                        { entryIdx !== (exampleEntries.length - 1) ?
+                                            'or'
+                                        :
+                                        null}
+                                    </span>
+                                )}
                             </div>
-                        </div>
 
-                    </form>
-
-                    {(context.notification) ?
-                        <div className="notification">{context.notification}</div>
-                    : null}
-                    {(context.coordinates) ?
-                        <p>Searched coordinates: {context.coordinates}</p>
-                    : null}
-                    {(context.regulome_score) ?
-                        <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking)</p>
-                    : null}
-                    {(context.regulome_score && !context.peak_details) ?
-                        <a
-                            rel="nofollow"
-                            className="btn btn-info btn-sm"
-                            href={searchBase ? `${searchBase}&peak_metadata` : '?peak_metadata'}
-                        >
-                            See peaks
-                        </a>
-                    : null}
-                    {(context.peak_details !== undefined && context.peak_details !== null) ?
-                        <div className="btn-container">
-                            <a className="btn btn-info btn-sm" href={context.download_elements[0]} data-bypass>Download peak details (TSV)</a>
-                            <a className="btn btn-info btn-sm" href={context.download_elements[1]} data-bypass>Download peak details (JSON)</a>
+                            <input type="submit" value="Search" className="btn btn-sm btn-info" />
+                            <input type="hidden" name="genome" value={this.state.genome} />
                         </div>
-                    : null}
-                </PanelBody>
-            </Panel>
+                    </div>
+
+                </form>
+
+                {(context.notification && context.notification !== 'No annotations found') ?
+                    <div className="notification">{context.notification}</div>
+                : null}
+                {(context.coordinates) ?
+                    <p>Searched coordinates: {context.coordinates}</p>
+                : null}
+                {(context.regulome_score) ?
+                    <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking) </p>
+                : null}
+                {(context.regulome_score && !context.peak_details) ?
+                    <a
+                        rel="nofollow"
+                        className="btn btn-info btn-sm"
+                        href={searchBase ? `${searchBase}&peak_metadata` : '?peak_metadata'}
+                    >
+                        See peaks
+                    </a>
+                : null}
+                {(context.peak_details !== undefined && context.peak_details !== null) ?
+                    <div className="btn-container">
+                        <a className="btn btn-info btn-sm" href={context.download_elements[0]} data-bypass>Download peak details (TSV)</a>
+                        <a className="btn btn-info btn-sm" href={context.download_elements[1]} data-bypass>Download peak details (JSON)</a>
+                    </div>
+                : null}
+            </div>
         );
     }
 }
@@ -232,14 +229,6 @@ const PeakDetails = (props) => {
             title: 'Targets',
             getValue: item => item.targets.join(', '),
         },
-
-        value: {
-            title: 'Value',
-        },
-
-        strand: {
-            title: 'Strand',
-        },
     };
 
     return (
@@ -255,67 +244,296 @@ PeakDetails.propTypes = {
     context: React.PropTypes.object.isRequired,
 };
 
+const NearbySNPsDrawing = (props) => {
+    const context = props.context;
+
+    let startNearbySnps = 0;
+    let endNearbySnps = 0;
+    let coordinate = 0;
+    let coordinateX = 0;
+
+    const coordinateXEven = [-100];
+    const coordinateXOdd = [-100];
+    const coordinateYOffset = [];
+    let countEven = 0;
+    let countOdd = 0;
+    if (context.nearby_snps && context.nearby_snps[0] && context.nearby_snps[0].coordinates) {
+        startNearbySnps = +context.nearby_snps[0].coordinates.lt;
+        endNearbySnps = +context.nearby_snps[context.nearby_snps.length - 1].coordinates.lt;
+        coordinate = +context.coordinates.split('-')[1];
+        coordinateX = (920 * ((coordinate - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
+
+        context.nearby_snps.forEach((snp, snpIndex) => {
+            let offset = 0;
+            const tempCoordinate = (920 * ((+snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
+            if (snpIndex % 2 === 0) {
+                countEven += 1;
+                coordinateXEven[countEven] = tempCoordinate;
+                // check if coordinate was close to last even coordinate
+                if ((coordinateXEven[countEven] - coordinateXEven[countEven - 1]) < 90) {
+                    // check if last coordinate was also offset
+                    if (coordinateYOffset[snpIndex - 2] !== 0) {
+                        // if last coordinate was also offset, check if this coordinate was also too close to that one
+                        if (coordinateXEven[countEven] - coordinateXEven[countEven - 1] < 90) {
+                            offset = coordinateYOffset[snpIndex - 2] + 20;
+                        } else {
+                            offset = 20;
+                        }
+                    } else {
+                        offset = 20;
+                    }
+                }
+            } else {
+                countOdd += 1;
+                coordinateXOdd[countOdd] = tempCoordinate;
+                // check if coordinate was close to last odd coordinate
+                if ((coordinateXOdd[countOdd] - coordinateXOdd[countOdd - 1]) < 90) {
+                    // check if last coordinate was also offset
+                    if (coordinateYOffset[snpIndex - 2] !== 0) {
+                        // if last coordinate was also offset, check if this coordinate was also too close to that one
+                        if (coordinateXOdd[countOdd] - coordinateXOdd[countOdd - 1] < 90) {
+                            offset = coordinateYOffset[snpIndex - 2] + 20;
+                        } else {
+                            offset = 20;
+                        }
+                    } else {
+                        offset = 20;
+                    }
+                }
+            }
+            coordinateYOffset.push(offset);
+        });
+    }
+
+    return (
+        <div className="svg-container">
+            <div className="svg-title top-title">Chromosome {context.nearby_snps[0].chrom.split('chr')[1]}</div>
+            <div className="svg-title">SNPs matching searched coordinates and nearby SNPs</div>
+            <svg className="nearby-snps" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMid meet" aria-labelledby="Nearby SNPs" role="img">
+                <defs>
+                    <marker
+                        id="arrow"
+                        viewBox="0 0 10 10"
+                        refX="5"
+                        refY="5"
+                        markerWidth="5"
+                        markerHeight="6"
+                        orient="auto-start-reverse"
+                    >
+                        <path d="M 0 0 L 10 5 L 0 10 z" />
+                    </marker>
+                </defs>
+                <g className="grid x-grid" id="xGrid">
+                    <line x1="10" x2="990" y1="75" y2="75" markerEnd="url(#arrow)" markerStart="url(#arrow)" stroke="#7F7F7F" strokeWidth="2" />
+                </g>
+                <g className="labels x-labels">
+                    {context.nearby_snps.map((snp, snpIndex) => {
+                        const snpX = (920 * ((+snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
+                        if (snpIndex % 2 === 0) {
+                            if (snpX === coordinateX) {
+                                return (
+                                    <g key={`tick${snpIndex}`}>
+                                        <line x1={String(snpX)} x2={String(snpX)} y1={60 - coordinateYOffset[snpIndex]} y2="75" stroke="#c13b42" strokeWidth="2" />
+                                    </g>
+                                );
+                            }
+                            return (
+                                <g key={`tick${snpIndex}`}>
+                                    <line x1={String(snpX)} x2={String(snpX)} y1={60 - coordinateYOffset[snpIndex]} y2="75" stroke="#7F7F7F" strokeWidth="2" />
+                                </g>
+                            );
+                        }
+                        if (snpX === coordinateX) {
+                            return (
+                                <g key={`tick${snpIndex}`}>
+                                    <line x1={String(snpX)} x2={String(snpX)} y1={90 + coordinateYOffset[snpIndex]} y2="75" stroke="#c13b42" strokeWidth="2" />
+                                </g>
+                            );
+                        }
+                        return (
+                            <g key={`tick${snpIndex}`}>
+                                <line x1={String(snpX)} x2={String(snpX)} y1={90 + coordinateYOffset[snpIndex]} y2="75" stroke="#7F7F7F" strokeWidth="2" />
+                            </g>
+                        );
+                    })}
+                    {context.nearby_snps.map((snp, snpIndex) => {
+                        const snpX = (920 * ((snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
+                        const labelX = snpX - 40;
+                        if (snpIndex % 2 === 0) {
+                            if (snpX === coordinateX) {
+                                return (
+                                    <g key={`snp${snpIndex}`}>
+                                        <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width="77" fill="white" opacity="0.6" />
+                                        <text x={labelX} y={55 - coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
+                                    </g>
+                                );
+                            }
+                            return (
+                                <g key={`snp${snpIndex}`}>
+                                    <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width="77" fill="white" opacity="0.6" />
+                                    <text x={labelX} y={55 - coordinateYOffset[snpIndex]}>{snp.rsid}</text>
+                                </g>
+                            );
+                        }
+                        if (snpX === coordinateX) {
+                            return (
+                                <g key={`snp${snpIndex}`}>
+                                    <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width="77" fill="white" opacity="0.6" />
+                                    <text x={labelX} y={105 + coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
+                                </g>
+                            );
+                        }
+                        return (
+                            <g key={`snp${snpIndex}`}>
+                                <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width="77" fill="white" opacity="0.6" />
+                                <text x={labelX} y={105 + coordinateYOffset[snpIndex]}>{snp.rsid}</text>
+                            </g>
+                        );
+                    })}
+                </g>
+            </svg>
+        </div>
+    );
+};
+
+NearbySNPsDrawing.propTypes = {
+    context: React.PropTypes.object.isRequired,
+};
+
 const ResultsTable = (props) => {
     const context = props.context;
-    const data = context['@graph'];
-
-    const dataColumns = {
-
-        assay_title: {
-            title: 'Method',
-            getValue: item => (item.assay_title || item.annotation_type),
-        },
-
-        biosample_term_name: {
-            title: 'Biosample',
-            getValue: (item) => item.biosample_ontology ? item.biosample_ontology.term_name : '',
-        },
-
-        target: {
-            title: 'Targets',
-            getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
-        },
-
-        organ_slims: {
-            title: 'Organ',
-            getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
-        },
-
-        accession: {
-            title: 'Link',
-            display: item => <a href={item['@id']}>{item.accession}</a>,
-        },
-
-        description: {
-            title: 'Description',
-        },
-    };
+    const allData = context['@graph'];
+    let data = allData;
+    if (props.dataFilter === 'chip') {
+        data = allData.filter(d => d.assay_title === 'ChIP-seq');
+    } else if (props.dataFilter === 'qtl') {
+        data = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
+    } else if (props.dataFilter === 'dnase') {
+        data = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
+    } else if (props.dataFilter === 'chromatin') {
+        data = allData.filter(d => (d.annotation_type === 'chromatin state'));
+    }
+    let dataColumns = null;
+    if (props.dataFilter === 'chromatin') {
+        dataColumns = {
+            assay_title: {
+                title: 'Method',
+                getValue: item => (item.assay_title || item.annotation_type),
+            },
+            biosample_term_name: {
+                title: 'Biosample',
+                getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+            },
+            organ_slims: {
+                title: 'Organ',
+                getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
+            },
+            accession: {
+                title: 'Link',
+                display: item => <a href={item['@id']}>{item.accession}</a>,
+            },
+            description: {
+                title: 'Description',
+            },
+        };
+    } else if (props.dataFilter === 'qtl') {
+        dataColumns = {
+            assay_title: {
+                title: 'Method',
+                getValue: item => (item.assay_title || item.annotation_type),
+            },
+            biosample_term_name: {
+                title: 'Biosample',
+                getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+            },
+            target: {
+                title: 'Targets',
+                getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
+            },
+            accession: {
+                title: 'Link',
+                display: item => <a href={item['@id']}>{item.accession}</a>,
+            },
+            description: {
+                title: 'Description',
+            },
+        };
+    } else {
+        dataColumns = {
+            assay_title: {
+                title: 'Method',
+                getValue: item => (item.assay_title || item.annotation_type),
+            },
+            biosample_term_name: {
+                title: 'Biosample',
+                getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+            },
+            target: {
+                title: 'Targets',
+                getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
+            },
+            organ_slims: {
+                title: 'Organ',
+                getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
+            },
+            accession: {
+                title: 'Link',
+                display: item => <a href={item['@id']}>{item.accession}</a>,
+            },
+            description: {
+                title: 'Description',
+            },
+        };
+    }
 
     return (
         <div>
-            <SortTablePanel title="Results">
-                <SortTable list={data} columns={dataColumns} />
-            </SortTablePanel>
+            {data.length > 0 ?
+                <SortTablePanel title="Results">
+                    <SortTable list={data} columns={dataColumns} />
+                </SortTablePanel>
+            :
+                <div className="notification large-notification">No result table is available for this SNP.</div>
+            }
         </div>
     );
 };
 
 ResultsTable.propTypes = {
     context: React.PropTypes.object.isRequired,
+    dataFilter: PropTypes.string,
+};
+
+ResultsTable.defaultProps = {
+    dataFilter: '',
 };
 
 class RegulomeSearch extends React.Component {
     constructor() {
         super();
 
-        this.assembly = 'hg19';
+        this.applicationRef = null;
+        this.state = {
+            selectedThumbnail: null,
+            thumbnailWidth: 0,
+            screenWidth: 0,
+        };
 
         // Bind this to non-React methods.
         this.onFilter = this.onFilter.bind(this);
+        this.chooseThumbnail = this.chooseThumbnail.bind(this);
+        this.updateDimensions = this.updateDimensions.bind(this);
     }
 
-    shouldComponentUpdate(nextProps) {
-        return !_.isEqual(this.props, nextProps);
+    componentDidMount() {
+        this.updateDimensions();
+        window.addEventListener('resize', this.updateDimensions);
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        const thumbnailUpdate = this.state.selectedThumbnail !== nextState.selectedThumbnail;
+        const screenSizeUpdate = this.state.screenWidth !== this.applicationRef.offsetWidth;
+        return (!_.isEqual(this.props, nextProps) || thumbnailUpdate || screenSizeUpdate);
     }
 
     onFilter(e) {
@@ -327,33 +545,30 @@ class RegulomeSearch extends React.Component {
         }
     }
 
-    render() {
-        const visualizeLimit = 100;
-        const context = this.props.context;
-        const results = context['@graph'];
-        const notification = context.notification;
-        const searchBase = url.parse(this.context.location_href).search || '';
-        const urlBase = this.context.location_href.split('/regulome-search')[0];
-        const filters = context.filters;
-        const facets = context.facets;
-        const total = context.total;
-        const visualizeDisabled = total > visualizeLimit;
-
-        const visualizeCfg = context.visualize_batch;
-
-        // Get a sorted list of batch hubs keys with case-insensitive sort
-        let visualizeKeys = [];
-        if (context.visualize_batch && Object.keys(context.visualize_batch).length) {
-            visualizeKeys = Object.keys(context.visualize_batch).sort((a, b) => {
-                const aLower = a.toLowerCase();
-                const bLower = b.toLowerCase();
-                return (aLower > bLower) ? 1 : ((aLower < bLower) ? -1 : 0);
-            });
+    updateDimensions() {
+        const screenWidth = this.applicationRef.offsetWidth;
+        let thumbnailWidth = 0;
+        if (screenWidth > 865) {
+            thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
+        } else {
+            thumbnailWidth = this.applicationRef.offsetWidth - 40;
         }
+        this.setState({
+            thumbnailWidth,
+            screenWidth,
+        });
+    }
 
+    chooseThumbnail(chosen) {
+        this.setState({ selectedThumbnail: chosen });
+    }
+
+    render() {
+        const context = this.props.context;
+        const notification = context.notification;
+        const urlBase = this.context.location_href.split('/regulome-search')[0];
         return (
-            <div>
-
+            <div ref={(ref) => { this.applicationRef = ref; }} >
                 {(context.total > 0) ?
                     <div>
                         <div className="lead-logo">
@@ -362,89 +577,134 @@ class RegulomeSearch extends React.Component {
                             </a>
                         </div>
                         <div>
-                            <div className="result-summary">
-                                {(context.regulome_score) ?
-                                    <p className="regulomescore">Score: <span className="bold-class">{context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking)</span></p>
-                                : null}
-                            </div>
                             <div className="search-information">
                                 {(context.coordinates) ?
-                                    <p>Searched coordinates: {context.coordinates}</p>
+                                    <div className="notification-line">
+                                        <div className="notification-label">Searched coordinates</div>
+                                        <div className="notification">{context.coordinates}</div>
+                                    </div>
                                 : null}
                                 {(context.notification) ?
-                                    <p>{context.notification}</p>
-                                : null}
-                            </div>
-                            <div className="button-collection">
-                                {visualizeKeys && context.visualize_batch && !visualizeDisabled ?
-                                    <div className="visualize-block">
-                                        {visualizeCfg.hg19.UCSC ?
-                                            <div>
-                                                <div className="visualize-element">
-                                                    <a href={visualizeCfg.hg19['Quick View']} rel="noopener noreferrer" target="_blank">
-                                                        <i className="icon icon-external-link" />
-                                                    Visualize: Quick View
-                                                    </a>
-                                                </div>
-                                                <div className="visualize-element">
-                                                    <a href={visualizeCfg.hg19.UCSC} rel="noopener noreferrer" target="_blank">
-                                                        <i className="icon icon-external-link" />
-                                                    UCSC browser
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        :
-                                            <div className="visualize-element visualize-error">To visualize, choose other datasets.</div>
-                                        }
+                                    <div className="notification-line">
+                                        <div className="notification-label">{context.notification.split(': ')[0]}</div>
+                                        <div className="notification">{context.notification.split(': ')[1].replace('in this region', '')}</div>
                                     </div>
-                                :
-                                    <div className="visualize-block">
-                                        <div className="visualize-element visualize-error">Filter to fewer than 100 results to visualize</div>
-                                    </div>
-                                }
-                                {(context.regulome_score && !context.peak_details) ?
-                                    <a
-                                        rel="nofollow"
-                                        className="peaks-link"
-                                        href={searchBase ? `${searchBase}&peak_metadata` : '?peak_metadata'}
-                                    >
-                                        <i className="icon icon-external-link" />
-                                        View peak details
-                                    </a>
                                 : null}
-                            </div>
-                            <div>
-                                <div className="panel flex-panel">
-
-                                    {facets.length ?
-                                        <div className="facet-column">
-                                            <div className="facet-controls">
-                                                <div className="results-count">Showing {results.length} of {total}</div>
-                                            </div>
-                                            <FilterList {...this.props} />
-                                            <FacetList
-                                                {...this.props}
-                                                facets={facets}
-                                                filters={filters}
-                                                searchBase={searchBase ? `${searchBase}&` : `${searchBase}?`}
-                                                onFilter={this.onFilter}
-                                                modifyFacetsFlag
-                                            />
+                                {(context.regulome_score) ?
+                                    <div>
+                                        <div className="notification-line">
+                                            <div className="notification-label">Score</div>
+                                            <div className="notification">{context.regulome_score.ranking}</div>
                                         </div>
-                                    : ''}
-
-                                    <div className="wide-column">
-                                        <Motifs {...this.props} urlBase={urlBase} />
-
-                                        <h4>Detailed results</h4>
-                                        <div className="visualize-error">Showing {results.length} of {total}</div>
-                                        <ResultsTable {...this.props} />
-
+                                        <div className="notification-line">
+                                            <div className="notification-label">Rank</div>
+                                            <div className="notification">{context.regulome_score.probability}</div>
+                                        </div>
                                     </div>
-
-                                </div>
-
+                                : null}
                             </div>
+                            {context.nearby_snps ?
+                                <NearbySNPsDrawing {...this.props} />
+                            : null}
+                            <div className={`thumbnail-gallery ${this.state.selectedThumbnail ? 'small-thumbnails' : ''}`} >
+                                <button
+                                    className={`thumbnail ${this.state.selectedThumbnail === 'valis' ? 'active' : ''}`}
+                                    onClick={() => this.chooseThumbnail('valis')}
+                                >
+                                    <h4>Genome browser</h4>
+                                    {(this.state.selectedThumbnail === null) ?
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click here to view results in a genome browser.</div>
+                                            <div className="image-container">
+                                                <img src="/static/img/browser_thumbnail.png" alt="Click to view the genome browser" />
+                                            </div>
+                                        </div>
+                                    : null}
+                                </button>
+                                <button
+                                    className={`thumbnail ${this.state.selectedThumbnail === 'chip' ? 'active' : ''}`}
+                                    onClick={() => this.chooseThumbnail('chip')}
+                                >
+                                    <h4>ChIP data</h4>
+                                    {(this.state.selectedThumbnail === null) ?
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see detailed ChIP-seq data.</div>
+                                            <BarChart {...this.props} dataFilter={'chip'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                        </div>
+                                    : null}
+                                </button>
+                                <button
+                                    className={`thumbnail ${this.state.selectedThumbnail === 'chromatin' ? 'active' : ''}`}
+                                    onClick={() => this.chooseThumbnail('chromatin')}
+                                >
+                                    <h4>Chromatin state</h4>
+                                    {(this.state.selectedThumbnail === null) ?
+                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.</div>
+                                    : null}
+                                </button>
+                                <button
+                                    className={`thumbnail ${this.state.selectedThumbnail === 'dnase' ? 'active' : ''}`}
+                                    onClick={() => this.chooseThumbnail('dnase')}
+                                >
+                                    <h4>Accessibility</h4>
+                                    {(this.state.selectedThumbnail === null) ?
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.</div>
+                                            <BarChart {...this.props} dataFilter={'dnase'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                        </div>
+                                    : null}
+                                </button>
+                                <button
+                                    className={`thumbnail ${this.state.selectedThumbnail === 'motifs' ? 'active' : ''}`}
+                                    onClick={() => this.chooseThumbnail('motifs')}
+                                >
+                                    <h4>Motifs</h4>
+                                    {(this.state.selectedThumbnail === null) ?
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see PWM and Footprint data and their associated sequence logos.</div>
+                                            <Motifs {...this.props} urlBase={urlBase} limit={4} />
+                                        </div>
+                                    : null}
+                                </button>
+                                <button
+                                    className={`thumbnail ${this.state.selectedThumbnail === 'qtl' ? 'active' : ''}`}
+                                    onClick={() => this.chooseThumbnail('qtl')}
+                                >
+                                    <h4>QTL Data</h4>
+                                    {(this.state.selectedThumbnail === null) ?
+                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.</div>
+                                    : null}
+                                </button>
+                                {(this.state.selectedThumbnail) ?
+                                    <button
+                                        className="thumbnail expand-thumbnail"
+                                        onClick={() => this.chooseThumbnail(null)}
+                                    >
+                                        <h4><i className="icon icon-expand" /></h4>
+                                    </button>
+                                : null}
+                            </div>
+                            {(this.state.selectedThumbnail) ?
+                                <div>
+                                    {(this.state.selectedThumbnail === 'motifs') ?
+                                        <div>
+                                            <h4>Motifs</h4>
+                                            <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
+                                        </div>
+                                    :
+                                        <div>
+                                            {(this.state.selectedThumbnail === 'chip') ?
+                                                <BarChart {...this.props} dataFilter={'chip'} chartWidth={this.state.screenWidth} chartLimit={0} chartOrientation={'horizontal'} />
+                                            : null}
+                                            {(this.state.selectedThumbnail === 'dnase') ?
+                                                <ChartTable {...this.props} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={'dnase'} />
+                                            :
+                                                <ResultsTable {...this.props} dataFilter={this.state.selectedThumbnail} />
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            : null}
                         </div>
                     </div>
                 : null}
