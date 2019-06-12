@@ -166,14 +166,17 @@ def assembly_mapper(location, species, input_assembly, output_assembly):
         return(chromosome, start, end)
 
 
-def get_rsid_coordinates(rsid, assembly, atlas=None):
+def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
     if atlas and assembly in ['GRCh38', 'hg19', 'GRCh37']:
         snp = atlas.snp(_GENOME_TO_ALIAS[assembly], rsid)
         if snp:
             try:
-                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinate']['lte'])
-            except KeyError:
+                return(snp['chrom'], snp['coordinates']['gte'], snp['coordinates']['lt'])
+            except KeyError as e:
                 log.warning("Could not find %s on %s, using ensemble" % (rsid, assembly))
+                if not webfetch:
+                    log.error("Do not lookup: %s", e)
+                    raise
 
     species = _GENOME_TO_SPECIES.get(assembly, 'homo_sapiens')
     ensembl_url = _ENSEMBL_URL
@@ -195,7 +198,8 @@ def get_rsid_coordinates(rsid, assembly, atlas=None):
             if 'PATCH' not in mapping['location']:
                 if mapping['assembly_name'] == assembly:
                     chromosome, start, end = re.split(':|-', mapping['location'])
-                    return('chr' + chromosome, start, end)
+                    # must convert to 0-base
+                    return('chr' + chromosome, int(start)-1, int(end))
                 elif assembly == 'GRCh37':
                     return assembly_mapper(mapping['location'], species, 'GRCh38', assembly)
                 elif assembly == 'GRCm37':
@@ -567,7 +571,7 @@ def region_search(context, request):
                                 'biosample_term_name': biosample_term_name,
                                 'chrom': peak['_index'],
                                 'start': peak['_source']['coordinates']['gte'],
-                                'end': peak['_source']['coordinates']['lte']
+                                'end': peak['_source']['coordinates']['lt']
                                 }]
                 peak_details += peak_detail
             result['peak_details'] = peak_details
