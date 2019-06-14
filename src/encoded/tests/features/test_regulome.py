@@ -26,6 +26,17 @@ def test_one_regulome(testapp, workbook, region_index):
     assert res.json['download_elements'] == expected
 
 
+def test_dataset_size(testapp, workbook, region_index):
+    ''' this doesn't actually test size but makes sure some properties were removed '''
+    res = testapp.get('/regulome-search/?region=rs10905307&genome=GRCh37')
+    assert res.json['notification'] == 'Success: 2 peaks in 2 files belonging to 2 datasets in this region'
+    assert res.json['regulome_score'] == '0.18499 (probability); 1f (ranking v1.1)'
+    assert res.json['coordinates'] == 'chr10:5894499-5894500'
+    assert {e['accession'] for e in res.json['@graph']} == {'ENCSR061TST', 'ENCSR000DZQ'}
+    assert {e['biosample_ontology']['term_name'] for e in res.json['@graph']} == {'GM12878', 'lymphoblastoid cell line'}
+    assert 'files' not in [res.json['@graph'][0].keys()]
+
+
 def test_regulome_score(testapp, workbook, region_index):
     res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
     assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
