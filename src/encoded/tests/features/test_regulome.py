@@ -35,6 +35,7 @@ def test_dataset_size(testapp, workbook, region_index):
     assert {e['accession'] for e in res.json['@graph']} == {'ENCSR061TST', 'ENCSR000DZQ'}
     assert {e['biosample_ontology']['term_name'] for e in res.json['@graph']} == {'GM12878', 'lymphoblastoid cell line'}
     assert 'files' not in [res.json['@graph'][0].keys()]
+    assert {e.get('assay_title', '') or e.get('annotation_type', '') for e in res.json['@graph']} == {'dsQTLs', 'ChIP-seq'}
 
 
 def test_regulome_score(testapp, workbook, region_index):

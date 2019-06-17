@@ -344,6 +344,9 @@
             "title": "Accession",
             "type": "string"
         },
+        "annotation_type": {
+            "title": "Annotation type"
+        },
         "files.replicate.experiment.assay_term_name": {
             "title": "Assay Type",
             "type": "string"
