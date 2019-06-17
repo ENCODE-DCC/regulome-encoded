@@ -43,42 +43,44 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
 
 
 @pytest.mark.parametrize("assembly,location,dbdetails", [
-    ('hg19', ('chr10', 5894499, 5894500), [
-        {'dataset': 
+    ('hg19', ('chr10', 5894499, 5894500), {
+        '5f921aa5-5758-4ead-846a-26af87e1a098-28':
+        {'dataset':
             {   '@id': '/annotations/ENCSR061TST/',
                 'annotation_type': 'dsQTLs',
                 'collection_type': 'dsQTLs',
-                'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
+                'biosample_term_name': 'lymphoblastoid cell line',
+                'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0',
             },
-         'file': 
+         'file':
             {   '@id': '/files/ENCFF122TST/',
                 'assembly': 'hg19',
-                'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098'
+                'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098',
             },
         },
+        '956cba28-ccff-4cbd-b1c8-39db4e3de572-296':
         {'dataset':
             {   '@id': '/experiments/ENCSR000DZQ/',
                 'assay_term_name': 'ChIP-seq',
                 'biosample_term_name': 'GM12878',
                 'collection_type': 'ChIP-seq',
                 'target': ['EBF1'],
-                'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02'
+                'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02',
           },
          'file': {   '@id': '/files/ENCFF002COS/',
                      'assembly': 'hg19',
-                     'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572'
+                     'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572',
             },
         },
-    ]),
+    }),
 ])
 def test_find_peaks_filtered(assembly, location, dbdetails, region_index, regulome_atlas):
     ''' this essentially tests _resident_details as well '''
     fpeaks, _ = regulome_atlas.find_peaks_filtered(assembly, location[0], location[1], location[2])
-    for part in ('dataset', 'file'): 
-        assert fpeaks[0]['resident_detail'][part] == dbdetails[0][part] \
-            or fpeaks[0]['resident_detail'][part] == dbdetails[1][part]
-        assert fpeaks[1]['resident_detail'][part] == dbdetails[0][part] \
-            or fpeaks[1]['resident_detail'][part] == dbdetails[1][part]
+    for peak in fpeaks:
+        deets = dbdetails[peak['_id']]  # this is like an assert
+        for part in ('dataset', 'file'):
+            assert deets[part] == peak['resident_detail'][part]
 
 
 @pytest.mark.parametrize("assembly,rsid,location", [
@@ -120,13 +122,13 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
     ('hg19', 'chr1', 39492462, 1600,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'eQTL': [{'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
-                'Footprint': [{'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
-                'DNase': [{'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
+                'ChIP': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
+                'eQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
+                'Footprint': [{'biosample_term_name': 'HeLa-S3','collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
+                'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
                 'Footprint_matched': ['ELK4'],
-                'PWM': [{'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
+                'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
                 'PWM_matched': ['ELK4']
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
@@ -138,8 +140,8 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
     ('hg19', 'chr10', 5894500, 100000,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
+                'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
+                'dsQTL': [{ 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
             'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
@@ -166,13 +168,13 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
     ('hg19', 'chr1', 39492462, 1600,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'eQTL': [{'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
-                'Footprint': [{'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
-                'DNase': [{'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
+                'ChIP': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
+                'eQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
+                'Footprint': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
+                'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
                 'Footprint_matched': ['ELK4'],
-                'PWM': [{'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
+                'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
                 'PWM_matched': ['ELK4']
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
@@ -184,8 +186,8 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
     ('hg19', 'chr10', 5894500, 100000,
         [{
             'evidence': {
-                'ChIP': [{'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
+                'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'assay_term_name': 'ChIP-seq'}],
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
             'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
@@ -194,51 +196,6 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
         }])
 ])
 def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, regulome_atlas):
-
-    import pprint
-    '''range_start = int(pos - (window / 2))
-    range_end = int(pos + (window / 2))
-    if range_start < 0:
-        range_end += 0 - range_start
-        range_start = 0
-    snps = regulome_atlas.find_snps(assembly, chrom, range_start, range_end)
-
-    snps = sorted(snps, key=lambda s: s['coordinates']['gte'])
-
-    start = snps[0]['coordinates']['gte']  # SNPs must be in location order!
-    end = snps[-1]['coordinates']['lt']
-    assert start >= end
-    (peaks, details) = regulome_atlas.find_peaks_filtered(assembly, chrom, start, end, peaks_too=True)
-    if not peaks or not details:
-        assert False
-        for snp in snps:
-            snp['score'] = None
-
-    last_uuids = {}
-    last_snp = {}
-    for snp in snps:
-        snp['score'] = None  # default
-        snp['assembly'] = assembly
-        snp_uuids = regulome_atlas._peak_uuids_in_overlap(peaks, snp['chrom'], snp['coordinates']['gte'])
-        if snp_uuids:
-            if snp_uuids == last_uuids:
-                if last_snp:
-                    snp['score'] = last_snp['score']
-                    if 'evidence' in last_snp:
-                        snp['evidence'] = last_snp['evidence']
-            else:
-                last_uuids = snp_uuids
-                snp_details = regulome_atlas._filter_details(details, uuids=list(snp_uuids))
-                if snp_details:
-                    (snp_datasets, _snp_files) = regulome_atlas.details_breakdown(snp_details)
-                    if snp_datasets:
-                        snp_evidence = regulome_atlas.regulome_evidence(snp_datasets)
-                        if snp_evidence:
-                            snp['score'] = regulome_atlas.regulome_score(snp_datasets, snp_evidence)
-                            snp['evidence'] = snp_evidence
-                            last_snp = snp
-    assert result[0] == snps[0]
-    '''
 
     scored_snps = regulome_atlas.nearby_snps(assembly, chrom, pos, window=window, scores=True)
     #  sthis returns empty generator which seems wrong.
