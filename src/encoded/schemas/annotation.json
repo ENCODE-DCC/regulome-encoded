@@ -344,6 +344,9 @@
             "title": "Accession",
             "type": "string"
         },
+        "annotation_type": {
+            "title": "Annotation type"
+        },
         "files.replicate.experiment.assay_term_name": {
             "title": "Assay Type",
             "type": "string"
@@ -355,6 +358,14 @@
         "biosample_ontology.term_name": {
             "title": "Biosample",
             "type": "string"
+        },
+        "biosample_ontology.classification": {
+            "title": "Biosample Classification",
+            "type": "string"
+        },
+        "biosample_ontology.organ_slims": {
+            "title": "Organ",
+            "type": "array"
         },
         "description": {
             "title": "Description",
@@ -390,6 +401,18 @@
         },
         "software_used.software.name": {
             "title": "Software used",
+            "type": "array"
+        },
+        "documents.@id": {
+            "title": "Document ID",
+            "type": "array"
+        },
+        "documents.attachment.href": {
+            "title": "Document HREFs",
+            "type": "array"
+        },
+        "documents.document_type": {
+            "title": "Document Type",
             "type": "array"
         }
     },

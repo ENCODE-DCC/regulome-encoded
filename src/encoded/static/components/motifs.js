@@ -125,7 +125,7 @@ export const Motifs = (props) => {
     const urlBase = props.urlBase;
 
     // Filter results to find ones with associated PWM data
-    const pwmLinkList = results.filter(d => d.documents[0] && d.documents[0].document_type === 'position weight matrix');
+    const pwmLinkList = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
 
     return (
         <div>
