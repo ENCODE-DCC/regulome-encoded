@@ -307,7 +307,7 @@ class RegulomeAtlas(object):
         for k, bw in LOCAL_BIGWIGS.items():
             values = bw.values(chrom, start, end)
             average = sum(values) / max(len(values), 1)
-            evidence[k] = (not math.isnan(average)) and average
+            evidence[k] = 0.0 if math.isnan(average) else average
 
         return evidence
 
