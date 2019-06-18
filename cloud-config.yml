@@ -230,6 +230,7 @@ runcmd:
 - sudo mv /etc/mailname /etc/mailname.OLD
 - sudo echo "$PUBLIC_DNS_NAME" | sudo tee --append /etc/mailname
 - sudo service postfix restart
+- sudo -u encoded bin/aws s3 cp --recursive s3://regulomedb/bigwig_files bigwig_scores
 users:
 - default
 - name: build
