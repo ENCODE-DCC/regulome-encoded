@@ -434,6 +434,7 @@ def regulome_summary(context, request):
         rsids = get_rsids(atlas, assembly, chrom, start, end)
         # Only SNP or single nucleotide are considered as scorable
         regulome_score = 'N/A'
+        features = {}
         if rsids == [] and (int(end) - int(start)) > 1:
             result['notifications'].append({coord: 'Failed: {}'.format(
                 'Non-SNP or multi-nucleotide region is not scorable')})
@@ -443,11 +444,12 @@ def regulome_summary(context, request):
                 evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
                 regulome_score = atlas.regulome_score(all_hits['datasets'],
                                                       evidence)
+                features = evidence_to_features(evidence)
                 result['notifications'].append({coord: 'Success'})
             except Exception as e:
                 result['notifications'].append({coord: 'Failed: (exception) {}'.format(e)})
         summaries.append({'chrom': chrom, 'start': start, 'end': end,
-                          'rsids': rsids, 'features': evidence_to_features(evidence),
+                          'rsids': rsids, 'features': features,
                           'regulome_score': regulome_score})
         result['timing'].append({coord: (time.time() - begin)})  # DEBUG timing
     result['summaries'] = summaries
