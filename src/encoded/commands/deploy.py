@@ -553,6 +553,13 @@ def parse_args():
         help="Set EC2 availabilty zone")
     parser.add_argument('--git-repo', default='https://github.com/ENCODE-DCC/regulome-encoded.git',
             help="Git repo to checkout branches: https://github.com/{user|org}/{repo}.git")
+    parser.add_argument('--batchupgrade-vars', nargs=4, default=['1000', '1', '16', '1'],
+        help=(
+            "Set batchupgrade vars for demo only "
+            "Ex) --batchupgrade-vars 1000 1 8 1 "
+            "Where the args are batchsize, chunksize, processes, and maxtasksperchild"
+        )
+    )
     # Set Role
     # - 'demo' role is default for making single or clustered
     # applications for feature building
