@@ -372,6 +372,29 @@ def parse_region_query(request):
     return result
 
 
+def evidence_to_features(evidence):
+    features = {
+        'ChIP': False,
+        'DNase': False,
+        'PWM': False,
+        'Footprint': False,
+        'eQTL': False,
+        'dsQTL': False,
+        'PWM_matched': False,
+        'Footprint_matched': False,
+        'ChIP_max_signal': 0.0,
+        'DNase_max_signal': 0.0,
+        'IC_matched_max': 0.0,
+        'IC_max': 0.0,
+    }
+    for k in features:
+        if isinstance(features[k], float):
+            features[k] = evidence.get(k, 0.0)
+        else:
+            features[k] = k in evidence
+    return features
+
+
 @view_config(route_name='regulome-summary', request_method=('GET', 'POST'),
              permission='search')
 def regulome_summary(context, request):
@@ -410,21 +433,18 @@ def regulome_summary(context, request):
         # Get rsid for the coordinate
         rsids = get_rsids(atlas, assembly, chrom, start, end)
         # Only SNP or single nucleotide are considered as scorable
-        features = dict()
         regulome_score = 'N/A'
+        features = {}
         if rsids == [] and (int(end) - int(start)) > 1:
             result['notifications'].append({coord: 'Failed: {}'.format(
                 'Non-SNP or multi-nucleotide region is not scorable')})
         else:  # Scorable
             try:
                 all_hits = region_get_hits(atlas, assembly, chrom, start, end)
-                evidence = atlas.regulome_evidence(all_hits['datasets'])
-                features = {k: k in evidence
-                            for k in ['ChIP', 'DNase', 'PWM', 'Footprint',
-                                      'eQTL', 'dsQTL', 'PWM_matched',
-                                      'Footprint_matched']}
+                evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
                 regulome_score = atlas.regulome_score(all_hits['datasets'],
                                                       evidence)
+                features = evidence_to_features(evidence)
                 result['notifications'].append({coord: 'Success'})
             except Exception as e:
                 result['notifications'].append({coord: 'Failed: (exception) {}'.format(e)})
@@ -607,15 +627,11 @@ def region_search(context, request):
             result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
             begin = time.time()                                              # DEBUG: timing
             # NOTE: Needs all hits rather than 'released' or set reduced by facet selection
-            evidence = atlas.regulome_evidence(all_hits['datasets'])
-            features = {k: k in evidence
-                        for k in ['ChIP', 'DNase', 'PWM', 'Footprint',
-                                  'eQTL', 'dsQTL', 'PWM_matched',
-                                  'Footprint_matched']}
+            evidence = atlas.regulome_evidence(all_hits['datasets'], chromosome, int(start), int(end))
             regdb_score = atlas.regulome_score(all_hits['datasets'], evidence)
             if regdb_score:
                 result['regulome_score'] = regdb_score
-                result['features'] = features
+                result['features'] = evidence_to_features(evidence)
         result['timing'].append({'scoring': (time.time() - begin)})  # DEBUG: timing
 
     return result

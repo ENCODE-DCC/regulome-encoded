@@ -129,7 +129,11 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
                 'Footprint_matched': ['ELK4'],
                 'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
-                'PWM_matched': ['ELK4']
+                'PWM_matched': ['ELK4'],
+                'ChIP_max_signal': 460.9580078125,
+                'DNase_max_signal': 5.474899768829346,
+                'IC_matched_max': 1.9966800212860107,
+                'IC_max': 1.9991999864578247,
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
             'score': '0.8136 (probability); 1a (ranking v1.1)',
@@ -141,7 +145,12 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
         [{
             'evidence': {
                 'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{ 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
+                'dsQTL': [{ 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
+                'ChIP_max_signal': 9.485400199890137,
+                'DNase_max_signal': 0.6291999816894531,
+                'IC_matched_max': False,
+                'IC_max': False,
+            },
             'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
@@ -175,7 +184,11 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
                 'Footprint_matched': ['ELK4'],
                 'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
-                'PWM_matched': ['ELK4']
+                'PWM_matched': ['ELK4'],
+                'ChIP_max_signal': 460.9580078125,
+                'DNase_max_signal': 5.474899768829346,
+                'IC_matched_max': 1.9966800212860107,
+                'IC_max': 1.9991999864578247,
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
             'score': '0.8136 (probability); 1a (ranking v1.1)',
@@ -187,7 +200,12 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
         [{
             'evidence': {
                 'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}]},
+                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
+                'ChIP_max_signal': 9.485400199890137,
+                'DNase_max_signal': 0.6291999816894531,
+                'IC_matched_max': False,
+                'IC_max': False,
+            },
             'coordinates': {'lt': 5894500, 'gte': 5894499},
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',

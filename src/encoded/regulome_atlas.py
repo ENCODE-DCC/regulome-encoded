@@ -6,6 +6,8 @@ from operator import itemgetter
 from elasticsearch.exceptions import (
     NotFoundError
 )
+import math
+import pyBigWig
 from snovault.elasticsearch.indexer_state import SEARCH_MAX
 
 from .regulome_indexer import (
@@ -38,6 +40,21 @@ REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300,
 TRAINED_REG_MODEL = pickle.load(
     open(resource_filename('encoded', 'rf_model.sav'), 'rb')
 )
+
+LOCAL_BIGWIGS = {
+    'ChIP_max_signal': pyBigWig.open(
+        resource_filename('encoded', '../../bigwig_scores/ChIP_max_signal.bw')
+    ),
+    'DNase_max_signal': pyBigWig.open(
+        resource_filename('encoded', '../../bigwig_scores/DNase_max_signal.bw')
+    ),
+    'IC_matched_max': pyBigWig.open(
+        resource_filename('encoded', '../../bigwig_scores/IC_matched_max.bw')
+    ),
+    'IC_max': pyBigWig.open(
+        resource_filename('encoded', '../../bigwig_scores/IC_max.bw')
+    ),
+}
 
 
 class RegulomeAtlas(object):
@@ -256,7 +273,7 @@ class RegulomeAtlas(object):
             return 'Single_Nucleotides'
         return '???'
 
-    def regulome_evidence(self, datasets):
+    def regulome_evidence(self, datasets, chrom, start, end):
         '''Returns evidence for scoring: datasets in a characterized dict'''
         evidence = {}
         targets = {'ChIP': [], 'PWM': [], 'Footprint': []}
@@ -285,6 +302,12 @@ class RegulomeAtlas(object):
                 if 'Footprint_matched' not in evidence:
                     evidence['Footprint_matched'] = []
                 evidence['Footprint_matched'].append(target)
+
+        # Get values/signals from bigWig
+        for k, bw in LOCAL_BIGWIGS.items():
+            values = bw.values(chrom, start, end)
+            average = sum(values) / max(len(values), 1)
+            evidence[k] = 0.0 if math.isnan(average) else average
 
         return evidence
 
@@ -391,12 +414,10 @@ class RegulomeAtlas(object):
             ranking = '6'
         return '{} (probability); {} (ranking v1.1)'.format(probability, ranking)
 
-    def regulome_score(self, datasets, evidence=None):
+    def regulome_score(self, datasets, evidence):
         '''Calculate RegulomeDB score based upon hits and voodoo'''
         if not evidence:
-            evidence = self.regulome_evidence(datasets)
-            if not evidence:
-                return None
+            return None
         return self._score(set(evidence.keys()))
 
     @staticmethod
@@ -454,7 +475,7 @@ class RegulomeAtlas(object):
                     if snp_details:
                         (snp_datasets, _snp_files) = self.details_breakdown(snp_details)
                         if snp_datasets:
-                            snp_evidence = self.regulome_evidence(snp_datasets)
+                            snp_evidence = self.regulome_evidence(snp_datasets, chrom, start, end)
                             if snp_evidence:
                                 snp['score'] = self.regulome_score(snp_datasets, snp_evidence)
                                 snp['evidence'] = snp_evidence
@@ -490,7 +511,7 @@ class RegulomeAtlas(object):
                     if base_details:
                         (base_datasets, _base_files) = self.details_breakdown(base_details)
                         if base_datasets:
-                            base_evidence = self.regulome_evidence(base_datasets)
+                            base_evidence = self.regulome_evidence(base_datasets, chrom, start, end)
                             if base_evidence:
                                 score = self.regulome_score(base_datasets, base_evidence)
                                 if score:
@@ -567,7 +588,8 @@ class RegulomeAtlas(object):
         if not peaks or not details:
             return None
         (datasets, _files) = self.details_breakdown(details)
-        return self.regulome_score(datasets)
+        evidence = self.regulome_evidence(datasets, chrom, pos, pos + 1)
+        return self.regulome_score(datasets, evidence)
 
     @staticmethod
     def numeric_score(alpha_score):
