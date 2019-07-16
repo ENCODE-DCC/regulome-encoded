@@ -27,6 +27,26 @@ def nameify(in_str):
     return re.subn(r'\-+', '-', name)[0]
 
 
+def _short_name(long_name):
+    """
+    Returns a short name for the branch name if found
+    """
+    if not long_name:
+        return None
+    regexes = [
+        '(?:encd|sno)-[0-9]+',  # Demos
+        '^v[0-9]+rc[0-9]+',     # RCs
+        '^v[0-9]+x[0-9]+',      # Prod, Test
+    ]
+    result = long_name
+    for regex_str in regexes:
+        res = re.findall(regex_str, long_name, re.IGNORECASE)
+        if res:
+            result = res[0]
+            break
+    return result[:9].lower()
+
+
 def tag_ec2_instance(instance, tag_data, elasticsearch, cluster_name):
     tags = [
         {'Key': 'Name', 'Value': tag_data['name']},
@@ -36,6 +56,9 @@ def tag_ec2_instance(instance, tag_data, elasticsearch, cluster_name):
     ]
     if elasticsearch == 'yes':
         tags.append({'Key': 'elasticsearch', 'Value': elasticsearch})
+        # This if for integration with nagios server.
+        # Only used on production.
+        tags.append({'Key': 'Role', 'Value': 'data'})
     if cluster_name is not None:
         tags.append({'Key': 'ec_cluster_name', 'Value': cluster_name})
     instance.create_tags(Tags=tags)
@@ -53,7 +76,7 @@ def read_ssh_key(identity_file):
         ssh_keygen_args
     ).decode('utf-8').strip()
     if fingerprint:
-        with open(ssh_key_path, 'r') as key_file:
+        with open(identity_file, 'r') as key_file:
             ssh_pub_key = key_file.readline().strip()
             return ssh_pub_key
     return None
@@ -80,7 +103,6 @@ def _get_bdm(main_args):
     ]
 
 
-<<<<<<< HEAD
 def get_user_data(commit, config_yaml, data_insert, main_args):
     ssh_pub_key = read_ssh_key(main_args.identity_file)
     if not ssh_pub_key:
@@ -114,6 +136,7 @@ def _get_instances_tag_data(main_args):
     instances_tag_data = {
         'branch': main_args.branch,
         'commit': None,
+        'short_name': _short_name(main_args.name),
         'name': main_args.name,
         'username': None,
     }
@@ -125,9 +148,10 @@ def _get_instances_tag_data(main_args):
         sys.exit(1)
     instances_tag_data['username'] = getpass.getuser()
     if instances_tag_data['name'] is None:
+        instances_tag_data['short_name'] = _short_name(instances_tag_data['branch'])
         instances_tag_data['name'] = nameify(
             '%s-%s-%s' % (
-                instances_tag_data['branch'],
+                instances_tag_data['short_name'],
                 instances_tag_data['commit'],
                 instances_tag_data['username'],
             )
@@ -166,6 +190,7 @@ def _get_run_args(main_args, instances_tag_data, config_yaml):
             'ES_IP': main_args.es_ip,
             'ES_PORT': main_args.es_port,
             'GIT_REPO': main_args.git_repo,
+            'GIT_BRANCH': main_args.branch,
             'REDIS_IP': main_args.redis_ip,
             'REDIS_PORT': main_args.redis_port,
             'BATCHUPGRADE_VARS': ' '.join(main_args.batchupgrade_vars),
@@ -225,9 +250,44 @@ def _get_run_args(main_args, instances_tag_data, config_yaml):
     return run_args
 
 
+def _get_instance_output(
+        instances_tag_data,
+        attach_dm=False,
+        given_name=None,
+        is_production=False,
+):
+    hostname = '{}.{}.encodedcc.org'.format(
+        instances_tag_data['id'],
+        instances_tag_data['domain'],
+    )
+    name_to_use = given_name if given_name else instances_tag_data['short_name']
+    suffix = '-dm' if attach_dm else ''
+    domain = 'demo'
+    if instances_tag_data['domain'] == 'production':
+        domain = 'production'
+    return [
+        'Host %s%s.*' % (name_to_use, suffix),
+        '  Hostname %s' % hostname,
+        '  # https://%s.%s.encodedcc.org' % (instances_tag_data['name'], domain),
+        '  # ssh ubuntu@%s' % hostname,
+    ]
+
+
 def _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, cluster_master=False):
     tmp_name = instances_tag_data['name']
-    domain = 'production' if main_args.profile_name == 'production' else 'instance'
+    instances_tag_data['domain'] = 'production' if main_args.profile_name == 'production' else 'instance'
+    output_list = ['']
+    is_elasticsearch = main_args.elasticsearch == 'yes'
+    is_cluster_master = False
+    is_cluster = False
+    if is_elasticsearch and run_args['count'] > 1:
+        if cluster_master and run_args['master_user_data']:
+            is_cluster_master = True
+            output_list.append('Creating Elasticsearch Master Node for cluster')
+        else:
+            is_cluster = True
+            output_list.append('Creating Elasticsearch cluster')
+    created_cluster_master = False
     for i, instance in enumerate(instances):
         instances_tag_data['name'] = tmp_name
         instances_tag_data['id'] = instance.id
@@ -514,6 +574,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Deploy ENCODE on AWS",
     )
+    parser.add_argument(
+        '-i',
+        '--identity-file',
+        default="{}/.ssh/id_rsa.pub".format(expanduser("~")),
+        help="ssh identity file path"
+    )
     parser.add_argument('-b', '--branch', default=None, help="Git branch or tag")
     parser.add_argument('--build-new-config', action='store_true', help="Build cloud config yaml.")
     parser.add_argument('-n', '--name', default=None, type=hostname, help="Instance name")
@@ -551,7 +617,7 @@ def parse_args():
         help="Deploy to production AWS")
     parser.add_argument('--availability-zone', default='us-west-2a',
         help="Set EC2 availabilty zone")
-    parser.add_argument('--git-repo', default='https://github.com/ENCODE-DCC/regulome-encoded.git',
+    parser.add_argument('--git-repo', default='https://github.com/ENCODE-DCC/encoded.git',
             help="Git repo to checkout branches: https://github.com/{user|org}/{repo}.git")
     parser.add_argument('--batchupgrade-vars', nargs=4, default=['1000', '1', '16', '1'],
         help=(
@@ -576,7 +642,11 @@ def parse_args():
             args.candidate = False
         elif args.candidate:
             args.role = 'candidate'
-    print(args.role)
+    # Add branch arg
+    if not args.branch:
+        args.branch = subprocess.check_output(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+        ).decode('utf-8').strip()
     return args
 
 
