@@ -28,15 +28,19 @@ def test_find_snps(assembly, location, snps, region_index, regulome_atlas):
 @pytest.mark.parametrize("assembly,location,dbpeaks", [
     ('hg19', ('chr10', 5894499, 5894500), [
         {'coordinates': {'gte': 5894432, 'lt': 5894748},
-         'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572'},
+         'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572',
+         'strand': '.', 'value': '135.942930657532'},
         {'coordinates': {'gte': 5894499, 'lt': 5894500},
-         'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098'}
+         'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098'},
+        {'coordinates': {'gte': 5888800, 'lt': 5903600},
+         'uuid': '08c4c912-6713-4904-9a76-5593c560ae03',
+         'value': '15_Quies'}
     ]),
 ])
 def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
     peaks = regulome_atlas.find_peaks(assembly, location[0], location[1], location[2])
 
-    assert len(peaks) == 2
+    assert len(peaks) == 3
     foundpeaks = [p['_source'] for p in peaks]
     for dbp in dbpeaks:
         assert dbp in foundpeaks
@@ -72,6 +76,16 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
                      'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572',
             },
         },
+        '08c4c912-6713-4904-9a76-5593c560ae03-839':
+        {'dataset':
+            {'@id': '/annotations/ENCSR497SKR/',
+             'annotation_type': 'chromatin state',
+             'biosample_term_name': 'HeLa-S3',
+             'collection_type': 'chromatin state',
+             'uuid': '51911c72-7c18-454f-803b-35e8416a716f'},
+         'file': {'@id': '/files/ENCFF943TST/',
+                  'assembly': 'hg19',
+                  'uuid': '08c4c912-6713-4904-9a76-5593c560ae03'}},
     }),
 ])
 def test_find_peaks_filtered(assembly, location, dbdetails, region_index, regulome_atlas):
@@ -136,6 +150,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 'IC_max': 1.9991999864578247,
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
+            'strand': '-',
             'score': '0.8136 (probability); 1a (ranking v1.1)',
             'rsid': 'rs3768324',
             'assembly': 'hg19',
@@ -152,6 +167,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 'IC_max': False,
             },
             'coordinates': {'lt': 5894500, 'gte': 5894499},
+            'strand': '+',
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
             'assembly': 'hg19',
@@ -191,6 +207,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 'IC_max': 1.9991999864578247,
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
+            'strand': '-',
             'score': '0.8136 (probability); 1a (ranking v1.1)',
             'rsid': 'rs3768324',
             'assembly': 'hg19',
@@ -207,6 +224,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 'IC_max': False,
             },
             'coordinates': {'lt': 5894500, 'gte': 5894499},
+            'strand': '+',
             'score': '0.18499 (probability); 1f (ranking v1.1)',
             'rsid': 'rs10905307',
             'assembly': 'hg19',

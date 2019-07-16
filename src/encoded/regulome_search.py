@@ -598,7 +598,9 @@ def region_search(context, request):
                                 'biosample_term_name': biosample_term_name,
                                 'chrom': peak['_index'],
                                 'start': peak['_source']['coordinates']['gte'],
-                                'end': peak['_source']['coordinates']['lt']
+                                'end': peak['_source']['coordinates']['lt'],
+                                'value': peak['_source'].get('value', ''),
+                                'strand': peak['_source'].get('strand', ''),
                                 }]
                 peak_details += peak_detail
             result['peak_details'] = peak_details

@@ -232,6 +232,14 @@ const PeakDetails = (props) => {
             title: 'Targets',
             getValue: item => item.targets.join(', '),
         },
+
+        value: {
+            title: 'Value',
+        },
+
+        strand: {
+            title: 'Strand',
+        },
     };
 
     return (
