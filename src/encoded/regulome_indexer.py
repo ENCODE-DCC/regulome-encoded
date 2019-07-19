@@ -136,6 +136,9 @@ REGULOME_VALUE_STRAND_COL = {
     'eQTLs': {
         'value_col': 5
     },
+    'PWMs': {
+        'strand_col': 4,
+    },
 }
 # Less than ideal way to recognize the SNP files by submitted_file_name
 # SNP_DATASET_UUID = 'ff8dff4e-1de5-446b-8a13-bb6243bc64aa'  # works on demo, but...
@@ -375,8 +378,12 @@ class RemoteReader(object):
         }  # Stored as BED 0-based half open
         if value_col and value_col < len(row):
             doc['value'] = row[value_col]
-        if strand_col and strand_col < len(row):
-            doc['strand'] = row[strand_col]
+        if strand_col:
+            # Some PWMs annotation doesn't have strand info
+            if strand_col < len(row) and row[strand_col] in ['.', '+', '-']:
+                doc['strand'] = row[strand_col]
+            else:
+                doc['strand'] = '.'
         return (chrom, doc)
 
     @staticmethod
@@ -389,7 +396,7 @@ class RemoteReader(object):
                 strand = row[5]
             else:
                 log.warn('{} has invalid strand info {} on column 6'.format(
-                    rsid, strand
+                    rsid, row[5]
                 ))
         if start == end:
             end = end + 1
