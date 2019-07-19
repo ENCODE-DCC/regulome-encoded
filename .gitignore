@@ -24,6 +24,8 @@
 /session-secret.b64
 /src/encoded/static/css/
 /src/encoded/static/scss/_variables.original.scss
+/bigwig_files/
+/rf_model.sav
 
 *.DS_Store
 *.egg-info

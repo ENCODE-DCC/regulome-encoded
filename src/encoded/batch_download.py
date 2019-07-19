@@ -293,7 +293,7 @@ def regulome_download(context, request):
                 formatted_snp = json.dumps({snp.get('rsid', coordinates): snp},
                                            sort_keys=True)[1:-1] + ','
             else:
-                score = snp.get('score', '')
+                score = snp.get('score', {}).get('ranking', '')
                 num_score = atlas.numeric_score(score)    # - 1 because bed format is 'half open'
                 formatted_snp = "%s\t%d\t%d\t%s\t%d\t%s" % \
                                 (snp['chrom'], snp['start'] - 1, snp['end'],

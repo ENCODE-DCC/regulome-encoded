@@ -81,7 +81,7 @@ def run(app, format_json=False, chosen_assembly='GRCh38', chosen_chrom='all', si
                         formatted_pos = json.dumps({pos.get('rsid', coordinates): pos},
                                                    sort_keys=True)[1:-1] + ','
                     else:
-                        score = pos.get('score', '')
+                        score = pos.get('score', {}).get('ranking', '')
                         num_score = atlas.numeric_score(score)
                         formatted_pos = "%s\t%d\t%d\t%s\t%d\t%s" % \
                                         (chrom, pos['start'] - 1, pos['end'],

@@ -38,21 +38,21 @@ REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300,
 
 # Make prediction on query data with trained random forest model load trained model
 TRAINED_REG_MODEL = pickle.load(
-    open(resource_filename('encoded', 'rf_model.sav'), 'rb')
+    open(resource_filename('encoded', '../../rf_model.sav'), 'rb')
 )
 
 LOCAL_BIGWIGS = {
     'ChIP_max_signal': pyBigWig.open(
-        resource_filename('encoded', '../../bigwig_scores/ChIP_max_signal.bw')
+        resource_filename('encoded', '../../bigwig_files/ChIP_max_signal.bw')
     ),
     'DNase_max_signal': pyBigWig.open(
-        resource_filename('encoded', '../../bigwig_scores/DNase_max_signal.bw')
+        resource_filename('encoded', '../../bigwig_files/DNase_max_signal.bw')
     ),
     'IC_matched_max': pyBigWig.open(
-        resource_filename('encoded', '../../bigwig_scores/IC_matched_max.bw')
+        resource_filename('encoded', '../../bigwig_files/IC_matched_max.bw')
     ),
     'IC_max': pyBigWig.open(
-        resource_filename('encoded', '../../bigwig_scores/IC_max.bw')
+        resource_filename('encoded', '../../bigwig_files/IC_max.bw')
     ),
 }
 
@@ -365,10 +365,33 @@ class RegulomeAtlas(object):
     def _score(characterization):
         '''private: returns regulome score from characterization set'''
         # Predict as probability of being a regulatory SNP from prediction
-        keys = ['ChIP', 'DNase', 'PWM', 'Footprint', 'eQTL', 'dsQTL',
-                'PWM_matched', 'Footprint_matched']
-        query = [[int(k in characterization) for k in keys]]
-        probability = str(round(TRAINED_REG_MODEL.predict_proba(query)[:, 1][0], 5))
+        binary_keys = [
+            'ChIP',
+            'DNase',
+            'PWM',
+            'Footprint',
+            'eQTL',
+            'dsQTL',
+            'PWM_matched',
+            'Footprint_matched'
+        ]
+        query = [int(k in characterization) for k in binary_keys]
+        numeric_keys = [
+            'IC_max', 'IC_matched_max', 'ChIP_max_signal', 'DNase_max_signal'
+        ]
+        query += [characterization[k] for k in numeric_keys]
+        # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
+        # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+        # In general, the input of the `predict_proba` method is a matrix of
+        # shape = [n_variants, n_features]. There are two classes for variant
+        # in RegulomeDB, being allele-specific TF binding or not. So the output
+        # is an numpy array of shape = [n_samples, 2]. Here, we only do one
+        # variant at a time. So `query` is a list of lists with
+        # shape = [1, n_features] and the output of
+        # `TRAINED_REG_MODEL.predict_proba([query])` is numpy array of
+        # shape = [1, 2]. Specifically, the second column is the probability we
+        # would like to output. So `[:, 1][0]` will be the desired score.
+        probability = str(round(TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5))
         ranking = '7'
         if ('eQTL' in characterization) or ('dsQTL' in characterization):
             if 'ChIP' in characterization:
@@ -412,13 +435,13 @@ class RegulomeAtlas(object):
         elif ('PWM' in characterization
               or 'Footprint' in characterization):
             ranking = '6'
-        return '{} (probability); {} (ranking v1.1)'.format(probability, ranking)
+        return {'probability': probability, 'ranking': ranking}
 
     def regulome_score(self, datasets, evidence):
         '''Calculate RegulomeDB score based upon hits and voodoo'''
         if not evidence:
             return None
-        return self._score(set(evidence.keys()))
+        return self._score(evidence)
 
     @staticmethod
     def _snp_window(snps, window, center_pos=None):
@@ -513,7 +536,7 @@ class RegulomeAtlas(object):
                         if base_datasets:
                             base_evidence = self.regulome_evidence(base_datasets, chrom, start, end)
                             if base_evidence:
-                                score = self.regulome_score(base_datasets, base_evidence)
+                                score = self.regulome_score(base_datasets, base_evidence).get('ranking', '')
                                 if score:
                                     num_score = self.numeric_score(score)
                                     if num_score == region_score:

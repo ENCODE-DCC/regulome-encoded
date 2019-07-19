@@ -22,8 +22,8 @@ const snpsColumns = {
         title: 'Regulome score',
         display: (item) => {
             const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            if (item.regulome_score !== 'N/A' && item.regulome_score !== null) {
-                return <a href={hrefScore}>{item.regulome_score}</a>;
+            if (item.regulome_score.probability !== null && item.regulome_score.ranking !== null) {
+                return <a href={hrefScore}>{item.regulome_score.probability} (probability); {item.regulome_score.ranking} (ranking)</a>;
             }
             return <a href={hrefScore}>See related experiments</a>;
         },
