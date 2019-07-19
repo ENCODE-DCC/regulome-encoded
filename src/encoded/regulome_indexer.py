@@ -136,6 +136,9 @@ REGULOME_VALUE_STRAND_COL = {
     'eQTLs': {
         'value_col': 5
     },
+    'Footprints': {
+        'strand_col': 5,
+    },
     'PWMs': {
         'strand_col': 4,
     },
@@ -382,6 +385,12 @@ class RemoteReader(object):
             # Some PWMs annotation doesn't have strand info
             if strand_col < len(row) and row[strand_col] in ['.', '+', '-']:
                 doc['strand'] = row[strand_col]
+            # Temporary hack for Footprint data
+            elif (
+                strand_col - 1 < len(row)
+                and row[strand_col - 1] in ['.', '+', '-']
+            ):
+                doc['strand'] = row[strand_col - 1]
             else:
                 doc['strand'] = '.'
         return (chrom, doc)
