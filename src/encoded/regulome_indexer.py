@@ -90,6 +90,9 @@ REGULOME_REGION_REQUIREMENTS = {
         'file_type': ['bed narrowPeak'],
         'file_format': ['bed']
     },
+    'chromatin state': {
+        'file_format': ['bed']
+    },
     'PWMs': {
         'output_type': ['PWMs'],
         'file_format': ['bed']
@@ -112,6 +115,33 @@ REGULOME_REGION_REQUIREMENTS = {
         'output_type': ['variant calls'],
         'file_format': ['bed']
     }
+}
+# Columns (0-based) for value and strand to be indexed
+REGULOME_VALUE_STRAND_COL = {
+    'ChIP-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
+    'DNase-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
+    'FAIRE-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
+    'chromatin state': {
+        'value_col': 3
+    },
+    'eQTLs': {
+        'value_col': 5
+    },
+    'Footprints': {
+        'strand_col': 5,
+    },
+    'PWMs': {
+        'strand_col': 4,
+    },
 }
 # Less than ideal way to recognize the SNP files by submitted_file_name
 # SNP_DATASET_UUID = 'ff8dff4e-1de5-446b-8a13-bb6243bc64aa'  # works on demo, but...
@@ -228,6 +258,9 @@ def get_snp_index_mapping(chrom='chr1'):
                 'coordinates': {
                     'type': 'integer_range'
                 },
+                'strand': {
+                    'type': 'string'  # + - .
+                },
             }
         }
     }
@@ -335,21 +368,45 @@ class RemoteReader(object):
             yield row
 
     @staticmethod
-    def region(row):
+    def region(row, value_col=None, strand_col=None):
         '''Read a region from an in memory row and returns chrom and document to index.
            Extend this to get store and strand properties, although the bed files vary by type
         '''
         chrom, start, end = row[0], int(row[1]), int(row[2])
-        return (chrom, {
-                        'gte': start,
-                        'lt': end
-                    }
-                )  # Stored as BED 0-based half open
+        doc = {
+            'coordinates': {
+                'gte': start,
+                'lt': end
+            },
+        }  # Stored as BED 0-based half open
+        if value_col and value_col < len(row):
+            doc['value'] = row[value_col]
+        if strand_col:
+            # Some PWMs annotation doesn't have strand info
+            if strand_col < len(row) and row[strand_col] in ['.', '+', '-']:
+                doc['strand'] = row[strand_col]
+            # Temporary hack for Footprint data
+            elif (
+                strand_col - 1 < len(row)
+                and row[strand_col - 1] in ['.', '+', '-']
+            ):
+                doc['strand'] = row[strand_col - 1]
+            else:
+                doc['strand'] = '.'
+        return (chrom, doc)
 
     @staticmethod
     def snp(row):
         '''Read a SNP from an in memory row and returns chrom and document to index.'''
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]
+        strand = '.'
+        if len(row) > 5:
+            if row[5] in ['.', '+', '-']:
+                strand = row[5]
+            else:
+                log.warn('{} has invalid strand info {} on column 6'.format(
+                    rsid, row[5]
+                ))
         if start == end:
             end = end + 1
         return (chrom, {
@@ -358,7 +415,8 @@ class RemoteReader(object):
               'coordinates': { 
                   'gte': start,
                   'lt': end
-                }
+                },
+              'strand': strand,
         })
 
     # TODO: support bigBeds
@@ -943,13 +1001,10 @@ class RegionIndexer(Indexer):
         return True
 
     @staticmethod
-    def region_bulk_iterator(chrom, assembly, uuid, peaks_for_chrom):
+    def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
         '''Given yields peaks packaged for bulk indexing'''
-        for idx, peak in enumerate(peaks_for_chrom):
-            doc = {
-                'uuid': uuid,
-                'coordinates': peak,
-            }
+        for idx, doc in enumerate(docs_for_chrom):
+            doc['uuid'] = uuid
             yield {'_index': chrom, '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
 
     def index_regions(self, assembly, regions, file_doc, chroms):
@@ -1048,11 +1103,30 @@ class RegionIndexer(Indexer):
                         if snp_set:
                             (chrom, doc) = self.reader.snp(row)
                         else:
-                            (chrom, doc) = self.reader.region(row)
+                            (chrom, doc) = self.reader.region(
+                                row,
+                                value_col=REGULOME_VALUE_STRAND_COL.get(
+                                    file_doc['dataset']['collection_type'], {}
+                                ).get('value_col'),
+                                strand_col=REGULOME_VALUE_STRAND_COL.get(
+                                    file_doc['dataset']['collection_type'], {}
+                                ).get('strand_col')
+                            )
                     except Exception:
                         log.error('%s - failure to parse row %s:%s:%s, skipping row',
                                   afile['href'], row[0], row[1], row[2])
                         continue
+                    if doc['coordinates']['gte'] == doc['coordinates']['lt']:
+                        log.error(
+                            '%s - on chromosome %s, a start coordinate %s is '
+                            'larger than or equal to the end coordinate %s, '
+                            'skipping row',
+                            afile['href'],
+                            row[0],
+                            row[1],
+                            row[2]
+                        )
+                        continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
                     if chrom not in SUPPORTED_CHROMOSOMES:
                         continue   # TEMPORARY: limit both SNPs and regions to major chroms
                     if chrom not in file_data:
