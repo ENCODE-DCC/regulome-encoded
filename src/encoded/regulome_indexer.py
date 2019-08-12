@@ -75,7 +75,8 @@ REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_ty
 REGULOME_REGION_REQUIREMENTS = {
     'ChIP-seq': {
         'output_type': ['optimal idr thresholded peaks'],
-        'file_format': ['bed']
+        'file_format': ['bed'],
+        'status': 'released',
     },
     'binding sites': {
         'output_type': ['curated binding sites'],
@@ -84,14 +85,17 @@ REGULOME_REGION_REQUIREMENTS = {
     'DNase-seq': {
         'output_type': ['peaks'],
         'file_type': ['bed narrowPeak'],
-        'file_format': ['bed']
+        'file_format': ['bed'],
+        'status': 'released',
     },
     'FAIRE-seq': {
         'file_type': ['bed narrowPeak'],
-        'file_format': ['bed']
+        'file_format': ['bed'],
+        'status': 'released',
     },
     'chromatin state': {
-        'file_format': ['bed']
+        'file_format': ['bed'],
+        'status': 'released',
     },
     'PWMs': {
         'output_type': ['PWMs'],
@@ -829,8 +833,11 @@ class RegionIndexer(Indexer):
         if len(dataset.get('files', [])) == 0:
             return False
 
+        collection_type = regulome_collection_type(dataset)
+        if collection_type in ['ChIP-seq', 'DNase-seq', 'FAIRE-seq', 'chromatin state']:
+            return True
+
         if 'RegulomeDB' in dataset.get('internal_tags', []):
-            collection_type = regulome_collection_type(dataset)
             if collection_type is not None and \
                collection_type in list(REGULOME_REGION_REQUIREMENTS.keys()):
                 return True
