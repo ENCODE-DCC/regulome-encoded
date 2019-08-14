@@ -52,16 +52,10 @@ def test_regulome_summary(testapp, workbook, region_index):
                     'chr10 5894499 %09 5894500 rs10905307 %0A%0D'
                     'This is an invalid region query %0D%0A')
     res = testapp.get(summary_query_url.format(region_query))
-    import json
-    print(json.dumps(res.json, indent=4, sort_keys=True))
-    res_notes = sorted(res.json['notifications'], key=lambda x: next(iter(x)))
-    expected_notes = [
-        {"This is an invalid region query ": "Failed: invalid region input"},
-        {"chr10:11741180-11741181": "Success"},
-        {"chr10:5894499-5894500": "Success"},
-        {"chr1:39492461-39492462": "Success"},
-    ]
-    assert res_notes == expected_notes
+    expected_notes = {
+        "This is an invalid region query ": "Failed: invalid region input"
+    }
+    assert res.json['notifications'] == expected_notes
 
 
 @pytest.mark.parametrize("query_term,expected,valid", [

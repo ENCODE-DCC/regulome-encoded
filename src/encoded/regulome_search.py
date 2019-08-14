@@ -296,10 +296,9 @@ def get_coordinate(query_term, assembly='GRCh37', atlas=None):
 
 
 def get_rsids(atlas, assembly, chrom, start, end):
-    pos = (int(start) + int(end)) / 2
-    window = int(end) - int(start)
-    rsids = atlas.nearby_snps(_GENOME_TO_ALIAS.get(assembly, 'hg19'),
-                              chrom, pos, window=window, max_snps=99999)
+    rsids = atlas.find_snps(
+        _GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end
+    )
     return [rsid['rsid'] for rsid in rsids if 'rsid' in rsid]
 
 
@@ -328,45 +327,59 @@ def parse_region_query(request):
                       for query in regions
                       for region_query in re.split(r'[\r\n]+', query)
                       if not re.match(r'^(#.*)|(\s*)$', region_query)]
-    try:
-        from_ = int(from_)
-    except ValueError:
-        from_ = 0
-    if size in ('all', ''):
-        size = len(region_queries)
-    else:
-        try:
-            size = int(size)
-        except ValueError:
-            size = 25
-    coordinates = set()
-    notifications = []
+
+    variants = dict()
+    notifications = {}
     atlas = RegulomeAtlas(request.registry[SNP_SEARCH_ES])
     for region_query in region_queries:
-        # Stop when got enough unique regions
-        if len(coordinates) >= size:
-            break
         # Get coordinate for queried region
         try:
             chrom, start, end = get_coordinate(region_query, assembly, atlas)
-        except ValueError as e:
-            notifications.append({region_query: 'Failed: invalid region input'})
+        except ValueError:
+            notifications[region_query] = 'Failed: invalid region input'
             continue
-        # Skip if scored before
-        coord = '{}:{}-{}'.format(chrom, start, end)
-        if coord in coordinates:
-            notifications.append({region_query: 'Skipped: scored before'})
-            continue
-        else:
-            coordinates.add(coord)
+        snps = atlas.find_snps(
+            _GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end
+        )
+        if not snps:
+            if (int(end) - int(start)) > 1:
+                notifications[region_query] = (
+                    'Failed: no variants found in this multi-nucleotide region'
+                )
+                continue
+            else:
+                variants['{}:{}-{}'.format(chrom, int(start), int(end))] = set()
+        for snp in snps:
+            coord = '{}:{}-{}'.format(
+                snp['chrom'],
+                snp['coordinates']['gte'],
+                snp['coordinates']['lt']
+            )
+            if coord in variants:
+                variants[coord].add(snp['rsid'])
+            else:
+                variants[coord] = {snp['rsid']}
+
+    total = len(variants)
+    try:
+        from_ = max(int(from_), 0)
+    except ValueError:
+        from_ = 0
+    if size in ('all', ''):
+        to_ = total
+    else:
+        try:
+            to_ = min(from_ + max(int(size), 0), total)
+        except ValueError:
+            to_ = min(from_ + 25, total)
 
     result = {
         '@context': request.route_path('jsonld_context'),
         '@id': request.path_qs,
         'assembly': assembly,
-        'coordinates': list(coordinates),
         'from': from_,
-        'total': size,
+        'total': total,
+        'variants': {k: list(v) for k, v in sorted(variants.items())[from_:to_]},
         'notifications': notifications,
     }
     return result
@@ -406,19 +419,20 @@ def regulome_summary(context, request):
     result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
 
     # Redirect to regulome report for single unique region query
-    if len(result['coordinates']) == 1:
-        query = {'region': result['coordinates'],
-                 'genome': result['assembly'],
-                 'from': result['from'],
-                 'limit': result['total']}
+    if len(result['variants']) == 1:
+        query = {'region': [v for v in result['variants']][0],
+                 'genome': result['assembly']}
         location = request.route_url('regulome-search', slash='', _query=query)
         raise HTTPSeeOther(location=location)
+
     result['@type'] = ['regulome-summary']
     result['title'] = 'Regulome summary'
 
     # No regions to search
-    if result['coordinates'] == []:
-        result['notifications'].append({'Failed': 'No regions found'})
+    if not result['variants']:
+        # Just in case no message is recorded during parse_region_query
+        if not result['notifications']:
+            result['notifications'] = {'Failed': 'No variants found'}
         return result
 
     # Loop through coordinates and score each unique region
@@ -426,28 +440,22 @@ def regulome_summary(context, request):
     atlas = RegulomeAtlas(regulome_es)
     assembly = result['assembly']
     summaries = []
-    for coord in result['coordinates']:
+    for coord in result['variants']:
         begin = time.time()  # DEBUG: timing
         chrom, start_end = coord.split(':')
         start, end = start_end.split('-')
         # Get rsid for the coordinate
-        rsids = get_rsids(atlas, assembly, chrom, start, end)
-        # Only SNP or single nucleotide are considered as scorable
-        regulome_score = {}
-        features = {}
-        if rsids == [] and (int(end) - int(start)) > 1:
-            result['notifications'].append({coord: 'Failed: {}'.format(
-                'Non-SNP or multi-nucleotide region is not scorable')})
-        else:  # Scorable
-            try:
-                all_hits = region_get_hits(atlas, assembly, chrom, start, end)
-                evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
-                regulome_score = atlas.regulome_score(all_hits['datasets'],
-                                                      evidence)
-                features = evidence_to_features(evidence)
-                result['notifications'].append({coord: 'Success'})
-            except Exception as e:
-                result['notifications'].append({coord: 'Failed: (exception) {}'.format(e)})
+        rsids = result['variants'][coord]
+        # parse_region_query makes sure variants returned are all scorable
+        try:
+            all_hits = region_get_hits(atlas, assembly, chrom, start, end)
+            evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
+            regulome_score = atlas.regulome_score(all_hits['datasets'],
+                                                  evidence)
+            features = evidence_to_features(evidence)
+        except Exception:
+            features = {}
+            regulome_score = {}
         summaries.append({'chrom': chrom, 'start': start, 'end': end,
                           'rsids': rsids, 'features': features,
                           'regulome_score': regulome_score})

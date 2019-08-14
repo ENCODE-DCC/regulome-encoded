@@ -246,7 +246,7 @@ class AdvSearch extends React.Component {
                 {(context.coordinates) ?
                     <p>Searched coordinates: {context.coordinates}</p>
                 : null}
-                {(context.regulome_score) ?
+                {(context.regulome_score && context.regulome_score.probability && context.regulome_score.ranking) ?
                     <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking) </p>
                 : null}
                 {(context.regulome_score && !context.peak_details) ?
@@ -598,7 +598,7 @@ class RegulomeSearch extends React.Component {
                                         <div className="notification">{+context.notification.split(': ')[1].split(' peaks')[0] - chromatinData.length} peaks</div>
                                     </div>
                                 : null}
-                                {(context.regulome_score) ?
+                                {(context.regulome_score && context.regulome_score.probability && context.regulome_score.ranking) ?
                                     <div>
                                         <div className="notification-line">
                                             <div className="notification-label">Rank</div>
