@@ -13,7 +13,7 @@ def test_one_regulome(testapp, workbook, region_index):
     assert res.json['title'] == 'Regulome search'
     assert res.json['@type'] == ['region-search', 'Portal']
     assert res.json['notification'] == 'Success: 8 peaks in 8 files belonging to 8 datasets in this region'
-    assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
+    assert res.json['regulome_score'] == {'probability': '0.94', 'ranking': '1a'}
     assert res.json['coordinates'] == 'chr1:39492461-39492462'
     assert {e['accession'] for e in res.json['@graph']} == {
         'ENCSR228TST', 'ENCSR061TST', 'ENCSR000DCE', 'ENCSR333TST',
@@ -30,7 +30,7 @@ def test_dataset_size(testapp, workbook, region_index):
     ''' this doesn't actually test size but makes sure some properties were removed '''
     res = testapp.get('/regulome-search/?region=rs10905307&genome=GRCh37')
     assert res.json['notification'] == 'Success: 3 peaks in 3 files belonging to 3 datasets in this region'
-    assert res.json['regulome_score'] == '0.18499 (probability); 1f (ranking v1.1)'
+    assert res.json['regulome_score'] == {'probability': '0.2', 'ranking': '1f'}
     assert res.json['coordinates'] == 'chr10:5894499-5894500'
     assert {e['accession'] for e in res.json['@graph']} == {'ENCSR061TST', 'ENCSR000DZQ', 'ENCSR497SKR'}
     assert {e['biosample_ontology']['term_name'] for e in res.json['@graph']} == {'GM12878', 'lymphoblastoid cell line', 'HeLa-S3'}
@@ -40,7 +40,7 @@ def test_dataset_size(testapp, workbook, region_index):
 
 def test_regulome_score(testapp, workbook, region_index):
     res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
-    assert res.json['regulome_score'] == '0.8136 (probability); 1a (ranking v1.1)'
+    assert res.json['regulome_score'] == {'probability': '0.94', 'ranking': '1a'}
 
 
 def test_regulome_summary(testapp, workbook, region_index):

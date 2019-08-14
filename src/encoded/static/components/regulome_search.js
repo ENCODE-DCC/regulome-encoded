@@ -178,7 +178,7 @@ class AdvSearch extends React.Component {
                         <p>Searched coordinates: {context.coordinates}</p>
                     : null}
                     {(context.regulome_score) ?
-                        <p className="regulomescore">RegulomeDB score: {context.regulome_score}</p>
+                        <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking)</p>
                     : null}
                     {(context.regulome_score && !context.peak_details) ?
                         <a
@@ -364,7 +364,7 @@ class RegulomeSearch extends React.Component {
                         <div>
                             <div className="result-summary">
                                 {(context.regulome_score) ?
-                                    <p className="regulomescore">Score: <span className="bold-class">{context.regulome_score}</span></p>
+                                    <p className="regulomescore">Score: <span className="bold-class">{context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking)</span></p>
                                 : null}
                             </div>
                             <div className="search-information">

@@ -433,7 +433,7 @@ def regulome_summary(context, request):
         # Get rsid for the coordinate
         rsids = get_rsids(atlas, assembly, chrom, start, end)
         # Only SNP or single nucleotide are considered as scorable
-        regulome_score = 'N/A'
+        regulome_score = {}
         features = {}
         if rsids == [] and (int(end) - int(start)) > 1:
             result['notifications'].append({coord: 'Failed: {}'.format(
