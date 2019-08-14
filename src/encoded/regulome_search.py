@@ -309,14 +309,14 @@ def parse_region_query(request):
         assembly = request.params.get('genome', 'GRCh37')
         regions = request.params.getall('regions')
         from_ = request.params.get('from', 0)
-        size = request.params.get('limit', 25)
+        size = request.params.get('limit', 200)
     else:  # request.method == 'POST'
         assembly = request.json_body.get('genome', 'GRCh37')
         regions = request.json_body.get('regions', [])
         if not isinstance(regions, list):
             regions = [regions]
         from_ = request.json_body.get('from', 0)
-        size = request.json_body.get('limit', 25)
+        size = request.json_body.get('limit', 200)
 
     # Parse parameters
     if assembly not in _GENOME_TO_ALIAS.keys():
@@ -371,7 +371,7 @@ def parse_region_query(request):
         try:
             to_ = min(from_ + max(int(size), 0), total)
         except ValueError:
-            to_ = min(from_ + 25, total)
+            to_ = min(from_ + 200, total)
 
     result = {
         '@context': request.route_path('jsonld_context'),

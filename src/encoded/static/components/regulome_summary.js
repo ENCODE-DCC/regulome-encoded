@@ -52,7 +52,7 @@ SNPSummary.defaultProps = {
 
 const RegulomeSummary = (props) => {
     const context = props.context;
-    const summaries = context.summaries;
+    const summaries = context.summaries || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
 
@@ -63,7 +63,7 @@ const RegulomeSummary = (props) => {
             </div>
 
             <div className="notification-label-centered">
-                <div className="notification-summary">This search has found <b>{context.total}</b> variant(s).</div>
+                <div className="notification-summary">This search has found <b>{context.total}</b> variant(s). Here shows <b>{summaries.length}</b> of them.</div>
                 {notifications && notifications.length > 0 ?
                     <div className="notification-line notification-title">Unsuccessful searches:</div>
                 : null}
