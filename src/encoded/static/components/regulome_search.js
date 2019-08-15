@@ -6,6 +6,8 @@ import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
 import { BarChart, ChartTable } from './visualizations';
+import { requestSearch } from './objectutils';
+import GenomeBrowser from './genome_browser';
 
 const dataTypeStrings = [
     {
@@ -241,6 +243,24 @@ const PeakDetails = (props) => {
 };
 
 PeakDetails.propTypes = {
+    context: React.PropTypes.object.isRequired,
+};
+
+const QTLDetails = (props) => {
+    const context = props.context;
+    const allData = context['@graph'];
+    const QTLdata = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
+    const eQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('eQTL') !== -1).length;
+    const dsQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('dsQTL') !== -1).length;
+    return (
+        <div className="thumbnail-info">
+            <div>There {eQTLcount > 1 ? 'are' : 'is'} {eQTLcount} eQTL result{eQTLcount > 1 ? 's' : ''}.</div>
+            <div>There {dsQTLcount > 1 ? 'are' : 'is'} {dsQTLcount} dsQTL result{dsQTLcount > 1 ? 's' : ''}.</div>
+        </div>
+    );
+};
+
+QTLDetails.propTypes = {
     context: React.PropTypes.object.isRequired,
 };
 
@@ -517,6 +537,7 @@ class RegulomeSearch extends React.Component {
             selectedThumbnail: null,
             thumbnailWidth: 0,
             screenWidth: 0,
+            includedFiles: [],
         };
 
         // Bind this to non-React methods.
@@ -560,13 +581,43 @@ class RegulomeSearch extends React.Component {
     }
 
     chooseThumbnail(chosen) {
-        this.setState({ selectedThumbnail: chosen });
+        if (chosen === 'valis') {
+            const assembly = 'hg19';
+            let searchQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig`;
+            if (this.props.context['@graph'].length > 20) {
+                console.log('lets not be insane, there are this many datasets');
+                console.log(this.props.context['@graph'].length);
+            }
+            this.props.context['@graph'].forEach((d, dIDX) => {
+                if (dIDX < 20) {
+                    const dataset = d['@id'];
+                    searchQuery += `&dataset=${dataset}`;
+                }
+            });
+            requestSearch(searchQuery).then((results) => {
+                const datasetFiles = results ? results['@graph'] : [];
+                let includedFiles = datasetFiles ? datasetFiles.concat(datasetFiles) : [];
+                if (includedFiles.length > 10) {
+                    console.log('there are this many results');
+                    console.log(includedFiles.length);
+                    includedFiles = includedFiles.slice(0, 10);
+                }
+                this.setState({
+                    selectedThumbnail: chosen,
+                    includedFiles,
+                });
+            });
+        } else {
+            this.setState({ selectedThumbnail: chosen });
+        }
     }
 
     render() {
         const context = this.props.context;
         const notification = context.notification;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
+        const expanded = true;
+        const coordinates = context.coordinates;
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
                 {(context.total > 0) ?
@@ -672,7 +723,10 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>QTL Data</h4>
                                     {(this.state.selectedThumbnail === null) ?
-                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.</div>
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.</div>
+                                            <QTLDetails {...this.props} />
+                                        </div>
                                     : null}
                                 </button>
                                 {(this.state.selectedThumbnail) ?
@@ -690,6 +744,16 @@ class RegulomeSearch extends React.Component {
                                         <div>
                                             <h4>Motifs</h4>
                                             <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
+                                        </div>
+                                    : (this.state.selectedThumbnail === 'valis') ?
+                                        <div>
+                                            <h4>Genome browser</h4>
+                                            <GenomeBrowser
+                                                files={this.state.includedFiles}
+                                                expanded
+                                                assembly={'hg19'}
+                                                coordinates={coordinates}
+                                            />
                                         </div>
                                     :
                                         <div>
