@@ -1148,3 +1148,23 @@ button {
 .bar-chart-bars {
     margin-bottom: 40px;
 }
+
+.pagination-container {
+    text-align: center;
+    margin: auto;
+    margin-top: 20px;
+}
+
+.btn-page {
+    font-size: 18px;
+    padding: 8px 6px 4px 10px;
+    line-height: 1;
+    margin-bottom: 10px;
+    &:hover {
+        background: #698B61;
+    }
+    &.btn-page-left {
+        margin-right: 5px;
+        padding: 8px 10px 4px 6px;
+    }
+}

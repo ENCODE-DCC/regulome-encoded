@@ -6,6 +6,8 @@ import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
 import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visualizations';
+import { requestSearch } from './objectutils';
+import GenomeBrowser from './genome_browser';
 
 const dataTypeStrings = [
     {
@@ -296,6 +298,24 @@ AdvSearch.contextTypes = {
     navigate: PropTypes.func,
 };
 
+const QTLDetails = (props) => {
+    const context = props.context;
+    const allData = context['@graph'];
+    const QTLdata = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
+    const eQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('eQTL') !== -1).length;
+    const dsQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('dsQTL') !== -1).length;
+    return (
+        <div className="thumbnail-info">
+            <div>There {eQTLcount > 1 ? 'are' : 'is'} <b>{eQTLcount}</b> eQTL result{eQTLcount > 1 ? 's' : ''}.</div>
+            <div>There {dsQTLcount > 1 ? 'are' : 'is'} <b>{dsQTLcount}</b> dsQTL result{dsQTLcount > 1 ? 's' : ''}.</div>
+        </div>
+    );
+};
+
+QTLDetails.propTypes = {
+    context: React.PropTypes.object.isRequired,
+};
+
 const NearbySNPsDrawing = (props) => {
     const context = props.context;
 
@@ -492,6 +512,20 @@ ResultsTable.defaultProps = {
     dataFilter: '',
 };
 
+const appendDatasetsToQuery = (query, chunkDatasets) => {
+    let searchQuery = query;
+    chunkDatasets.forEach((d) => {
+        const dataset = d['@id'];
+        searchQuery += `&dataset=${dataset}`;
+    });
+    return searchQuery;
+};
+
+// size of each query (how many datasets)
+const chunkSize = 10;
+// number of files to display on genome browser
+const displaySize = 20;
+
 class RegulomeSearch extends React.Component {
     constructor() {
         super();
@@ -501,12 +535,21 @@ class RegulomeSearch extends React.Component {
             selectedThumbnail: null,
             thumbnailWidth: 0,
             screenWidth: 0,
+            allFiles: [],
+            includedFiles: [],
+            multipleBrowserPages: false,
+            browserCurrentPage: 1,
+            browserTotalPages: 1,
         };
 
         // Bind this to non-React methods.
+        this.requests = [];
         this.onFilter = this.onFilter.bind(this);
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
+        this.addNewFiles = this.addNewFiles.bind(this);
+        this.handlePagination = this.handlePagination.bind(this);
+        this.chunkingDataset = this.chunkingDataset.bind(this);
     }
 
     componentDidMount() {
@@ -517,7 +560,8 @@ class RegulomeSearch extends React.Component {
     shouldComponentUpdate(nextProps, nextState) {
         const thumbnailUpdate = this.state.selectedThumbnail !== nextState.selectedThumbnail;
         const screenSizeUpdate = this.state.screenWidth !== this.applicationRef.offsetWidth;
-        return (!_.isEqual(this.props, nextProps) || thumbnailUpdate || screenSizeUpdate);
+        const pageUpdate = this.state.browserCurrentPage !== nextState.browserCurrentPage;
+        return (!_.isEqual(this.props, nextProps) || thumbnailUpdate || screenSizeUpdate || pageUpdate);
     }
 
     onFilter(e) {
@@ -543,13 +587,191 @@ class RegulomeSearch extends React.Component {
         });
     }
 
+    addNewFiles(searchQuery) {
+        return new Promise((ok) => {
+            requestSearch(searchQuery).then((results) => {
+                const newFiles = results ? results['@graph'] : [];
+                this.setState(prevState => ({
+                    allFiles: [...prevState.allFiles, ...newFiles],
+                }));
+                ok('success');
+            });
+        });
+    }
+
+    handlePagination(pageDirection) {
+        if (pageDirection === 'plus') {
+            const pageIdx = this.state.browserCurrentPage;
+            const startIdx = pageIdx * displaySize;
+            const endIdx = (pageIdx + 1) * displaySize;
+            const includedFiles = this.state.allFiles.slice(startIdx, endIdx);
+            this.setState(prevState => ({
+                includedFiles,
+                browserCurrentPage: prevState.browserCurrentPage + 1,
+            }));
+        } else {
+            const pageIdx = this.state.browserCurrentPage - 2;
+            const startIdx = pageIdx * displaySize;
+            const endIdx = ((pageIdx + 1) * displaySize);
+            const includedFiles = this.state.allFiles.slice(startIdx, endIdx);
+            this.setState(prevState => ({
+                includedFiles,
+                browserCurrentPage: prevState.browserCurrentPage - 1,
+            }));
+        }
+    }
+
+    chunkingDataset(requests, startIdxWrapper, endIdxWrapper, datasets, baseQuery) {
+        // iterate over queries
+        for (let chunkIdx = startIdxWrapper; chunkIdx < endIdxWrapper; chunkIdx += 1) {
+            // subset of datasets for the query
+            const startIdx = chunkIdx * chunkSize;
+            const endIdx = (chunkIdx + 1) * chunkSize;
+            let chunkDatasets = [];
+            chunkDatasets = datasets.slice(startIdx, endIdx);
+            // this is the query
+            const searchQuery = appendDatasetsToQuery(baseQuery, chunkDatasets);
+            // add results of query to full array of results
+            requests[chunkIdx] = this.addNewFiles(searchQuery);
+        }
+        return requests;
+    }
+
     chooseThumbnail(chosen) {
-        this.setState({ selectedThumbnail: chosen });
+        if (chosen === 'valis' && this.state.allFiles.length < 1) {
+            // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
+            const assembly = 'hg19';
+            // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
+            const experimentDatasets = this.props.context['@graph'].filter(d => d['@id'].includes('experiment'));
+            // each query corresponds to a promise and 'requests' keeps track of whether the query has successfully returned data
+            const requests = [];
+            // in order to append dataset information to file data, we generate lookups for biosample, assay, and target list by dataset
+            const biosampleMap = {};
+            const assayMap = {};
+            const targetMap = {};
+            experimentDatasets.forEach((dataset) => {
+                biosampleMap[dataset['@id']] = dataset.biosample_ontology.term_name || '';
+                assayMap[dataset['@id']] = dataset.assay_term_name || '';
+                targetMap[dataset['@id']] = dataset.target ? dataset.target.label : (dataset.targets) ? dataset.targets.map(t => t.label).join(', ') : '';
+            });
+            console.log(`there are ${experimentDatasets.length} datasets`);
+            // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
+            const chipDatasets = experimentDatasets.filter(d => d.assay_title === 'ChIP-seq');
+            const dnaseDatasets = experimentDatasets.filter(d => d.assay_title === 'DNase-seq');
+            const faireDatasets = experimentDatasets.filter(d => d.assay_title === 'FAIRE-seq');
+            // how many queries we need to run based on number of datasets per query
+            const numChipChunks = Math.ceil(Object.keys(chipDatasets).length / chunkSize);
+            const numDnaseChunks = Math.ceil(Object.keys(dnaseDatasets).length / chunkSize);
+            const numFaireChunks = Math.ceil(Object.keys(faireDatasets).length / chunkSize);
+            // the goal is to pick 1 each bigWig and bigBed file per experiment, with the following output types and replicate numbers for the different assays:
+            // DNase → peaks, read-depth normalized signal (rep1)
+            // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
+            // FAIRE → peaks, signal
+            // we start by collecting all files that satisfy these conditions
+            const chipBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&biological_replicates=1&limit=all`;
+            const dnaseBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2&limit=all`;
+            const faireBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all`;
+            // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
+            // we construct an array of Promises for all the queries
+            this.chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
+            this.chunkingDataset(requests, 0, numDnaseChunks, dnaseDatasets, dnaseBaseQuery);
+            this.chunkingDataset(requests, 0, numFaireChunks, faireDatasets, faireBaseQuery);
+
+            // once all the data has been retrieved, narrow down full set of files to 2 per dataset
+            Promise.all(requests).then(() => {
+                // sort by dataset
+                const sortedFiles = _.sortBy(this.state.allFiles, obj => obj.dataset);
+                // add biosample, assay, and target list from dataset to file information
+                sortedFiles.forEach((d) => {
+                    d.biosample = biosampleMap[d.dataset];
+                    d.assay = assayMap[d.dataset];
+                    d.target = targetMap[d.dataset];
+                });
+                // do first pass at filtering down full file list
+                const trimmedFiles0 = sortedFiles.filter((file) => {
+                    const DatasetFiles0 = sortedFiles.filter(f2 => f2.dataset === file.dataset);
+                    if (DatasetFiles0.length > 2) {
+                        // if there are more than 2 files for a ChIP-seq dataset, we prefer rep 1,2 to rep 1
+                        if (file.assay === 'ChIP-seq') {
+                            if (file.biological_replicates.length === 1) {
+                                return false;
+                            }
+                            return true;
+                        // if there are more than 2 files for a DNase-seq dataset, we prefer rep 1
+                        } else if (file.assay === 'DNase-seq') {
+                            if (file.biological_replicates.length === 1) {
+                                return true;
+                            }
+                            return false;
+                        // if there are more than 2 files for a FAIRE-seq dataset, we prefer multiple replicates
+                        } else if (file.assay === 'FAIRE-seq') {
+                            if (file.biological_replicates.length === 0) {
+                                return false;
+                            }
+                            return true;
+                        }
+                        return true;
+                    }
+                    return true;
+                });
+                // it is still possible to have multiple files per dataset
+                // in those cases, we will filter for only "released" files
+                const trimmedFiles = trimmedFiles0.filter((file) => {
+                    const datasetFiles = trimmedFiles0.filter(f2 => f2.dataset === file.dataset);
+                    // only filter by file status if there are still more than 2 files for the dataset
+                    if (datasetFiles.length > 2) {
+                        if (file.status === 'released') {
+                            return true;
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+
+                // this is entirely for debugging ---------
+                experimentDatasets.forEach((d) => {
+                    const originalFiles = sortedFiles.filter(f => f.dataset === d['@id']);
+                    console.log(`dataset ${d['@id'].split('/')[2]} originally had ${originalFiles.length} matching files: ${originalFiles.map(f => f.accession).join(', ')}`);
+
+                    const matchingFiles = trimmedFiles.filter(f => f.dataset === d['@id']);
+                    console.log(`after filtering, dataset ${d['@id'].split('/')[2]} has ${matchingFiles.length} matching files: ${matchingFiles.map(f => f.accession).join(', ')}`);
+                });
+                console.log(`there are ${trimmedFiles.length} files after filtering`);
+                // this is the end of the print statements for debugging ------------
+
+                // if there are more filtered files than we want to display on one page, we will paginate
+                if (trimmedFiles.length > displaySize) {
+                    const includedFiles = trimmedFiles.slice(0, displaySize);
+                    const browserTotalPages = Math.ceil(trimmedFiles.length / displaySize);
+                    this.setState({
+                        allFiles: trimmedFiles,
+                        includedFiles,
+                        multipleBrowserPages: true,
+                        browserTotalPages,
+                        browserCurrentPage: 1,
+                    }, () => {
+                        this.setState({ selectedThumbnail: chosen });
+                    });
+                } else {
+                    this.setState({
+                        allFiles: trimmedFiles,
+                        includedFiles: trimmedFiles,
+                        selectedThumbnail: chosen,
+                    }, () => {
+                        this.setState({ selectedThumbnail: chosen });
+                    });
+                }
+            });
+        } else {
+            // all necessary data is already available for all other tabs
+            this.setState({ selectedThumbnail: chosen });
+        }
     }
 
     render() {
         const context = this.props.context;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
+        const coordinates = context.coordinates;
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
@@ -676,8 +898,11 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>QTL Data</h4>
                                     {(this.state.selectedThumbnail === null) ?
-                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
-                                            <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
+                                                <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
+                                            </div>
+                                            <QTLDetails {...this.props} />
                                         </div>
                                     : null}
                                 </button>
@@ -696,6 +921,25 @@ class RegulomeSearch extends React.Component {
                                         <div>
                                             <h4>Motifs</h4>
                                             <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
+                                        </div>
+                                    : (this.state.selectedThumbnail === 'valis') ?
+                                        <div>
+                                            <GenomeBrowser
+                                                fixedHeight={this.state.multipleBrowserPages}
+                                                files={this.state.includedFiles}
+                                                expanded
+                                                assembly={'hg19'}
+                                                coordinates={coordinates}
+                                            />
+                                            {this.state.multipleBrowserPages ?
+                                                <div className="pagination-container">
+                                                    <div>
+                                                        <button disabled={this.state.browserCurrentPage === 1} className="btn btn-page btn-page-left" onClick={() => this.handlePagination('minus')}><i className="icon icon-chevron-left" /></button>
+                                                        <button disabled={this.state.browserCurrentPage === this.state.browserTotalPages} className="btn btn-page" onClick={() => this.handlePagination('plus')}><i className="icon icon-chevron-right" /></button>
+                                                    </div>
+                                                    <div>Page <b>{this.state.browserCurrentPage}</b> of <b>{this.state.browserTotalPages}</b></div>
+                                                </div>
+                                            : null}
                                         </div>
                                     : (this.state.selectedThumbnail === 'chip') ?
                                         <div>
