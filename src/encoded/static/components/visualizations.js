@@ -214,10 +214,10 @@ export class BarChart extends React.Component {
         });
         const chartDataOrig = sortedFakeFacets;
 
-        // may want to be smarter about this but we can't display unlimited data
+        // return subset of results if 'chartLimit' is defined
         let chartData = [];
         if (this.props.chartLimit > 0 && (sortedFakeFacets.length > this.props.chartLimit)) {
-            chartData = chartDataOrig.filter((d, cIDX) => cIDX < this.props.chartLimit);
+            chartData = chartDataOrig.slice(0, this.props.chartLimit);
         } else {
             chartData = chartDataOrig;
         }
@@ -312,7 +312,9 @@ export class ChartTable extends React.Component {
                 currentTarget: [...this.state.currentTarget, `table${clickID}`],
             });
         } else {
-            const removedTarget = this.state.currentTarget.filter(element => element !== `table${clickID}`);
+            const removedIDX = this.state.currentTarget.indexOf(`table${clickID}`);
+            const removedTarget = this.state.currentTarget;
+            removedTarget.splice(removedIDX, 1);
             this.setState({
                 currentTarget: removedTarget,
             });
@@ -336,10 +338,10 @@ export class ChartTable extends React.Component {
     }
 
     expandTerms() {
-        const allTargets = [];
-        for (let idx = 0; idx <= Object.keys(this.state.chartData).length; idx += 1) {
-            allTargets.push(`table${idx}`);
-        }
+        const allTargets = Object.keys(this.state.chartData).map((key) => {
+            const dKey = key.replace(/[^\w\s]/gi, '').toLowerCase();
+            return `table${dKey}`;
+        });
         this.setState({
             currentTarget: allTargets,
         });
@@ -399,10 +401,7 @@ export class ChartTable extends React.Component {
     }
 
     render() {
-        let errorMessage = false;
-        if (this.state.searchTerm) {
-            errorMessage = true;
-        }
+        let errorMessage = !!this.state.searchTerm;
         return (
             <div className="bar-chart-container">
                 <div className="bar-chart-header">
@@ -419,7 +418,8 @@ export class ChartTable extends React.Component {
                         </div>
                     </div>
                 </div>
-                {Object.keys(this.state.chartData).map((d, dIDX) => {
+                {Object.keys(this.state.chartData).map((d) => {
+                    const dKey = d.replace(/[^\w\s]/gi, '').toLowerCase();
                     let searchTermMatch = true;
                     if (this.state.searchTerm) {
                         searchTermMatch = sanitizedString(d).match(this.state.searchTerm);
@@ -427,10 +427,12 @@ export class ChartTable extends React.Component {
                             errorMessage = false;
                         }
                     }
+                    const barWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d];
+                    const remainderWidth = this.props.chartWidth - barWidth - this.state.leftMargin;
                     return (
                         <div
-                            className={`biosample-table table${dIDX} ${searchTermMatch ? 'display-table' : ''}`}
-                            key={`table${dIDX}`}
+                            className={`biosample-table table${dKey} ${searchTermMatch ? 'display-table' : ''}`}
+                            key={`table${dKey}`}
                         >
                             <div className="bar-row" key={this.state.chartData[d]}>
                                 <button
@@ -438,19 +440,20 @@ export class ChartTable extends React.Component {
                                     style={{
                                         width: `${this.state.leftMargin}px`,
                                     }}
-                                    onClick={() => this.handleClick(dIDX)}
-                                    aria-expanded={this.state.currentTarget.includes(`table${dIDX}`)}
-                                    aria-controls={`barchart-table-${dIDX}`}
-                                    id={`barchart-button-${dIDX}`}
+                                    onClick={() => this.handleClick(dKey)}
+                                    aria-expanded={this.state.currentTarget.includes(`table${dKey}`)}
+                                    aria-controls={`barchart-table-${dKey}`}
+                                    id={`barchart-button-${dKey}`}
                                 >
-                                    <i className={`icon ${this.state.currentTarget.includes(`table${dIDX}`) ? 'icon-caret-down' : 'icon-caret-right'}`} />
+                                    <i className={`icon ${this.state.currentTarget.includes(`table${dKey}`) ? 'icon-caret-down' : 'icon-caret-right'}`} />
                                     {d}
                                 </button>
                                 <div
                                     className="bar-container"
                                     style={{
                                         height: '20px',
-                                        width: `${((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d]}px`,
+                                        width: `${barWidth}px`,
+                                        marginRight: `${remainderWidth}px`,
                                     }}
                                 >
                                     <div
@@ -458,19 +461,19 @@ export class ChartTable extends React.Component {
                                         style={{
                                             backgroundColor: '#276A8E',
                                             height: '20px',
-                                            width: `${((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d]}px`,
+                                            width: `${barWidth}px`,
                                         }}
                                     />
                                     <div className="bar-annotation">{this.state.chartData[d]}</div>
                                 </div>
                             </div>
                             <div
-                                className={`barchart-table ${this.state.currentTarget.includes(`table${dIDX}`) ? 'active' : ''}`}
+                                className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
                                 style={{
                                     marginLeft: `${this.state.leftMargin}px`,
                                 }}
-                                id={`barchart-table-${dIDX}`}
-                                aria-labelledby={`barchart-button-${dIDX}`}
+                                id={`barchart-table-${dKey}`}
+                                aria-labelledby={`barchart-button-${dKey}`}
                             >
                                 {this.state.data.filter(element => filterForBiosample(element, d)).map(d2 =>
                                     <div className="table-entry" key={`table-entry-${d2.accession}`}>

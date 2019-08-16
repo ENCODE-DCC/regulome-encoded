@@ -33,6 +33,77 @@ const exampleEntries = [
     },
 ];
 
+// Columns for different subsets of data
+const dataColumnsChromatin = {
+    assay_title: {
+        title: 'Method',
+        getValue: item => (item.assay_title || item.annotation_type),
+    },
+    biosample_term_name: {
+        title: 'Biosample',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+    },
+    organ_slims: {
+        title: 'Organ',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
+    },
+    accession: {
+        title: 'Link',
+        display: item => <a href={item['@id']}>{item.accession}</a>,
+    },
+    description: {
+        title: 'Description',
+    },
+};
+
+const dataColumnsQTL = {
+    assay_title: {
+        title: 'Method',
+        getValue: item => (item.assay_title || item.annotation_type),
+    },
+    biosample_term_name: {
+        title: 'Biosample',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+    },
+    target: {
+        title: 'Targets',
+        getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
+    },
+    accession: {
+        title: 'Link',
+        display: item => <a href={item['@id']}>{item.accession}</a>,
+    },
+    description: {
+        title: 'Description',
+    },
+};
+
+const dataColumnsOther = {
+    assay_title: {
+        title: 'Method',
+        getValue: item => (item.assay_title || item.annotation_type),
+    },
+    biosample_term_name: {
+        title: 'Biosample',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+    },
+    target: {
+        title: 'Targets',
+        getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
+    },
+    organ_slims: {
+        title: 'Organ',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
+    },
+    accession: {
+        title: 'Link',
+        display: item => <a href={item['@id']}>{item.accession}</a>,
+    },
+    description: {
+        title: 'Description',
+    },
+};
+
 class DataType extends React.Component {
     constructor() {
         super();
@@ -309,7 +380,8 @@ const NearbySNPsDrawing = (props) => {
         <div className="svg-container">
             <div className="svg-title top-title">Chromosome {context.nearby_snps[0].chrom.split('chr')[1]}</div>
             <div className="svg-title">SNPs matching searched coordinates and nearby SNPs</div>
-            <svg className="nearby-snps" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMid meet" aria-labelledby="Nearby SNPs" role="img">
+            <svg className="nearby-snps" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMid meet" aria-labelledby="diagram-of-nearby-snps" role="img">
+                <title id="diagram-of-nearby-snps">Diagram of nearby SNPs</title>
                 <defs>
                     <marker
                         id="arrow"
@@ -415,75 +487,11 @@ const ResultsTable = (props) => {
     }
     let dataColumns = null;
     if (props.dataFilter === 'chromatin') {
-        dataColumns = {
-            assay_title: {
-                title: 'Method',
-                getValue: item => (item.assay_title || item.annotation_type),
-            },
-            biosample_term_name: {
-                title: 'Biosample',
-                getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
-            },
-            organ_slims: {
-                title: 'Organ',
-                getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
-            },
-            accession: {
-                title: 'Link',
-                display: item => <a href={item['@id']}>{item.accession}</a>,
-            },
-            description: {
-                title: 'Description',
-            },
-        };
+        dataColumns = dataColumnsChromatin;
     } else if (props.dataFilter === 'qtl') {
-        dataColumns = {
-            assay_title: {
-                title: 'Method',
-                getValue: item => (item.assay_title || item.annotation_type),
-            },
-            biosample_term_name: {
-                title: 'Biosample',
-                getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
-            },
-            target: {
-                title: 'Targets',
-                getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
-            },
-            accession: {
-                title: 'Link',
-                display: item => <a href={item['@id']}>{item.accession}</a>,
-            },
-            description: {
-                title: 'Description',
-            },
-        };
+        dataColumns = dataColumnsQTL;
     } else {
-        dataColumns = {
-            assay_title: {
-                title: 'Method',
-                getValue: item => (item.assay_title || item.annotation_type),
-            },
-            biosample_term_name: {
-                title: 'Biosample',
-                getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
-            },
-            target: {
-                title: 'Targets',
-                getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
-            },
-            organ_slims: {
-                title: 'Organ',
-                getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
-            },
-            accession: {
-                title: 'Link',
-                display: item => <a href={item['@id']}>{item.accession}</a>,
-            },
-            description: {
-                title: 'Description',
-            },
-        };
+        dataColumns = dataColumnsOther;
     }
 
     return (

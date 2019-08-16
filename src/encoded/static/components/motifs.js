@@ -100,11 +100,7 @@ export class MotifElement extends React.Component {
                     {targetList ?
                         <p><span className="motif-label">{targetListLabel}</span>{targetList.join(', ')}</p>
                     : null}
-                    {element.assay_title ?
-                        <p><span className="motif-label">Method</span>{element.assay_title}</p>
-                    :
-                        <p><span className="motif-label">Method</span>{element.annotation_type}</p>
-                    }
+                    <p><span className="motif-label">Method</span>{element.assay_title || element.annotation_type}</p>
                     {element.biosample_ontology ?
                         <p><span className="motif-label">Biosample</span>{element.biosample_ontology.term_name}</p>
                     : null}
@@ -137,11 +133,12 @@ export const Motifs = (props) => {
     // Filter results to find ones with associated PWM data
     const pwmLinkListFull = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
     let pwmLinkList = [];
-    if (limit > 0 && pwmLinkListFull !== []) {
+    if (limit > 0 && pwmLinkListFull.length !== 0) {
         pwmLinkList = pwmLinkListFull.slice(0, limit);
     } else {
         pwmLinkList = pwmLinkListFull;
     }
+
     return (
         <div>
             <div className={`sequence-logo-table ${classList}`}>
