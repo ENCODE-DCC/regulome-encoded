@@ -570,9 +570,7 @@ class RegulomeSearch extends React.Component {
         const notification = context.notification;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
         const allData = context['@graph'];
-        const groupedData = _.groupBy(allData, (d) => {
-            return d.annotation_type || d.assay_title;
-        });
+        const groupedData = _.groupBy(allData, d => d.annotation_type || d.assay_title);
         const QTLData = [...groupedData.dsQTLs, ...groupedData.eQTLs];
         const chipData = groupedData['ChIP-seq'];
         const dnaseData = [...groupedData['FAIRE-seq'], ...groupedData['DNase-seq']];
