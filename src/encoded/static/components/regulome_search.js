@@ -473,18 +473,8 @@ NearbySNPsDrawing.propTypes = {
 };
 
 const ResultsTable = (props) => {
-    const context = props.context;
-    const allData = context['@graph'];
-    let data = allData;
-    if (props.dataFilter === 'chip') {
-        data = allData.filter(d => d.assay_title === 'ChIP-seq');
-    } else if (props.dataFilter === 'qtl') {
-        data = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
-    } else if (props.dataFilter === 'dnase') {
-        data = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
-    } else if (props.dataFilter === 'chromatin') {
-        data = allData.filter(d => (d.annotation_type === 'chromatin state'));
-    }
+    const data = props.data;
+    const displayTitle = props.displayTitle;
     let dataColumns = null;
     if (props.dataFilter === 'chromatin') {
         dataColumns = dataColumnsChromatin;
@@ -501,15 +491,19 @@ const ResultsTable = (props) => {
                     <SortTable list={data} columns={dataColumns} />
                 </SortTablePanel>
             :
-                <div className="notification large-notification">No result table is available for this SNP.</div>
+                <div>
+                    <h4>{displayTitle}</h4>
+                    <div className="error-message">No result table is available for this SNP.</div>
+                </div>
             }
         </div>
     );
 };
 
 ResultsTable.propTypes = {
-    context: React.PropTypes.object.isRequired,
+    data: React.PropTypes.array.isRequired,
     dataFilter: PropTypes.string,
+    displayTitle: PropTypes.string.isRequired,
 };
 
 ResultsTable.defaultProps = {
@@ -575,6 +569,12 @@ class RegulomeSearch extends React.Component {
         const context = this.props.context;
         const notification = context.notification;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
+        const allData = context['@graph'];
+        const QTLData = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
+        const chipData = allData.filter(d => d.assay_title === 'ChIP-seq');
+        const dnaseData = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
+        const chromatinData = allData.filter(d => (d.annotation_type === 'chromatin state'));
+
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
                 {(context.total > 0) ?
@@ -636,8 +636,12 @@ class RegulomeSearch extends React.Component {
                                     <h4>ChIP data</h4>
                                     {(this.state.selectedThumbnail === null) ?
                                         <div>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see detailed ChIP-seq data.</div>
-                                            <BarChart {...this.props} dataFilter={'chip'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see detailed ChIP-seq data.
+                                                <div>(<b>{chipData.length}</b> result{chipData.length !== 1 ? 's' : ''})</div>
+                                            </div>
+                                            {chipData.length > 0 ?
+                                                <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                            : null}
                                         </div>
                                     : null}
                                 </button>
@@ -657,8 +661,12 @@ class RegulomeSearch extends React.Component {
                                     <h4>Accessibility</h4>
                                     {(this.state.selectedThumbnail === null) ?
                                         <div>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.</div>
-                                            <BarChart {...this.props} dataFilter={'dnase'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.
+                                                <div>(<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})</div>
+                                            </div>
+                                            {dnaseData.length > 0 ?
+                                                <BarChart data={dnaseData} dataFilter={'dnase'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                            : null}
                                         </div>
                                     : null}
                                 </button>
@@ -680,7 +688,9 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>QTL Data</h4>
                                     {(this.state.selectedThumbnail === null) ?
-                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.</div>
+                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
+                                            <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
+                                        </div>
                                     : null}
                                 </button>
                                 {(this.state.selectedThumbnail) ?
@@ -699,18 +709,41 @@ class RegulomeSearch extends React.Component {
                                             <h4>Motifs</h4>
                                             <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
                                         </div>
-                                    :
+                                    : (this.state.selectedThumbnail === 'chip') ?
                                         <div>
-                                            {(this.state.selectedThumbnail === 'chip') ?
-                                                <BarChart {...this.props} dataFilter={'chip'} chartWidth={this.state.screenWidth} chartLimit={0} chartOrientation={'horizontal'} />
-                                            : null}
-                                            {(this.state.selectedThumbnail === 'dnase') ?
-                                                <ChartTable {...this.props} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={'dnase'} />
+                                            {chipData.length > 0 ?
+                                                <div>
+                                                    <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.screenWidth} chartLimit={0} chartOrientation={'horizontal'} />
+                                                    <ResultsTable data={chipData} displayTitle={'ChIP data'} dataFilter={this.state.selectedThumbnail} />
+                                                </div>
                                             :
-                                                <ResultsTable {...this.props} dataFilter={this.state.selectedThumbnail} />
+                                                <div>
+                                                    <h4>ChIP experiments</h4>
+                                                    <div className="error-message">No results available to display, please choose a different SNP.</div>
+                                                </div>
                                             }
                                         </div>
-                                    }
+                                    : (this.state.selectedThumbnail === 'dnase') ?
+                                        <div>
+                                            {dnaseData.length > 0 ?
+                                                <ChartTable data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={'dnase'} />
+                                            :
+                                                <div>
+                                                    <h4>FAIRE-seq and DNase-seq experiments</h4>
+                                                    <div className="error-message">No results available to display, please choose a different SNP.</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    : (this.state.selectedThumbnail === 'qtl') ?
+                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={this.state.selectedThumbnail} />
+                                    : (this.state.selectedThumbnail === 'chromatin') ?
+                                        <ResultsTable data={chromatinData} displayTitle={'Chromatin data'} dataFilter={this.state.selectedThumbnail} />
+                                    : (this.state.selectedThumbnail === 'valis') ?
+                                        <div>
+                                            <h4>Genome browser</h4>
+                                            <div className="error-message">This will be added in the next PR!</div>
+                                        </div>
+                                    : null}
                                 </div>
                             : null}
                         </div>

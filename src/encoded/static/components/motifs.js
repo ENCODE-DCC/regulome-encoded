@@ -141,17 +141,15 @@ export const Motifs = (props) => {
 
     return (
         <div>
-            <div className={`sequence-logo-table ${classList}`}>
-                <div className="sequence-logo">
-                    {(pwmLinkList.length === 0) ?
-                        <div className="visualize-error">There are no results that include PWM data. Try a different search.</div>
-                    :
-                        <div>
-                            {pwmLinkList.map(d => <MotifElement key={d.accession} element={d} urlBase={urlBase} shortened={limit > 0} />)}
-                        </div>
-                    }
+            {(pwmLinkList.length === 0) ?
+                <div className="error-message">There are no results that include PWM data. Try a different search.</div>
+            :
+                <div className={`sequence-logo-table ${classList}`}>
+                    <div className="sequence-logo">
+                        {pwmLinkList.map(d => <MotifElement key={d.accession} element={d} urlBase={urlBase} shortened={limit > 0} />)}
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     );
 };

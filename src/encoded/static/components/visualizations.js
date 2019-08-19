@@ -180,7 +180,7 @@ export class BarChart extends React.Component {
     drawCharts(targetElement) {
         const d3 = this.d3;
 
-        const allData = this.props.context['@graph'];
+        const allData = this.props.data;
         let data = allData;
         const fakeFacets = [];
         if (this.props.dataFilter === 'chip') {
@@ -255,7 +255,7 @@ export class BarChart extends React.Component {
 }
 
 BarChart.propTypes = {
-    context: PropTypes.object.isRequired,
+    data: PropTypes.array.isRequired,
     dataFilter: PropTypes.string.isRequired,
     chartWidth: PropTypes.number.isRequired,
     chartLimit: PropTypes.number.isRequired, // limit is set to 0 for all the data
@@ -352,17 +352,7 @@ export class ChartTable extends React.Component {
     }
 
     drawCharts() {
-        const allData = this.props.context['@graph'];
-        let data = allData;
-        if (this.props.dataFilter === 'chip') {
-            data = allData.filter(d => d.assay_title === 'ChIP-seq');
-        } else if (this.props.dataFilter === 'qtl') {
-            data = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
-        } else if (this.props.dataFilter === 'dnase') {
-            data = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
-        } else if (this.props.dataFilter === 'chromatin') {
-            data = allData.filter(d => (d.annotation_type === 'chromatin state'));
-        }
+        const data = this.props.data;
         const fakeFacets = [];
         data.forEach((d) => {
             if (fakeFacets[d.biosample_ontology.term_name]) {
@@ -507,10 +497,9 @@ export class ChartTable extends React.Component {
 }
 
 ChartTable.propTypes = {
-    context: PropTypes.object.isRequired,
+    data: PropTypes.array.isRequired,
     displayTitle: PropTypes.string.isRequired,
     chartWidth: PropTypes.number.isRequired,
-    dataFilter: PropTypes.string.isRequired,
 };
 
 export default {
