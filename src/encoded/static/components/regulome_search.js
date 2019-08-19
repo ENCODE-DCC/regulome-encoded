@@ -601,11 +601,11 @@ class RegulomeSearch extends React.Component {
                                 {(context.regulome_score) ?
                                     <div>
                                         <div className="notification-line">
-                                            <div className="notification-label">Score</div>
+                                            <div className="notification-label">Rank</div>
                                             <div className="notification">{context.regulome_score.ranking}</div>
                                         </div>
                                         <div className="notification-line">
-                                            <div className="notification-label">Rank</div>
+                                            <div className="notification-label">Score</div>
                                             <div className="notification">{context.regulome_score.probability}</div>
                                         </div>
                                     </div>
