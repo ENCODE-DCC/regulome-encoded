@@ -308,16 +308,14 @@ export class ChartTable extends React.Component {
 
     handleClick(clickID) {
         if (!(this.state.currentTarget.includes(`table${clickID}`))) {
-            this.setState({
-                currentTarget: [...this.state.currentTarget, `table${clickID}`],
-            });
+            this.setState(prevState => ({
+                currentTarget: [...prevState.currentTarget, `table${clickID}`],
+            }));
         } else {
             const removedIDX = this.state.currentTarget.indexOf(`table${clickID}`);
-            const removedTarget = this.state.currentTarget;
-            removedTarget.splice(removedIDX, 1);
-            this.setState({
-                currentTarget: removedTarget,
-            });
+            this.setState(prevState => ({
+                currentTarget: [...prevState.currentTarget.slice(0, removedIDX), ...prevState.currentTarget.slice(removedIDX + 1)],
+            }));
         }
     }
 
