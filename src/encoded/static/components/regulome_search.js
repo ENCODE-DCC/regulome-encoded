@@ -595,7 +595,7 @@ class RegulomeSearch extends React.Component {
                                 {(context.notification) ?
                                     <div className="notification-line">
                                         <div className="notification-label">{context.notification.split(': ')[0]}</div>
-                                        <div className="notification">{context.notification.split(': ')[1].replace('in this region', '')}</div>
+                                        <div className="notification">{+context.notification.split(': ')[1].split(' peaks')[0] - chromatinData.length} peaks</div>
                                     </div>
                                 : null}
                                 {(context.regulome_score) ?
