@@ -651,7 +651,9 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>Chromatin state</h4>
                                     {(this.state.selectedThumbnail === null) ?
-                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.</div>
+                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.
+                                            <div>(<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})</div>
+                                        </div>
                                     : null}
                                 </button>
                                 <button
