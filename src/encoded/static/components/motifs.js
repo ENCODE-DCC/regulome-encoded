@@ -142,7 +142,13 @@ export const Motifs = (props) => {
     return (
         <div>
             {(pwmLinkList.length === 0) ?
-                <div className="error-message">There are no results that include PWM data. Try a different search.</div>
+                <div>
+                    {limit !== 0 ?
+                        <div className="motif-error">(<b>0</b> results)</div>
+                    :
+                        <div className="error-message">There are no results that include PWM data. Try a different search.</div>
+                    }
+                </div>
             :
                 <div className={`sequence-logo-table ${classList}`}>
                     <div className="sequence-logo">
