@@ -570,11 +570,10 @@ class RegulomeSearch extends React.Component {
         const notification = context.notification;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
         const allData = context['@graph'];
-        const groupedData = _.groupBy(allData, d => d.annotation_type || d.assay_title);
-        const QTLData = [...groupedData.dsQTLs, ...groupedData.eQTLs];
-        const chipData = groupedData['ChIP-seq'];
-        const dnaseData = [...groupedData['FAIRE-seq'], ...groupedData['DNase-seq']];
-        const chromatinData = groupedData['chromatin state'];
+        const QTLData = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
+        const chipData = allData.filter(d => d.assay_title === 'ChIP-seq');
+        const dnaseData = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
+        const chromatinData = allData.filter(d => (d.annotation_type === 'chromatin state'));
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
