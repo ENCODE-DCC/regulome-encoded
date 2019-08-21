@@ -7,14 +7,14 @@ const snpsColumns = {
     chrom: {
         title: 'Chromosome location',
         display: (item) => {
-            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37&limit=all`;
             return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
         },
     },
     rsids: {
         title: 'dbSNP IDs',
         display: (item) => {
-            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37&limit=all`;
             return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
         },
     },
@@ -54,12 +54,25 @@ const RegulomeSummary = (props) => {
     const context = props.context;
     const summaries = context.summaries;
     const notifications = context.notifications;
-    const coordinates = context.coordinates;
 
     let snpCount = 0;
-    summaries.forEach((summary) => {
-        snpCount += summary.rsids.length;
-    });
+    if (summaries) {
+        summaries.forEach((summary) => {
+            snpCount += summary.rsids.length;
+        });
+    }
+
+    // Notifications are an array of objects instead of just an object
+    const notificationKeys = [];
+    let errorFlag = false;
+    if (notifications) {
+        notifications.forEach((notification) => {
+            notificationKeys.push(Object.keys(notification)[0]);
+            if (notification[Object.keys(notification)[0]] !== 'Success') {
+                errorFlag = true;
+            }
+        });
+    }
 
     return (
         <div>
@@ -67,20 +80,30 @@ const RegulomeSummary = (props) => {
                 <a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a>
             </div>
 
-            <div className="results-summary">
-                <p>This search has evaluated {context.notifications.length} input lines and found {snpCount} SNP(s).</p>
+            <div className="notification-label-centered">
+                <div className="notification-summary">This search has evaluated <b>{context.notifications.length}</b> input lines and found <b>{snpCount}</b> SNP(s).</div>
+                {errorFlag ?
+                    <div className="notification-line notification-title">Unsuccessful searches:</div>
+                : null}
                 {notifications.map((notification, idx) => {
-                    if (notification[coordinates[idx]] !== 'Success') {
-                        return (<p key={idx}>Region {coordinates[idx]} {notification[coordinates[idx]]}</p>);
+                    if (notification[notificationKeys[idx]] !== 'Success') {
+                        return (
+                            <div className="notification-line wider" key={idx}>
+                                <span className="notification-label">{notificationKeys[idx]}</span>
+                                <span className="notification">{notification[notificationKeys[idx]]}</span>
+                            </div>
+                        );
                     }
                     return null;
                 })}
-
             </div>
-
-            <div className="summary-table-hoverable">
-                <SNPSummary {...props} />
-            </div>
+            {(snpCount > 0) ?
+                <div className="summary-table-hoverable">
+                    <SNPSummary {...props} />
+                </div>
+            :
+                <div className="notification-label-centered">Try another search to see results.</div>
+            }
 
         </div>
     );

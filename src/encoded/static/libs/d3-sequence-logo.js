@@ -360,6 +360,8 @@ function entryPoint(logoSelector, PWM) {
     // map: number of sequences -> svg letter height
     const yscale = d3.scaleLinear().domain([0, n]).range([0, svgLetterHeight]);
 
+    d3.select(logoSelector).select('svg').remove();
+
     const svg = d3.select(logoSelector)
         .append('svg')
         .attr('width', svgFullWidth)
