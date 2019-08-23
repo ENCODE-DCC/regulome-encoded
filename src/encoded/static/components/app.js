@@ -1036,7 +1036,7 @@ class App extends React.Component {
                     {this.props.inline ? <script data-prop-name="inline" dangerouslySetInnerHTML={{ __html: this.props.inline }} /> : null}
                     {this.props.styles ? <link rel="stylesheet" href={this.props.styles} /> : null}
                     {newsHead(this.props, `${hrefUrl.protocol}//${hrefUrl.host}`)}
-                    <link href="https://fonts.googleapis.com/css?family=Khula:300,400,600,700" rel="stylesheet" />
+                    <link href="https://fonts.googleapis.com/css?family=Khula:300,400,600,700,800" rel="stylesheet" />
                 </head>
                 <body onClick={this.handleClick} onSubmit={this.handleSubmit}>
                     <script

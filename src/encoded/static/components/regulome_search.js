@@ -5,7 +5,7 @@ import url from 'url';
 import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
-import { BarChart, ChartTable } from './visualizations';
+import { BarChart, ChartList, ChartTable, mapChromatinNames } from './visualizations';
 
 const dataTypeStrings = [
     {
@@ -35,8 +35,9 @@ const exampleEntries = [
 
 // Columns for different subsets of data
 const dataColumnsChromatin = {
-    method: {
-        title: 'Method',
+    value: {
+        title: 'Chromatin state',
+        display: item => mapChromatinNames(item.value),
     },
     peak: {
         title: 'Chromatin state window',
@@ -57,9 +58,6 @@ const dataColumnsChromatin = {
     file: {
         title: 'File',
         display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
-    },
-    value: {
-        title: 'Chromatin state',
     },
 };
 
@@ -455,7 +453,7 @@ NearbySNPsDrawing.propTypes = {
     context: React.PropTypes.object.isRequired,
 };
 
-const ResultsTable = (props) => {
+export const ResultsTable = (props) => {
     const data = props.data;
     const displayTitle = props.displayTitle;
     let dataColumns = null;
@@ -476,7 +474,7 @@ const ResultsTable = (props) => {
             :
                 <div>
                     <h4>{displayTitle}</h4>
-                    <div className="error-message">No result table is available for this SNP.</div>
+                    <div className="error-message">{props.errorMessage}</div>
                 </div>
             }
         </div>
@@ -487,6 +485,7 @@ ResultsTable.propTypes = {
     data: React.PropTypes.array.isRequired,
     dataFilter: PropTypes.string,
     displayTitle: PropTypes.string.isRequired,
+    errorMessage: PropTypes.string.isRequired,
 };
 
 ResultsTable.defaultProps = {
@@ -633,8 +632,13 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>Chromatin state</h4>
                                     {(this.state.selectedThumbnail === null) ?
-                                        <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.
-                                            <div>(<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})</div>
+                                        <div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.
+                                                <div>(<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})</div>
+                                            </div>
+                                            {chromatinData.length > 0 ?
+                                                <BarChart data={chromatinData} dataFilter={'chromatin'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                            : null}
                                         </div>
                                     : null}
                                 </button>
@@ -698,7 +702,7 @@ class RegulomeSearch extends React.Component {
                                             {chipData.length > 0 ?
                                                 <div>
                                                     <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.screenWidth} chartLimit={0} chartOrientation={'horizontal'} />
-                                                    <ResultsTable data={chipData} displayTitle={'ChIP data'} dataFilter={this.state.selectedThumbnail} />
+                                                    <ResultsTable data={chipData} displayTitle={'ChIP data'} dataFilter={this.state.selectedThumbnail} errorMessage={'No result table is available for this SNP.'} />
                                                 </div>
                                             :
                                                 <div>
@@ -710,7 +714,7 @@ class RegulomeSearch extends React.Component {
                                     : (this.state.selectedThumbnail === 'dnase') ?
                                         <div>
                                             {dnaseData.length > 0 ?
-                                                <ChartTable data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={'dnase'} />
+                                                <ChartList data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={this.state.selectedThumbnail} />
                                             :
                                                 <div>
                                                     <h4>FAIRE-seq and DNase-seq experiments</h4>
@@ -719,9 +723,13 @@ class RegulomeSearch extends React.Component {
                                             }
                                         </div>
                                     : (this.state.selectedThumbnail === 'qtl') ?
-                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={this.state.selectedThumbnail} />
+                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={this.state.selectedThumbnail} errorMessage={'No result table is available for this SNP.'} />
                                     : (this.state.selectedThumbnail === 'chromatin') ?
-                                        <ResultsTable data={chromatinData} displayTitle={'Chromatin data'} dataFilter={this.state.selectedThumbnail} />
+                                        <div>
+                                            {chromatinData.length > 0 ?
+                                                <ChartTable data={chromatinData} displayTitle={'Chromatin state'} chartWidth={Math.min(this.state.screenWidth, 1000)} />
+                                            : null}
+                                        </div>
                                     : (this.state.selectedThumbnail === 'valis') ?
                                         <div>
                                             <h4>Genome browser</h4>
@@ -766,6 +774,10 @@ RegulomeSearch.defaultProps = {
 RegulomeSearch.contextTypes = {
     location_href: PropTypes.string,
     navigate: PropTypes.func,
+};
+
+export default {
+    ResultsTable,
 };
 
 globals.contentViews.register(RegulomeSearch, 'regulome-search');
