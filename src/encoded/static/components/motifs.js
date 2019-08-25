@@ -85,14 +85,15 @@ export class MotifElement extends React.Component {
 
     render() {
         const element = this.props.element;
-        const targetList = element.targets.map(t => t.label);
+        const targetList = element.targets;
         const targetListLabel = targetList.length > 1 ? 'Targets' : 'Target';
+        const accession = element.dataset.split('/')[2];
 
         return (
-            <div className="element" id={`element${element.accession}`}>
+            <div className="element" id={`element${accession}`}>
                 <div className="motif-description">
                     {!(this.props.shortened) ?
-                        <p><a href={element['@id']}>{element.accession}</a></p>
+                        <p><a href={element.dataset}>{accession}</a></p>
                     : null}
                     {element.organ_slims ?
                         <p><span className="motif-label">Organ</span>{element.organ_slims.join(', ')}</p>
@@ -100,7 +101,7 @@ export class MotifElement extends React.Component {
                     {targetList ?
                         <p><span className="motif-label">{targetListLabel}</span>{targetList.join(', ')}</p>
                     : null}
-                    <p><span className="motif-label">Method</span>{element.assay_title || element.annotation_type}</p>
+                    <p><span className="motif-label">Method</span>{element.method}</p>
                     {element.biosample_ontology ?
                         <p><span className="motif-label">Biosample</span>{element.biosample_ontology.term_name}</p>
                     : null}
@@ -152,7 +153,7 @@ export const Motifs = (props) => {
             :
                 <div className={`sequence-logo-table ${classList}`}>
                     <div className="sequence-logo">
-                        {pwmLinkList.map(d => <MotifElement key={d.accession} element={d} urlBase={urlBase} shortened={limit > 0} />)}
+                        {pwmLinkList.map(d => <MotifElement key={d.dataset.split('/')[2]} element={d} urlBase={urlBase} shortened={limit > 0} />)}
                     </div>
                 </div>
             }

@@ -7,14 +7,14 @@ const snpsColumns = {
     chrom: {
         title: 'Chromosome location',
         display: (item) => {
-            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37&limit=all`;
+            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
             return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
         },
     },
     rsids: {
         title: 'dbSNP IDs',
         display: (item) => {
-            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37&limit=all`;
+            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
             return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
         },
     },
@@ -63,7 +63,7 @@ const RegulomeSummary = (props) => {
             </div>
 
             <div className="notification-label-centered">
-                <div className="notification-summary">This search has found <b>{context.total}</b> variant(s). Here shows <b>{summaries.length}</b> of them.</div>
+                <div className="notification-summary">This search has found <b>{context.total}</b> variant(s).{context.total > summaries.length ? <span> Only <b>{summaries.length}</b> are shown.</span> : null}</div>
                 {notifications && notifications.length > 0 ?
                     <div className="notification-line notification-title">Unsuccessful searches:</div>
                 : null}

@@ -184,16 +184,16 @@ export class BarChart extends React.Component {
         let data = allData;
         const fakeFacets = [];
         if (this.props.dataFilter === 'chip') {
-            data = allData.filter(d => d.assay_title === 'ChIP-seq');
+            data = allData.filter(d => d.method === 'ChIP-seq');
             data.forEach((d) => {
-                if (fakeFacets[d.target.label]) {
-                    fakeFacets[d.target.label] += 1;
+                if (fakeFacets[d.targets]) {
+                    fakeFacets[d.targets] += 1;
                 } else {
-                    fakeFacets[d.target.label] = 1;
+                    fakeFacets[d.targets] = 1;
                 }
             });
         } else if (this.props.dataFilter === 'dnase') {
-            data = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
+            data = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
             data.forEach((d) => {
                 if (fakeFacets[d.biosample_ontology.term_name]) {
                     fakeFacets[d.biosample_ontology.term_name] += 1;
@@ -464,16 +464,16 @@ export class ChartTable extends React.Component {
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
                                 {this.state.data.filter(element => filterForBiosample(element, d)).map(d2 =>
-                                    <div className="table-entry" key={`table-entry-${d2.accession}`}>
-                                        <p><a href={d2['@id']}>{d2.accession}</a></p>
+                                    <div className="table-entry" key={`table-entry-${d2.dataset.split('/')[2]}`}>
+                                        <p><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></p>
                                         <div className="inset-table-entries">
                                             {d2.organ_slims ?
                                                 <p><span className="table-label">Organ</span>{d2.organ_slims.join(', ')}</p>
                                             : null}
-                                            {d2.assay_title ?
-                                                <p><span className="table-label">Method</span>{d2.assay_title}</p>
+                                            {d2.method ?
+                                                <p><span className="table-label">Method</span>{d2.method}</p>
                                             :
-                                                <p><span className="table-label">Method</span>{d2.annotation_type}</p>
+                                                <p><span className="table-label">Method</span>{d2.method}</p>
                                             }
                                             {d2.biosample_ontology ?
                                                 <p><span className="table-label">Biosample</span>{d2.biosample_ontology.term_name}</p>
