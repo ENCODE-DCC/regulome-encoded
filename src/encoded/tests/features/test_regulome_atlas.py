@@ -47,46 +47,142 @@ def test_find_peaks(assembly, location, dbpeaks, region_index, regulome_atlas):
 
 
 @pytest.mark.parametrize("assembly,location,dbdetails", [
-    ('hg19', ('chr10', 5894499, 5894500), {
-        '5f921aa5-5758-4ead-846a-26af87e1a098-28':
-        {'dataset':
-            {   '@id': '/annotations/ENCSR061TST/',
-                'annotation_type': 'dsQTLs',
-                'collection_type': 'dsQTLs',
-                'biosample_term_name': 'lymphoblastoid cell line',
-                'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0',
-            },
-         'file':
-            {   '@id': '/files/ENCFF122TST/',
-                'assembly': 'hg19',
-                'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098',
-            },
-        },
-        '956cba28-ccff-4cbd-b1c8-39db4e3de572-296':
-        {'dataset':
-            {   '@id': '/experiments/ENCSR000DZQ/',
-                'assay_term_name': 'ChIP-seq',
-                'biosample_term_name': 'GM12878',
-                'collection_type': 'ChIP-seq',
-                'target': ['EBF1'],
-                'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02',
-          },
-         'file': {   '@id': '/files/ENCFF002COS/',
-                     'assembly': 'hg19',
-                     'uuid': '956cba28-ccff-4cbd-b1c8-39db4e3de572',
-            },
-        },
-        '08c4c912-6713-4904-9a76-5593c560ae03-839':
-        {'dataset':
-            {'@id': '/annotations/ENCSR497SKR/',
-             'annotation_type': 'chromatin state',
-             'biosample_term_name': 'HeLa-S3',
-             'collection_type': 'chromatin state',
-             'uuid': '51911c72-7c18-454f-803b-35e8416a716f'},
-         'file': {'@id': '/files/ENCFF943TST/',
-                  'assembly': 'hg19',
-                  'uuid': '08c4c912-6713-4904-9a76-5593c560ae03'}},
-    }),
+    (
+        'hg19',
+        ('chr10', 98094819, 98094820),
+        {
+            '5f921aa5-5758-4ead-846a-26af87e1a098-199':
+                {
+                    'dataset':
+                        {
+                            '@id': '/annotations/ENCSR061TST/',
+                            'annotation_type': 'dsQTLs',
+                            'collection_type': 'dsQTLs',
+                            'biosample_term_name': 'lymphoblastoid cell line',
+                            'biosample_ontology': {
+                                '@id': '/biosample-types/cell_line_EFO_0005292/',
+                                '@type': [
+                                    'BiosampleType',
+                                    'Item'
+                                ],
+                                'aliases': [],
+                                'cell_slims': [
+                                    'lymphoblast'
+                                ],
+                                'classification': 'cell line',
+                                'dbxrefs': [],
+                                'developmental_slims': [],
+                                'name': 'cell_line_EFO_0005292',
+                                'organ_slims': [],
+                                'references': [],
+                                'schema_version': '1',
+                                'status': 'released',
+                                'synonyms': [],
+                                'system_slims': [],
+                                'term_id': 'EFO:0005292',
+                                'term_name': 'lymphoblastoid cell line',
+                                'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                            },
+                            'documents': [],
+                            'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0',
+                        },
+                    'file':
+                        {
+                            '@id': '/files/ENCFF122TST/',
+                            'assembly': 'hg19',
+                            'uuid': '5f921aa5-5758-4ead-846a-26af87e1a098',
+                        },
+                },
+            '5cb53884-bc79-4909-8c5f-1e1ee2019009-2366':
+                {
+                    'dataset':
+                        {
+                            '@id': '/experiments/ENCSR000ENO/',
+                            'assay_term_name': 'DNase-seq',
+                            'biosample_term_name': 'HeLa-S3',
+                            'biosample_ontology': {
+                                '@id': '/biosample-types/cell_line_EFO_0002791/',
+                                '@type': [
+                                    'BiosampleType',
+                                    'Item'
+                                ],
+                                'aliases': [],
+                                'cell_slims': [
+                                    'cancer cell'
+                                ],
+                                'classification': 'cell line',
+                                'dbxrefs': [],
+                                'developmental_slims': [],
+                                'name': 'cell_line_EFO_0002791',
+                                'organ_slims': [
+                                    'uterus'
+                                ],
+                                'references': [],
+                                'schema_version': '1',
+                                'status': 'released',
+                                'synonyms': [],
+                                'system_slims': [],
+                                'term_id': 'EFO:0002791',
+                                'term_name': 'HeLa-S3',
+                                'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                            },
+                            'collection_type': 'DNase-seq',
+                            'documents': [],
+                            'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'
+                        },
+                    'file':
+                        {
+                            '@id': '/files/ENCFF892YMX/',
+                            'assembly': 'hg19',
+                            'uuid': '5cb53884-bc79-4909-8c5f-1e1ee2019009'
+                        }
+                },
+            '08c4c912-6713-4904-9a76-5593c560ae03-11229':
+                {
+                    'dataset':
+                        {
+                            '@id': '/annotations/ENCSR497SKR/',
+                            'annotation_type': 'chromatin state',
+                            'biosample_term_name': 'HeLa-S3',
+                            'biosample_ontology': {
+                                '@id': '/biosample-types/cell_line_EFO_0002791/',
+                                '@type': [
+                                    'BiosampleType',
+                                    'Item'
+                                ],
+                                'aliases': [],
+                                'cell_slims': [
+                                    'cancer cell'
+                                ],
+                                'classification': 'cell line',
+                                'dbxrefs': [],
+                                'developmental_slims': [],
+                                'name': 'cell_line_EFO_0002791',
+                                'organ_slims': [
+                                    'uterus'
+                                ],
+                                'references': [],
+                                'schema_version': '1',
+                                'status': 'released',
+                                'synonyms': [],
+                                'system_slims': [],
+                                'term_id': 'EFO:0002791',
+                                'term_name': 'HeLa-S3',
+                                'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                            },
+                            'collection_type': 'chromatin state',
+                            'documents': [],
+                            'uuid': '51911c72-7c18-454f-803b-35e8416a716f'
+                        },
+                    'file':
+                        {
+                            '@id': '/files/ENCFF943TST/',
+                            'assembly': 'hg19',
+                            'uuid': '08c4c912-6713-4904-9a76-5593c560ae03'
+                        }
+                },
+        }
+    ),
 ])
 def test_find_peaks_filtered(assembly, location, dbdetails, region_index, regulome_atlas):
     ''' this essentially tests _resident_details as well '''
@@ -136,13 +232,193 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
     ('hg19', 'chr1', 39492462, 1600,
         [{
             'evidence': {
-                'ChIP': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
-                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'eQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
-                'Footprint': [{'biosample_term_name': 'HeLa-S3','collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
-                'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
+                'ChIP': [{
+                    'biosample_term_name': 'HeLa-S3',
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0002791/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['cancer cell'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0002791',
+                        'organ_slims': ['uterus'],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0002791',
+                        'term_name': 'HeLa-S3',
+                        'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                    },
+                    'collection_type': 'ChIP-seq',
+                    'documents': [],
+                    '@id': '/experiments/ENCSR000EVI/',
+                    'assay_term_name': 'ChIP-seq',
+                    'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93',
+                    'target': ['ELK4']
+                }],
+                'dsQTL': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0005292/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['lymphoblast'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0005292',
+                        'organ_slims': [],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0005292',
+                        'term_name': 'lymphoblastoid cell line',
+                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                    },
+                    'biosample_term_name': 'lymphoblastoid cell line',
+                    'collection_type': 'dsQTLs',
+                    'documents': [],
+                    '@id': '/annotations/ENCSR061TST/',
+                    'annotation_type': 'dsQTLs',
+                    'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
+                }],
+                'eQTL': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0005292/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['lymphoblast'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0005292',
+                        'organ_slims': [],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0005292',
+                        'term_name': 'lymphoblastoid cell line',
+                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                    },
+                    'biosample_term_name': 'lymphoblastoid cell line',
+                    'collection_type': 'eQTLs',
+                    'documents': [],
+                    '@id': '/annotations/ENCSR899TST/',
+                    'annotation_type': 'eQTLs',
+                    'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'
+                }],
+                'Footprint': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0002791/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['cancer cell'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0002791',
+                        'organ_slims': ['uterus'],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0002791',
+                        'term_name': 'HeLa-S3',
+                        'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                    },
+                    'biosample_term_name': 'HeLa-S3',
+                    'collection_type': 'Footprints',
+                    '@id': '/annotations/ENCSR228TST/',
+                    'annotation_type': 'Footprints',
+                    'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4',
+                    'target': ['ELK4'],
+                    'documents': [{
+                        '@id': '/documents/95d594c7-9d40-4cdf-91c8-d03f714a7305/',
+                        '@type': ['Document', 'Item'],
+                        'aliases': ['j-michael-cherry:regulomedb-PWMs-M01167.pwm'],
+                        'attachment': {'download': 'M01167.txt',
+                                       'href': '@@download/attachment/M01167.txt',
+                                       'md5sum': '67ea4b72bf5cc72aa8f00bf3e55e313d',
+                                       'type': 'text/plain'},
+                        'award': '/awards/U41HG009293/',
+                        'date_created': '2019-08-23T05:26:07.754121+00:00',
+                        'document_type': 'position '
+                                         'weight '
+                                         'matrix',
+                        'lab': '/labs/j-michael-cherry/',
+                        'references': [],
+                        'schema_version': '8',
+                        'status': 'released',
+                        'submitted_by': '/users/76091563-a959-4a9c-929c-9acfa1a0a078/',
+                        'urls': [],
+                        'uuid': '95d594c7-9d40-4cdf-91c8-d03f714a7305'
+                    }],
+                }],
+                'DNase': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0002791/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['cancer cell'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0002791',
+                        'organ_slims': ['uterus'],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0002791',
+                        'term_name': 'HeLa-S3',
+                        'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                    },
+                    'biosample_term_name': 'HeLa-S3',
+                    'collection_type': 'DNase-seq',
+                    'documents': [],
+                    '@id': '/experiments/ENCSR000ENO/',
+                    'assay_term_name': 'DNase-seq',
+                    'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'
+                }],
                 'Footprint_matched': ['ELK4'],
-                'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
+                'PWM': [{
+                    'biosample_term_name': 'None',
+                    'biosample_ontology': {},
+                    'collection_type': 'PWMs',
+                    '@id': '/annotations/ENCSR333TST/',
+                    'annotation_type': 'PWMs',
+                    'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc',
+                    'target': ['ELK4'],
+                    'documents': [{
+                        '@id': '/documents/87632efc-0349-4914-b74a-6fdd733e8146/',
+                        '@type': ['Document', 'Item'],
+                        'aliases': ['j-michael-cherry:regulomedb-PWMs-MA0076.1.pwm'],
+                        'attachment': {'download': 'MA0076.1.txt',
+                                       'href': '@@download/attachment/MA0076.1.txt',
+                                       'md5sum': 'a3226204e49720d6858d1523fd3ae60a',
+                                       'type': 'text/plain'},
+                        'award': '/awards/U41HG009293/',
+                        'date_created': '2019-08-23T05:26:07.786049+00:00',
+                        'document_type': 'position weight '
+                                        'matrix',
+                        'lab': '/labs/j-michael-cherry/',
+                        'references': [],
+                        'schema_version': '8',
+                        'status': 'released',
+                        'submitted_by': '/users/76091563-a959-4a9c-929c-9acfa1a0a078/',
+                        'urls': [],
+                        'uuid': '87632efc-0349-4914-b74a-6fdd733e8146'
+                    }],
+                }],
                 'PWM_matched': ['ELK4'],
                 'ChIP_max_signal': 460.9599914550781,
                 'DNase_max_signal': 5.46999979019165,
@@ -156,23 +432,37 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
             'assembly': 'hg19',
             'chrom': 'chr1'
         }]),
-    ('hg19', 'chr10', 5894500, 100000,
-        [{
-            'evidence': {
-                'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'biosample_term_name': 'GM12878', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{ 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'ChIP_max_signal': 367.3999938964844,
-                'DNase_max_signal': 7.980000019073486,
-                'IC_matched_max': 0.05000000074505806,
-                'IC_max': 1.3899999856948853,
+    ('hg19', 'chr10', 104551865, 50000,
+        [
+            {
+                'evidence': {
+                    'ChIP_max_signal': 37.65999984741211,
+                    'DNase_max_signal': 3.890000104904175,
+                    'IC_matched_max': 0.44999998807907104,
+                    'IC_max': 0.44999998807907104,
+                },
+                'coordinates': {'lt': 104529668, 'gte': 104529667},
+                'strand': '+',
+                'score': {'probability': '0.08', 'ranking': '7'},
+                'rsid': 'rs7092340',
+                'assembly': 'hg19',
+                'chrom': 'chr10'
             },
-            'coordinates': {'lt': 5894500, 'gte': 5894499},
-            'strand': '+',
-            'score': {'probability': '0.2', 'ranking': '1f'},
-            'rsid': 'rs10905307',
-            'assembly': 'hg19',
-            'chrom': 'chr10'
-        }])
+            {
+                'evidence': {
+                    'ChIP_max_signal': 46.13999938964844,
+                    'DNase_max_signal': 1.3700000047683716,
+                    'IC_matched_max': 0.1599999964237213,
+                    'IC_max': 0.3700000047683716,
+                },
+                'coordinates': {'lt': 104574063, 'gte': 104574062},
+                'strand': '-',
+                'score': {'probability': '0.08', 'ranking': '7'},
+                'rsid': 'rs284857',
+                'assembly': 'hg19',
+                'chrom': 'chr10'
+            },
+        ])
 ])
 def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulome_atlas):
     max_snps = 10
@@ -183,23 +473,204 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
         range_start = 0
 
     scored_snps = regulome_atlas._scored_snps(assembly, chrom, range_start, range_end, max_snps, pos)
-    for idx, snp in enumerate(scored_snps):
-        assert snp == result[idx]
-        idx = idx + 1
-    assert len(result) == idx
+    count = 0
+    for snp in scored_snps:
+        count += 1
+        assert snp in result
+    assert len(result) == count
 
 
 @pytest.mark.parametrize("assembly,chrom,pos,window,result", [
     ('hg19', 'chr1', 39492462, 1600,
         [{
             'evidence': {
-                'ChIP': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000EVI/', 'assay_term_name': 'ChIP-seq', 'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93', 'target': ['ELK4']}],
-                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'eQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'eQTLs', '@id': '/annotations/ENCSR899TST/', 'annotation_type': 'eQTLs', 'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'}],
-                'Footprint': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'Footprints', '@id': '/annotations/ENCSR228TST/', 'annotation_type': 'Footprints', 'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4', 'target': ['ELK4']}],
-                'DNase': [{'biosample_term_name': 'HeLa-S3', 'collection_type': 'DNase-seq', '@id': '/experiments/ENCSR000ENO/', 'assay_term_name': 'DNase-seq', 'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'}],
+                'ChIP': [{
+                    'biosample_term_name': 'HeLa-S3',
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0002791/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['cancer cell'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0002791',
+                        'organ_slims': ['uterus'],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0002791',
+                        'term_name': 'HeLa-S3',
+                        'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                    },
+                    'collection_type': 'ChIP-seq',
+                    'documents': [],
+                    '@id': '/experiments/ENCSR000EVI/',
+                    'assay_term_name': 'ChIP-seq',
+                    'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93',
+                    'target': ['ELK4']
+                }],
+                'dsQTL': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0005292/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['lymphoblast'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0005292',
+                        'organ_slims': [],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0005292',
+                        'term_name': 'lymphoblastoid cell line',
+                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                    },
+                    'biosample_term_name': 'lymphoblastoid cell line',
+                    'collection_type': 'dsQTLs',
+                    'documents': [],
+                    '@id': '/annotations/ENCSR061TST/',
+                    'annotation_type': 'dsQTLs',
+                    'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
+                }],
+                'eQTL': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0005292/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['lymphoblast'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0005292',
+                        'organ_slims': [],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0005292',
+                        'term_name': 'lymphoblastoid cell line',
+                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                    },
+                    'biosample_term_name': 'lymphoblastoid cell line',
+                    'collection_type': 'eQTLs',
+                    'documents': [],
+                    '@id': '/annotations/ENCSR899TST/',
+                    'annotation_type': 'eQTLs',
+                    'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'
+                }],
+                'Footprint': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0002791/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['cancer cell'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0002791',
+                        'organ_slims': ['uterus'],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0002791',
+                        'term_name': 'HeLa-S3',
+                        'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                    },
+                    'biosample_term_name': 'HeLa-S3',
+                    'collection_type': 'Footprints',
+                    '@id': '/annotations/ENCSR228TST/',
+                    'annotation_type': 'Footprints',
+                    'uuid': 'bfee7ca5-800e-4106-903d-825b9fe2faf4',
+                    'target': ['ELK4'],
+                    'documents': [{
+                        '@id': '/documents/95d594c7-9d40-4cdf-91c8-d03f714a7305/',
+                        '@type': ['Document', 'Item'],
+                        'aliases': ['j-michael-cherry:regulomedb-PWMs-M01167.pwm'],
+                        'attachment': {'download': 'M01167.txt',
+                                       'href': '@@download/attachment/M01167.txt',
+                                       'md5sum': '67ea4b72bf5cc72aa8f00bf3e55e313d',
+                                       'type': 'text/plain'},
+                        'award': '/awards/U41HG009293/',
+                        'date_created': '2019-08-23T05:26:07.754121+00:00',
+                        'document_type': 'position '
+                                         'weight '
+                                         'matrix',
+                        'lab': '/labs/j-michael-cherry/',
+                        'references': [],
+                        'schema_version': '8',
+                        'status': 'released',
+                        'submitted_by': '/users/76091563-a959-4a9c-929c-9acfa1a0a078/',
+                        'urls': [],
+                        'uuid': '95d594c7-9d40-4cdf-91c8-d03f714a7305'
+                    }],
+                }],
+                'DNase': [{
+                    'biosample_ontology': {
+                        '@id': '/biosample-types/cell_line_EFO_0002791/',
+                        '@type': ['BiosampleType', 'Item'],
+                        'aliases': [],
+                        'cell_slims': ['cancer cell'],
+                        'classification': 'cell line',
+                        'dbxrefs': [],
+                        'developmental_slims': [],
+                        'name': 'cell_line_EFO_0002791',
+                        'organ_slims': ['uterus'],
+                        'references': [],
+                        'schema_version': '1',
+                        'status': 'released',
+                        'synonyms': [],
+                        'system_slims': [],
+                        'term_id': 'EFO:0002791',
+                        'term_name': 'HeLa-S3',
+                        'uuid': '2ca8e02c-2c6e-4bcd-b361-668819050b93'
+                    },
+                    'biosample_term_name': 'HeLa-S3',
+                    'collection_type': 'DNase-seq',
+                    'documents': [],
+                    '@id': '/experiments/ENCSR000ENO/',
+                    'assay_term_name': 'DNase-seq',
+                    'uuid': '7fabca98-92e3-4957-924e-520490d3d26b'
+                }],
                 'Footprint_matched': ['ELK4'],
-                'PWM': [{'biosample_term_name': 'None', 'collection_type': 'PWMs', '@id': '/annotations/ENCSR333TST/', 'annotation_type': 'PWMs', 'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc', 'target': ['ELK4']}],
+                'PWM': [{
+                    'biosample_term_name': 'None',
+                    'biosample_ontology': {},
+                    'collection_type': 'PWMs',
+                    '@id': '/annotations/ENCSR333TST/',
+                    'annotation_type': 'PWMs',
+                    'uuid': '7fd82bc3-120e-4dda-9a9f-c2cd37c71afc',
+                    'target': ['ELK4'],
+                    'documents': [{
+                        '@id': '/documents/87632efc-0349-4914-b74a-6fdd733e8146/',
+                        '@type': ['Document', 'Item'],
+                        'aliases': ['j-michael-cherry:regulomedb-PWMs-MA0076.1.pwm'],
+                        'attachment': {'download': 'MA0076.1.txt',
+                                       'href': '@@download/attachment/MA0076.1.txt',
+                                       'md5sum': 'a3226204e49720d6858d1523fd3ae60a',
+                                       'type': 'text/plain'},
+                        'award': '/awards/U41HG009293/',
+                        'date_created': '2019-08-23T05:26:07.786049+00:00',
+                        'document_type': 'position weight '
+                                        'matrix',
+                        'lab': '/labs/j-michael-cherry/',
+                        'references': [],
+                        'schema_version': '8',
+                        'status': 'released',
+                        'submitted_by': '/users/76091563-a959-4a9c-929c-9acfa1a0a078/',
+                        'urls': [],
+                        'uuid': '87632efc-0349-4914-b74a-6fdd733e8146'
+                    }],
+                }],
                 'PWM_matched': ['ELK4'],
                 'ChIP_max_signal': 460.9599914550781,
                 'DNase_max_signal': 5.46999979019165,
@@ -213,32 +684,46 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
             'assembly': 'hg19',
             'chrom': 'chr1'
         }]),
-    ('hg19', 'chr10', 5894500, 100000,
-        [{
-            'evidence': {
-                'ChIP': [{'biosample_term_name': 'GM12878', 'collection_type': 'ChIP-seq', '@id': '/experiments/ENCSR000DZQ/', 'target': ['EBF1'], 'uuid': 'd9161058-d8c4-4b17-b03b-bfaeabe75e02', 'assay_term_name': 'ChIP-seq'}],
-                'dsQTL': [{'biosample_term_name': 'lymphoblastoid cell line', 'collection_type': 'dsQTLs', '@id': '/annotations/ENCSR061TST/', 'annotation_type': 'dsQTLs', 'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'}],
-                'ChIP_max_signal': 367.3999938964844,
-                'DNase_max_signal': 7.980000019073486,
-                'IC_matched_max': 0.05000000074505806,
-                'IC_max': 1.3899999856948853,
+    ('hg19', 'chr10', 104551865, 50000,
+        [
+            {
+                'evidence': {
+                    'ChIP_max_signal': 37.65999984741211,
+                    'DNase_max_signal': 3.890000104904175,
+                    'IC_matched_max': 0.44999998807907104,
+                    'IC_max': 0.44999998807907104,
+                },
+                'coordinates': {'lt': 104529668, 'gte': 104529667},
+                'strand': '+',
+                'score': {'probability': '0.08', 'ranking': '7'},
+                'rsid': 'rs7092340',
+                'assembly': 'hg19',
+                'chrom': 'chr10'
             },
-            'coordinates': {'lt': 5894500, 'gte': 5894499},
-            'strand': '+',
-            'score': {'probability': '0.2', 'ranking': '1f'},
-            'rsid': 'rs10905307',
-            'assembly': 'hg19',
-            'chrom': 'chr10'
-        }])
+            {
+                'evidence': {
+                    'ChIP_max_signal': 46.13999938964844,
+                    'DNase_max_signal': 1.3700000047683716,
+                    'IC_matched_max': 0.1599999964237213,
+                    'IC_max': 0.3700000047683716,
+                },
+                'coordinates': {'lt': 104574063, 'gte': 104574062},
+                'strand': '-',
+                'score': {'probability': '0.08', 'ranking': '7'},
+                'rsid': 'rs284857',
+                'assembly': 'hg19',
+                'chrom': 'chr10'
+            },
+        ])
 ])
 def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, regulome_atlas):
 
     scored_snps = regulome_atlas.nearby_snps(assembly, chrom, pos, window=window, scores=True)
-    #  sthis returns empty generator which seems wrong.
-    for idx, snp in enumerate(scored_snps):
-        assert snp == result[idx]
-        idx = idx + 1
-    assert len(result) == idx
+    count = 0
+    for snp in scored_snps:
+        count += 1
+        assert snp in result
+    assert len(result) == count
 
 
 @pytest.mark.parametrize("assembly,rsid,location", [

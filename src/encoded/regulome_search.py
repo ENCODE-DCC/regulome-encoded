@@ -1,30 +1,14 @@
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.httpexceptions import HTTPTemporaryRedirect
 from pyramid.view import view_config
-from snovault import TYPES
 from snovault.elasticsearch.interfaces import (
     ELASTIC_SEARCH,
     SNP_SEARCH_ES
 )
-from snovault.elasticsearch.indexer import MAX_CLAUSES_FOR_ES
-from pyramid.security import effective_principals
-from snovault.viewconfigs.base_view import BaseView
-from encoded.helpers.helper import (
-    format_results,
-    search_result_actions
-)
-from snovault.helpers.helper import (
-    get_filtered_query,
-    set_filters,
-    set_facets,
-    list_result_fields,
-)
-from .batch_download import get_peak_metadata_links
 from .regulome_atlas import RegulomeAtlas
 from .vis_defines import (
     vis_format_url
 )
-from collections import OrderedDict
 import requests
 from urllib.parse import urlencode
 
@@ -420,7 +404,7 @@ def regulome_summary(context, request):
 
     # Redirect to regulome report for single unique region query
     if len(result['variants']) == 1:
-        query = {'region': [v for v in result['variants']][0],
+        query = {'regions': [v for v in result['variants']][0],
                  'genome': result['assembly']}
         location = request.route_url('regulome-search', slash='', _query=query)
         raise HTTPSeeOther(location=location)
@@ -465,185 +449,87 @@ def regulome_summary(context, request):
 
 
 @view_config(route_name='regulome-search', request_method='GET', permission='search')
-def region_search(context, request):
+def regulome_search(context, request):
     """
-    Search files by region.
+    Regulome peak analysis.
     """
+    if 'from' in request.params or 'size' in request.params:
+        return {
+            '@context': request.route_path('jsonld_context'),
+            '@id': request.path_qs,
+            '@type': ['regulome-search'],
+            'notifications': {
+                'Failed': 'Invalid parameters: "from" and "size" are not accepted.'
+            },
+            'title': 'Regulome search',
+        }
     begin = time.time()  # DEBUG: timing
-    types = request.registry[TYPES]
-    page = request.path.split('/')[1]
-    result = {
-        '@id': '/' + page + '/' + ('?' + request.query_string.split('&referrer')[0]
-                                   if request.query_string else ''),
-        '@type': ['region-search', 'Portal'],
-        'title': 'Regulome search',
-        'facets': [],
-        '@graph': [],
-        'columns': OrderedDict(),
-        'notification': '',
-        'filters': [],
-        'timing': []  # DEBUG: timing
-    }
-    principals = effective_principals(request)
-    es = request.registry[ELASTIC_SEARCH]
-    atlas = RegulomeAtlas(request.registry[SNP_SEARCH_ES])
-    region = request.params.get('region', '*')
+    result = parse_region_query(request)
+    result['@type'] = ['regulome-search']
+    result['title'] = 'Regulome search'
+    result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
 
-    # handling limit
-    size = request.params.get('limit', 25)
-    if size in ('all', ''):
-        size = 99999
-    else:
-        try:
-            size = int(size)
-        except ValueError:
-            size = 25
-    if region == '':
-        region = '*'
-
-    assembly = request.params.get('genome', '*')
-    result['assembly'] = _GENOME_TO_ALIAS.get(assembly, 'GRCh38')
-    annotation = request.params.get('annotation', '*')
-    chromosome, start, end = ('', '', '')
-
-    result['timing'].append({'preamble': (time.time() - begin)})    # DEBUG: timing
-    begin = time.time()                                             # DEBUG: timing
-    rsid = None
-    if annotation != '*':
-        if annotation.lower().startswith('ens'):
-            chromosome, start, end = get_ensemblid_coordinates(annotation, assembly)
-        else:
-            chromosome, start, end = get_annotation_coordinates(es, annotation, assembly)
-    elif region != '*':
-        region = region.lower()
-        if region.startswith('rs'):
-            sanitized_region = sanitize_rsid(region)
-            chromosome, start, end = get_rsid_coordinates(sanitized_region, assembly, atlas)
-            rsid = sanitized_region
-        elif region.startswith('ens'):
-            chromosome, start, end = get_ensemblid_coordinates(region, assembly)
-        elif region.startswith('chr'):
-            chromosome, start, end = sanitize_coordinates(region)
-    else:
-        chromosome, start, end = ('', '', '')
-    # Check if there are valid coordinates
-    if not chromosome or not start or not end:
-        result['notification'] = 'No annotations found'
-        return result
-    else:
-        result['coordinates'] = '{chr}:{start}-{end}'.format(
-            chr=chromosome, start=start, end=end
+    if len(result['variants']) != 1:
+        result['notifications'].setdefault(
+            'Failed',
+            (
+                'One and only one variant can be processed. '
+                '{} variants found. Please refine the search.'
+            ).format(len(result['variants']))
         )
-    result['timing'].append({'get_coords': (time.time() - begin)})  # DEBUG: timing
-    begin = time.time()                                             # DEBUG: timing
-
-    # Search for peaks for the coordinates we got
-    peaks_too = ('peak_metadata' in request.query_string)
-    all_hits = region_get_hits(atlas, assembly, chromosome, start, end,
-                               peaks_too=peaks_too)
-    result['timing'].append({'peaks': (time.time() - begin)})       # DEBUG: timing
-    begin = time.time()                                             # DEBUG: timing
-    result['notification'] = all_hits['message']
-    if all_hits.get('dataset_count', 0) == 0:
         return result
 
-    # if more than one peak found return the experiments with those peak files
-    dataset_count = all_hits['dataset_count']
-    if dataset_count > MAX_CLAUSES_FOR_ES:
-        log.error("REGION_SEARCH WARNING: region covered by %d datasets is being restricted to %d"
-                  % (dataset_count, MAX_CLAUSES_FOR_ES))
-        all_hits['dataset_paths'] = all_hits['dataset_paths'][:MAX_CLAUSES_FOR_ES]
-        dataset_count = len(all_hits['dataset_paths'])
+    # Start search
+    regulome_es = request.registry[SNP_SEARCH_ES]
+    atlas = RegulomeAtlas(regulome_es)
+    assembly = result['assembly']
+    coord = list(result['variants'])[0]
+    begin = time.time()  # DEBUG: timing
+    chrom, start_end = coord.split(':')
+    start, end = start_end.split('-')
 
-    if dataset_count:
-
-        # set_type = ['Experiment']
-        set_indices = atlas.set_indices()
-        allowed_status = atlas.allowed_statuses()
-        facets = _REGULOME_FACETS
-
-        query = get_filtered_query(
-            'Dataset',
-            [],
-            sorted(list_result_fields(request, ['Experiment', 'Annotation'])),
-            principals,
-            atlas.set_type()
+    begin = time.time()  # DEBUG: timing
+    try:
+        all_hits = region_get_hits(
+            atlas, assembly, chrom, start, end, peaks_too=True
         )
-        del query['query']
-        query['post_filter']['bool']['must'].append({'terms':
-                                                    {'embedded.@id': all_hits['dataset_paths']}})
-        query['post_filter']['bool']['must'].append({'terms': {'embedded.status': allowed_status}})
-
-        used_filters = set_filters(request, query, result)
-        used_filters['@id'] = all_hits['dataset_paths']
-        used_filters['status'] = allowed_status
-        query['aggs'] = set_facets(facets, used_filters, principals, ['Dataset'])
-        schemas = (types[item_type].schema for item_type in ['Experiment'])
-        es_results = es.search(
-            body=query, index=set_indices, doc_type=set_indices, size=size, request_timeout=60
+        evidence = atlas.regulome_evidence(
+            all_hits['datasets'], chrom, int(start), int(end)
         )
-        result['@graph'] = list(format_results(request, es_results['hits']['hits']))
-        result['total'] = total = es_results['hits']['total']
-        result['facets'] = BaseView._format_facets(es_results, facets, used_filters, schemas, total, principals)
-        if len(result['@graph']) < dataset_count:  # paths should be the chosen few
-            all_hits['dataset_paths'] = [dataset['@id'] for dataset in result['@graph']]
+        result['regulome_score'] = atlas.regulome_score(
+            all_hits['datasets'], evidence
+        )
+        result['features'] = evidence_to_features(evidence)
+    except Exception as e:
+        result['notifications'][coord] = 'Failed: (exception) {}'.format(e)
+    peak_details = []
+    for peak in all_hits.get('peaks', []):
+        peak_details.append({
+            'chrom': peak['_index'],
+            'start': peak['_source']['coordinates']['gte'],
+            'end': peak['_source']['coordinates']['lt'],
+            'strand': peak['_source'].get('strand'),
+            'value': peak['_source'].get('value'),
 
-        if peaks_too:
-            result['peaks'] = all_hits['peaks']
-            # TODO temperory solution before refatoring region-search
-            peak_details = []
-            for peak in all_hits['peaks']:
-                # Get peak metadata
-                dataset = peak['resident_detail']['dataset']
-                method = (dataset.get('assay_term_name')
-                          or dataset.get('annotation_type', ''))
-                targets = dataset.get('target', [])
-                biosample_term_name = dataset.get('biosample_term_name', '')
-                # Get peak coordinates and assemble details
-                peak_detail = [{
-                                'method': method,
-                                'targets': targets,
-                                'biosample_term_name': biosample_term_name,
-                                'chrom': peak['_index'],
-                                'start': peak['_source']['coordinates']['gte'],
-                                'end': peak['_source']['coordinates']['lt'],
-                                'value': peak['_source'].get('value', ''),
-                                'strand': peak['_source'].get('strand', ''),
-                                }]
-                peak_details += peak_detail
-            result['peak_details'] = peak_details
+            'file': peak['resident_detail']['file']['@id'].split('/')[2],
 
-        result['download_elements'] = get_peak_metadata_links(request, result['assembly'],
-                                                              chromosome, start, end)
-        if result['total'] > 0:
-            result['notification'] = 'Success: ' + result['notification']
-            position_for_browser = format_position(result['coordinates'], 200)
-            result.update(search_result_actions(request, ['Experiment'], es_results,
-                          position=position_for_browser))
-        result.pop('batch_download', None)  # not desired for region OR regulome
+            'dataset': peak['resident_detail']['dataset']['@id'],
+            'documents': peak['resident_detail']['dataset']['documents'],
+            'biosample_ontology': peak['resident_detail']['dataset']['biosample_ontology'],
+            'method': peak['resident_detail']['dataset']['collection_type'],
+            'targets': peak['resident_detail']['dataset'].get('target', []),
+        })
+    result['@graph'] = peak_details
+    result['timing'].append({'regulome_search_scoring': (time.time() - begin)})  # DEBUG: timing
 
-        result['timing'].append({'datasets': (time.time() - begin)})  # DEBUG: timing
-        begin = time.time()                                           # DEBUG: timing
-        vis = update_viusalize(result, assembly, all_hits['dataset_paths'], allowed_status)
-        if vis is not None:
-            result['visualize_batch'] = vis
-        result['timing'].append({'visualize': (time.time() - begin)})  # DEBUG: timing
-        begin = time.time()                                            # DEBUG: timing
-
-        # score regulome SNPs or point locations
-        if (rsid is not None or (int(end) - int(start)) <= 1):
-            result['nearby_snps'] = atlas.nearby_snps(result['assembly'], chromosome,
-                                                      int(start), rsid)
-            result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
-            begin = time.time()                                              # DEBUG: timing
-            # NOTE: Needs all hits rather than 'released' or set reduced by facet selection
-            evidence = atlas.regulome_evidence(all_hits['datasets'], chromosome, int(start), int(end))
-            regdb_score = atlas.regulome_score(all_hits['datasets'], evidence)
-            if regdb_score:
-                result['regulome_score'] = regdb_score
-                result['features'] = evidence_to_features(evidence)
-        result['timing'].append({'scoring': (time.time() - begin)})  # DEBUG: timing
-
+    begin = time.time()  # DEBUG: timing
+    result['nearby_snps'] = atlas.nearby_snps(
+        _GENOME_TO_ALIAS.get(assembly, 'hg19'),
+        chrom,
+        int(start),
+        max_snps=len(result['variants'][coord])+10
+    )
+    result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
     return result
 
 
