@@ -9,37 +9,42 @@ pytestmark = [pytest.mark.indexing]
 
 
 def test_one_regulome(testapp, workbook, region_index):
-    res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
+    res = testapp.get('/regulome-search/?regions=rs3768324&genome=GRCh37')
     assert res.json['title'] == 'Regulome search'
-    assert res.json['@type'] == ['region-search', 'Portal']
-    assert res.json['notification'] == 'Success: 8 peaks in 8 files belonging to 8 datasets in this region'
+    assert res.json['@type'] == ['regulome-search']
+    assert len(res.json['@graph']) == 8
     assert res.json['regulome_score'] == {'probability': '0.94', 'ranking': '1a'}
-    assert res.json['coordinates'] == 'chr1:39492461-39492462'
-    assert {e['accession'] for e in res.json['@graph']} == {
-        'ENCSR228TST', 'ENCSR061TST', 'ENCSR000DCE', 'ENCSR333TST',
-        'ENCSR899TST', 'ENCSR000ENO', 'ENCSR000EVI', 'ENCSR497SKR'
+    assert 'chr1:39492461-39492462' in res.json['variants']
+    assert {e['dataset'] for e in res.json['@graph']} == {
+        '/annotations/ENCSR228TST/', '/annotations/ENCSR061TST/',
+        '/experiments/ENCSR000DCE/', '/annotations/ENCSR333TST/',
+        '/annotations/ENCSR899TST/', '/experiments/ENCSR000ENO/',
+        '/experiments/ENCSR000EVI/', '/annotations/ENCSR497SKR/'
     }
-    expected = [
-        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492461_39492462.bed',
-        'http://localhost/regulome_download/regulome_evidence_hg19_chr1_39492461_39492462.json'
-    ]
-    assert res.json['download_elements'] == expected
 
 
 def test_dataset_size(testapp, workbook, region_index):
     ''' this doesn't actually test size but makes sure some properties were removed '''
-    res = testapp.get('/regulome-search/?region=rs10905307&genome=GRCh37')
-    assert res.json['notification'] == 'Success: 3 peaks in 3 files belonging to 3 datasets in this region'
+    res = testapp.get('/regulome-search/?regions=rs10905307&genome=GRCh37')
+    assert len(res.json['@graph']) == 3
     assert res.json['regulome_score'] == {'probability': '0.2', 'ranking': '1f'}
-    assert res.json['coordinates'] == 'chr10:5894499-5894500'
-    assert {e['accession'] for e in res.json['@graph']} == {'ENCSR061TST', 'ENCSR000DZQ', 'ENCSR497SKR'}
-    assert {e['biosample_ontology']['term_name'] for e in res.json['@graph']} == {'GM12878', 'lymphoblastoid cell line', 'HeLa-S3'}
+    assert 'chr10:5894499-5894500' in res.json['variants']
+    assert {e['dataset'] for e in res.json['@graph']} == {
+        '/annotations/ENCSR061TST/',
+        '/experiments/ENCSR000DZQ/',
+        '/annotations/ENCSR497SKR/'
+    }
+    assert {
+        e['biosample_ontology']['term_name'] for e in res.json['@graph']
+    } == {'GM12878', 'lymphoblastoid cell line', 'HeLa-S3'}
     assert 'files' not in [res.json['@graph'][0].keys()]
-    assert {e.get('assay_title', '') or e.get('annotation_type', '') for e in res.json['@graph']} == {'dsQTLs', 'ChIP-seq', 'chromatin state'}
+    assert {
+        e.get('method', '') for e in res.json['@graph']
+    } == {'dsQTLs', 'ChIP-seq', 'chromatin state'}
 
 
 def test_regulome_score(testapp, workbook, region_index):
-    res = testapp.get('/regulome-search/?region=rs3768324&genome=GRCh37')
+    res = testapp.get('/regulome-search/?regions=rs3768324&genome=GRCh37')
     assert res.json['regulome_score'] == {'probability': '0.94', 'ranking': '1a'}
 
 

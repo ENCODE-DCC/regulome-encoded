@@ -35,9 +35,12 @@ const exampleEntries = [
 
 // Columns for different subsets of data
 const dataColumnsChromatin = {
-    assay_title: {
+    method: {
         title: 'Method',
-        getValue: item => (item.assay_title || item.annotation_type),
+    },
+    peak: {
+        title: 'Chromatin state window',
+        getValue: item => `${item.chrom}:${item.start}..${item.end}`,
     },
     biosample_term_name: {
         title: 'Biosample',
@@ -45,62 +48,79 @@ const dataColumnsChromatin = {
     },
     organ_slims: {
         title: 'Organ',
-        getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
+        getValue: item => (item.biosample_ontology && item.biosample_ontology.organ_slims && item.biosample_ontology.organ_slims.length > 0 ? item.biosample_ontology.organ_slims.join(', ') : ''),
     },
-    accession: {
-        title: 'Link',
-        display: item => <a href={item['@id']}>{item.accession}</a>,
+    dataset: {
+        title: 'Dataset',
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[2]}</a>,
     },
-    description: {
-        title: 'Description',
+    file: {
+        title: 'File',
+        display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
+    },
+    value: {
+        title: 'Chromatin state',
     },
 };
 
 const dataColumnsQTL = {
-    assay_title: {
+    method: {
         title: 'Method',
-        getValue: item => (item.assay_title || item.annotation_type),
+    },
+    peak: {
+        title: 'QTL location',
+        getValue: item => `${item.chrom}:${item.start}..${item.end}`,
     },
     biosample_term_name: {
         title: 'Biosample',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
     },
-    target: {
+    value: {
         title: 'Targets',
-        getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
     },
-    accession: {
-        title: 'Link',
-        display: item => <a href={item['@id']}>{item.accession}</a>,
+    dataset: {
+        title: 'Dataset',
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[2]}</a>,
     },
-    description: {
-        title: 'Description',
+    file: {
+        title: 'File',
+        display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
     },
 };
 
 const dataColumnsOther = {
-    assay_title: {
+    method: {
         title: 'Method',
-        getValue: item => (item.assay_title || item.annotation_type),
+    },
+    peak: {
+        title: 'Peak location',
+        getValue: item => `${item.chrom}:${item.start}..${item.end}`,
     },
     biosample_term_name: {
         title: 'Biosample',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
     },
-    target: {
+    targets: {
         title: 'Targets',
-        getValue: item => (item.target ? item.target.label : (item.targets) ? item.targets.map(t => t.label).join(', ') : ''),
+        getValue: item => (item.targets && item.targets.length > 0 ? item.targets.join(', ') : ''),
     },
     organ_slims: {
         title: 'Organ',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.organ_slims.join(', ') : ''),
     },
-    accession: {
-        title: 'Link',
-        display: item => <a href={item['@id']}>{item.accession}</a>,
+    dataset: {
+        title: 'Dataset',
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[2]}</a>,
     },
-    description: {
-        title: 'Description',
+    file: {
+        title: 'File',
+        display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
+    },
+    value: {
+        title: 'Value',
+    },
+    strand: {
+        title: 'Strand',
     },
 };
 
@@ -243,8 +263,8 @@ class AdvSearch extends React.Component {
                 {(context.notification && context.notification !== 'No annotations found') ?
                     <div className="notification">{context.notification}</div>
                 : null}
-                {(context.coordinates) ?
-                    <p>Searched coordinates: {context.coordinates}</p>
+                {(context.variants && context.variants.length > 0) ?
+                    <p>Searched coordinates: {Object.keys(context.variants)[0]}</p>
                 : null}
                 {(context.regulome_score && context.regulome_score.probability && context.regulome_score.ranking) ?
                     <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking) </p>
@@ -278,43 +298,6 @@ AdvSearch.contextTypes = {
     navigate: PropTypes.func,
 };
 
-const PeakDetails = (props) => {
-    const context = props.context;
-    const peaks = context.peak_details;
-
-    const peaksTableColumns = {
-        method: {
-            title: 'Method',
-        },
-
-        chrom: {
-            title: 'Chromosome location',
-            getValue: item => `${item.chrom}:${item.start}..${item.end}`,
-        },
-
-        biosample_term_name: {
-            title: 'Biosample',
-        },
-
-        targets: {
-            title: 'Targets',
-            getValue: item => item.targets.join(', '),
-        },
-    };
-
-    return (
-        <div>
-            <SortTablePanel title="Peak details">
-                <SortTable list={peaks} columns={peaksTableColumns} />
-            </SortTablePanel>
-        </div>
-    );
-};
-
-PeakDetails.propTypes = {
-    context: React.PropTypes.object.isRequired,
-};
-
 const NearbySNPsDrawing = (props) => {
     const context = props.context;
 
@@ -331,7 +314,7 @@ const NearbySNPsDrawing = (props) => {
     if (context.nearby_snps && context.nearby_snps[0] && context.nearby_snps[0].coordinates) {
         startNearbySnps = +context.nearby_snps[0].coordinates.lt;
         endNearbySnps = +context.nearby_snps[context.nearby_snps.length - 1].coordinates.lt;
-        coordinate = +context.coordinates.split('-')[1];
+        coordinate = +Object.keys(context.variants)[0].split('-')[1];
         coordinateX = (920 * ((coordinate - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
 
         context.nearby_snps.forEach((snp, snpIndex) => {
@@ -567,13 +550,12 @@ class RegulomeSearch extends React.Component {
 
     render() {
         const context = this.props.context;
-        const notification = context.notification;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
-        const allData = context['@graph'];
-        const QTLData = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
-        const chipData = allData.filter(d => d.assay_title === 'ChIP-seq');
-        const dnaseData = allData.filter(d => (d.assay_title === 'FAIRE-seq' || d.assay_title === 'DNase-seq'));
-        const chromatinData = allData.filter(d => (d.annotation_type === 'chromatin state'));
+        const allData = context['@graph'] || [];
+        const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
+        const chipData = allData.filter(d => d.method === 'ChIP-seq');
+        const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
+        const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
@@ -586,19 +568,19 @@ class RegulomeSearch extends React.Component {
                         </div>
                         <div>
                             <div className="search-information">
-                                {(context.coordinates) ?
+                                {(context.variants) ?
                                     <div className="notification-line">
                                         <div className="notification-label">Searched coordinates</div>
-                                        <div className="notification">{context.coordinates}</div>
+                                        <div className="notification">{Object.keys(context.variants)[0]}</div>
                                     </div>
                                 : null}
-                                {(context.notification) ?
+                                {allData && allData.length > 0 ?
                                     <div className="notification-line">
-                                        <div className="notification-label">{context.notification.split(': ')[0]}</div>
-                                        <div className="notification">{+context.notification.split(': ')[1].split(' peaks')[0] - chromatinData.length} peaks</div>
+                                        <div className="notification-label">Peaks</div>
+                                        <div className="notification">{allData.length - chromatinData.length} peaks</div>
                                     </div>
                                 : null}
-                                {(context.regulome_score && context.regulome_score.probability && context.regulome_score.ranking) ?
+                                {(context.regulome_score) ?
                                     <div>
                                         <div className="notification-line">
                                             <div className="notification-label">Rank</div>
@@ -611,7 +593,7 @@ class RegulomeSearch extends React.Component {
                                     </div>
                                 : null}
                             </div>
-                            {context.nearby_snps ?
+                            {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
                             : null}
                             <div className={`thumbnail-gallery ${this.state.selectedThumbnail ? 'small-thumbnails' : ''}`} >
@@ -750,16 +732,7 @@ class RegulomeSearch extends React.Component {
                             : null}
                         </div>
                     </div>
-                : null}
-
-                {(context.peak_details) ?
-                    <div>
-                        <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a></div>
-                        <PeakDetails {...this.props} />
-                    </div>
-                : null}
-
-                {(context.peak_details === undefined && !notification.startsWith('Success')) ?
+                :
                     <div>
                         <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a></div>
                         <AdvSearch {...this.props} />
@@ -772,7 +745,7 @@ class RegulomeSearch extends React.Component {
                             </div>
                         </div>
                     </div>
-                : null}
+                }
 
             </div>
         );
@@ -795,4 +768,4 @@ RegulomeSearch.contextTypes = {
     navigate: PropTypes.func,
 };
 
-globals.contentViews.register(RegulomeSearch, 'region-search');
+globals.contentViews.register(RegulomeSearch, 'regulome-search');

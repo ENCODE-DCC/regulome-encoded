@@ -479,36 +479,34 @@ class RegulomeAtlas(object):
                 return
 
         last_uuids = {}
-        last_snp = {}
         for snp in snps:
             snp['score'] = None  # default
             snp['assembly'] = assembly
             snp_uuids = self._peak_uuids_in_overlap(peaks, snp['chrom'], snp['coordinates']['gte'])
             if snp_uuids:
-                if snp_uuids == last_uuids:  # good chance evidence hasn't changed
-                    if last_snp:
-                        snp['score'] = last_snp['score']
-                        if 'evidence' in last_snp:
-                            snp['evidence'] = last_snp['evidence']
-                    yield snp
-                    continue
-                else:
+                # Otherwise datasets hits would be the same
+                if snp_uuids != last_uuids:
                     last_uuids = snp_uuids
                     snp_details = self._filter_details(details, uuids=list(snp_uuids))
                     if snp_details:
                         (snp_datasets, _snp_files) = self.details_breakdown(snp_details)
-                        if snp_datasets:
-                            snp_evidence = self.regulome_evidence(snp_datasets, chrom, start, end)
-                            if snp_evidence:
-                                snp['score'] = self.regulome_score(snp_datasets, snp_evidence)
-                                snp['evidence'] = snp_evidence
-                                # snp['datasets'] = snp_datasets
-                                # snp['files'] = snp_files
-                                last_snp = snp
-                                yield snp
-                                continue
+                    else:
+                        snp_datasets = {}
+                # Regulome evidence now includes signals from bigWig.
+                # Better to recalculate for every new locations.
+                if snp_datasets:
+                    snp_evidence = self.regulome_evidence(
+                        snp_datasets,
+                        snp['chrom'],
+                        snp['coordinates']['gte'],
+                        snp['coordinates']['lt']
+                    )
+                    if snp_evidence:
+                        snp['score'] = self.regulome_score(snp_datasets, snp_evidence)
+                        snp['evidence'] = snp_evidence
+                        yield snp
+                        continue
             # if we are here this snp had no score
-            last_snp = {}
             yield snp
 
     def _scored_regions(self, assembly, chrom, start, end):
@@ -525,6 +523,10 @@ class RegulomeAtlas(object):
         for base in range(start, end):
             base_uuids = self._peak_uuids_in_overlap(peaks, chrom, base)
             if base_uuids:
+                # For now we will combine nucleotides as long as peaks are the
+                # same. But keep in mind regulome evidence now includes signals
+                # from bigWigs, which are very likely different from nucleotide
+                # to nucleotide.
                 if base_uuids == last_uuids:
                     region_end = base  # extend region
                     continue

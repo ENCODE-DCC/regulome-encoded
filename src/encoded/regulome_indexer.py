@@ -874,6 +874,13 @@ class RegionIndexer(Indexer):
                                               for gene in genes])
                 if len(target_labels) > 0:
                     meta_doc['dataset']['target'] = target_labels
+        meta_doc['dataset']['biosample_ontology'] = dataset.get(
+            'biosample_ontology', {}
+        )
+        meta_doc['dataset']['documents'] = []
+        # Only save documents for datasets having motif info
+        if meta_doc['dataset']['collection_type'] in ['Footprints', 'PWMs']:
+            meta_doc['dataset']['documents'] = dataset.get('documents', [])
         biosample = dataset.get('biosample_ontology', {}).get('term_name', "None")
         if biosample:
             meta_doc['dataset']['biosample_term_name'] = biosample
