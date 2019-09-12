@@ -813,7 +813,7 @@ class RegulomeSearch extends React.Component {
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click here to view results in a genome browser.</div>
                                             <div className="image-container">
-                                                <img src="/static/img/browser_thumbnail.png" alt="Click to view the genome browser" />
+                                                <img src="/static/img/browser-thumbnail-v2.png" alt="Click to view the genome browser" />
                                             </div>
                                         </div>
                                     : null}
