@@ -98,11 +98,11 @@ export class MotifElement extends React.Component {
                     {element.organ_slims ?
                         <p><span className="motif-label">Organ</span>{element.organ_slims.join(', ')}</p>
                     : null}
-                    {targetList ?
+                    {(targetList.length > 0) ?
                         <p><span className="motif-label">{targetListLabel}</span>{targetList.join(', ')}</p>
                     : null}
                     <p><span className="motif-label">Method</span>{element.method}</p>
-                    {element.biosample_ontology ?
+                    {(element.biosample_ontology && element.biosample_ontology.term_name && element.biosample_ontology.term_name.length > 0) ?
                         <p><span className="motif-label">Biosample</span>{element.biosample_ontology.term_name}</p>
                     : null}
                     {element.description && !(this.props.shortened) ?

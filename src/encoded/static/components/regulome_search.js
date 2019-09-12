@@ -5,7 +5,7 @@ import url from 'url';
 import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
-import { BarChart, ChartList, ChartTable, mapChromatinNames } from './visualizations';
+import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visualizations';
 
 const dataTypeStrings = [
     {
@@ -37,7 +37,7 @@ const exampleEntries = [
 const dataColumnsChromatin = {
     value: {
         title: 'Chromatin state',
-        display: item => mapChromatinNames(item.value),
+        display: item => lookupChromatinNames(item.value),
     },
     peak: {
         title: 'Chromatin state window',

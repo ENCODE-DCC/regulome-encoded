@@ -3,43 +3,52 @@ import PropTypes from 'prop-types';
 import { ResultsTable } from './regulome_search';
 import { isLight } from './datacolors';
 
-export const mapChromatinNames = name => (
-    name.includes('TssAFlnk') ? 'Flanking Active TSS'
-    : name.includes('TssA') ? 'Active TSS'
-    : name.includes('TxFlnk') ? "Transcr. at gene 5' and 3'"
-    : name.includes('TxWk') ? 'Weak transcription'
-    : name.includes('Tx') ? 'Strong transcription'
-    : name.includes('EnhG') ? 'Genic enhancers'
-    : name.includes('EnhBiv') ? 'Bivalent Enhancer'
-    : name.includes('Enh') ? 'Enhancers'
-    : name.includes('ZNF/Rpts') ? 'ZNF genes & repeats'
-    : name.includes('Het') ? 'Heterochromatin'
-    : name.includes('TssBiv') ? 'Bivalent/Poised TSS'
-    : name.includes('BivFlnk') ? 'Flanking Bivalent TSS/Enh'
-    : name.includes('ReprPCWk') ? 'Weak Repressed PolyComb'
-    : name.includes('ReprPC') ? 'Repressed PolyComb'
-    : name.includes('Quies') ? 'Quiescent/Low'
-    : null
-);
+const mapChromatinNames = {
+    TssAFlnk: 'Flanking Active TSS',
+    TssA: 'Active TSS',
+    TxFlnk: "Transcr. at gene 5' and 3'",
+    TxWk: 'Weak transcription',
+    Tx: 'Strong transcription',
+    EnhG: 'Genic enhancers',
+    EnhBiv: 'Bivalent Enhancer',
+    Enh: 'Enhancers',
+    'ZNF/Rpts': 'ZNF genes & repeats',
+    Het: 'Heterochromatin',
+    TssBiv: 'Bivalent/Poised TSS',
+    BivFlnk: 'Flanking Bivalent TSS/Enh',
+    ReprPCWk: 'Weak Repressed PolyComb',
+    ReprPC: 'Repressed PolyComb',
+    Quies: 'Quiescent/Low',
+};
 
-const colorChromatinState = chrom => (
-    chrom === 'Flanking Active TSS' ? 'rgba(255,69,0)'
-    : chrom === 'Active TSS' ? 'rgba(255,0,0)'
-    : chrom === "Transcr. at gene 5' and 3'" ? 'rgba(50,205,50)'
-    : chrom === 'Strong transcription' ? 'rgba(0,128,0)'
-    : chrom === 'Weak transcription' ? 'rgba(0,100,0)'
-    : chrom === 'Genic enhancers' ? 'rgba(194,225,5)'
-    : chrom === 'Enhancers' ? 'rgba(255,255,0)'
-    : chrom === 'ZNF genes & repeats' ? 'rgba(102,205,170)'
-    : chrom === 'Heterochromatin' ? 'rgba(138,145,208)'
-    : chrom === 'Bivalent/Poised TSS' ? 'rgba(205,92,92)'
-    : chrom === 'Flanking Bivalent TSS/Enh' ? 'rgba(233,150,122)'
-    : chrom === 'Bivalent Enhancer' ? 'rgba(189,183,107)'
-    : chrom === 'Repressed PolyComb' ? 'rgba(128,128,128)'
-    : chrom === 'Weak Repressed PolyComb' ? 'rgba(192,192,192)'
-    : chrom === 'Quiescent/Low' ? '#DADADA' // this should be white but white is not visible against a white background
-    : '#d2d2d2'
-);
+const colorChromatinState = {
+    'Flanking Active TSS': 'rgba(255,69,0)',
+    'Active TSS': 'rgba(255,0,0)',
+    "Transcr. at gene 5' and 3'": 'rgba(50,205,50)',
+    'Strong transcription': 'rgba(0,128,0)',
+    'Weak transcription': 'rgba(0,100,0)',
+    'Genic enhancers': 'rgba(194,225,5)',
+    Enhancers: 'rgba(255,255,0)',
+    'ZNF genes & repeats': 'rgba(102,205,170)',
+    Heterochromatin: 'rgba(138,145,208)',
+    'Bivalent/Poised TSS': 'rgba(205,92,92)',
+    'Flanking Bivalent TSS/Enh': 'rgba(233,150,122)',
+    'Bivalent Enhancer': 'rgba(189,183,107)',
+    'Repressed PolyComb': 'rgba(128,128,128)',
+    'Weak Repressed PolyComb': 'rgba(192,192,192)',
+    'Quiescent/Low': '#DADADA', // this should be white but white is not visible against a white background
+};
+
+const lookupColorChromatinState = chrom => colorChromatinState[chrom];
+export const lookupChromatinNames = (chrom) => {
+    let result;
+    Object.keys(mapChromatinNames).forEach((m) => {
+        if (chrom.includes(m)) {
+            result = mapChromatinNames[m];
+        }
+    });
+    return result;
+};
 
 const initializedChromatinObject = {
     'Active TSS': 0,
@@ -240,8 +249,9 @@ export class BarChart extends React.Component {
         const data = this.props.data;
         let fillColor;
         let fakeFacets = [];
-        const sortedFakeFacets = [];
+        const newFakeFacets = [];
         let chartDataOrig = [];
+        // collect target data into facet for ChIP-seq chart
         if (this.props.dataFilter === 'chip') {
             fillColor = () => '#276A8E';
             data.forEach((d) => {
@@ -251,6 +261,7 @@ export class BarChart extends React.Component {
                     fakeFacets[d.targets] = 1;
                 }
             });
+        // collect biosample ontology term name data into facet for DNase-seq chart
         } else if (this.props.dataFilter === 'dnase') {
             fillColor = () => '#276A8E';
             data.forEach((d) => {
@@ -260,44 +271,49 @@ export class BarChart extends React.Component {
                     fakeFacets[d.biosample_ontology.term_name] = 1;
                 }
             });
+        // collect chromatin state data into facet
         } else if (this.props.dataFilter === 'chromatin') {
-            fillColor = colorChromatinState;
+            fillColor = lookupColorChromatinState;
             fakeFacets = Object.assign({}, initializedChromatinObject);
             data.forEach((d) => {
-                const newName = mapChromatinNames(d.value);
+                const newName = lookupChromatinNames(d.value);
                 fakeFacets[newName] += 1;
             });
+        }
+        // sort the histogram information by frequency of a value for ChIP-seq and DNase-seq
+        if (this.props.dataFilter !== 'chromatin') {
+            const keys = Object.keys(fakeFacets);
+            keys.sort((a, b) => (fakeFacets[b] - fakeFacets[a]));
+            keys.forEach((key) => {
+                newFakeFacets.push({
+                    key,
+                    value: fakeFacets[key],
+                });
+            });
+        // chromatin histogram information will be sorted by the activeness of the chromatin state, not frequency
+        // because of how it was initialized, it is already in the proper order
+        // however we do need to eliminate states from the facets for which there are 0 results so that we don't have empty bars on our bar chart
+        } else {
             const keys = Object.keys(fakeFacets);
             keys.forEach((key) => {
                 if (fakeFacets[key] > 0) {
-                    sortedFakeFacets.push({
+                    newFakeFacets.push({
                         key,
                         value: fakeFacets[key],
                     });
                 }
             });
-            chartDataOrig = sortedFakeFacets;
         }
-        // only sort the bar chart data if it is not chromatin data
-        if (this.props.dataFilter !== 'chromatin') {
-            const keys = Object.keys(fakeFacets);
-            keys.sort((a, b) => (fakeFacets[b] - fakeFacets[a]));
-            keys.forEach((key) => {
-                sortedFakeFacets.push({
-                    key,
-                    value: fakeFacets[key],
-                });
-            });
-            chartDataOrig = sortedFakeFacets;
-        }
+        chartDataOrig = newFakeFacets;
 
         // return subset of results if 'chartLimit' is defined
         let chartData = [];
-        if (this.props.chartLimit > 0 && (sortedFakeFacets.length > this.props.chartLimit)) {
+        if (this.props.chartLimit > 0 && (newFakeFacets.length > this.props.chartLimit)) {
             chartData = chartDataOrig.slice(0, this.props.chartLimit);
         } else {
             chartData = chartDataOrig;
         }
+        // append chart to the target element
         const svgElement = d3.select(targetElement).append('svg');
         if (this.props.chartOrientation === 'horizontal') {
             drawHorizontalChart(d3, svgElement, chartData, fillColor, this.props.chartWidth);
@@ -348,7 +364,7 @@ function filterForKey(element, key, dataFilter) {
         }
         return false;
     } else if (dataFilter === 'chromatin') {
-        return mapChromatinNames(element.value) === key;
+        return lookupChromatinNames(element.value) === key;
     }
     return false;
 }
@@ -371,8 +387,6 @@ export class ChartList extends React.Component {
             currentTarget: [],
             data: [],
             unsanitizedSearchTerm: '',
-            searchTerm: '',
-            fillColor: undefined,
         };
 
         // Bind `this` to non-React methods.
@@ -404,17 +418,11 @@ export class ChartList extends React.Component {
     handleSearch(event) {
         // Unsanitized search term entered by user for display
         this.setState({ unsanitizedSearchTerm: event.target.value });
-        // Search term entered by the user
-        const filterVal = String(sanitizedString(event.target.value));
-        this.setState({ searchTerm: filterVal });
     }
 
     clearSearch() {
-        // clear both search terms
-        this.setState({
-            unsanitizedSearchTerm: '',
-            searchTerm: '',
-        });
+        // Clear search term
+        this.setState({ unsanitizedSearchTerm: '' });
     }
 
     expandTerms() {
@@ -436,7 +444,6 @@ export class ChartList extends React.Component {
     drawCharts() {
         const data = this.props.data;
         const fakeFacets = [];
-        let fillColor;
         if (this.props.dataFilter === 'dnase') {
             data.forEach((d) => {
                 if (fakeFacets[d.biosample_ontology.term_name]) {
@@ -445,17 +452,15 @@ export class ChartList extends React.Component {
                     fakeFacets[d.biosample_ontology.term_name] = 1;
                 }
             });
-            fillColor = () => '#276A8E';
         } else {
             data.forEach((d) => {
-                const newName = mapChromatinNames(d.value);
+                const newName = lookupChromatinNames(d.value);
                 if (fakeFacets[newName]) {
                     fakeFacets[newName] += 1;
                 } else {
                     fakeFacets[newName] = 1;
                 }
             });
-            fillColor = colorChromatinState;
         }
         // sort the fake facets
         const keys = Object.keys(fakeFacets);
@@ -481,12 +486,19 @@ export class ChartList extends React.Component {
             chartMax,
             leftMargin,
             data,
-            fillColor,
         });
     }
 
     render() {
-        let errorMessage = !!this.state.searchTerm;
+        const searchTerm = String(sanitizedString(this.state.unsanitizedSearchTerm));
+        let errorMessage = !!searchTerm;
+        let fillColor;
+        if (this.props.dataFilter === 'dnase') {
+            fillColor = () => '#276A8E';
+        } else {
+            fillColor = lookupColorChromatinState;
+        }
+
         return (
             <div className="bar-chart-container">
                 <div className="bar-chart-header">
@@ -506,8 +518,8 @@ export class ChartList extends React.Component {
                 {Object.keys(this.state.chartData).map((d) => {
                     const dKey = d.replace(/[^\w\s]/gi, '').toLowerCase();
                     let searchTermMatch = true;
-                    if (this.state.searchTerm) {
-                        searchTermMatch = sanitizedString(d).match(this.state.searchTerm);
+                    if (searchTerm) {
+                        searchTermMatch = sanitizedString(d).match(searchTerm);
                         if (searchTermMatch) {
                             errorMessage = false;
                         }
@@ -544,7 +556,7 @@ export class ChartList extends React.Component {
                                     <div
                                         className="bar"
                                         style={{
-                                            backgroundColor: this.state.fillColor(d),
+                                            backgroundColor: fillColor(d),
                                             height: '20px',
                                             width: `${barWidth}px`,
                                         }}
@@ -552,7 +564,7 @@ export class ChartList extends React.Component {
                                     <div
                                         className="bar-annotation"
                                         style={{
-                                            color: `${isLight(this.state.fillColor(d)) ? 'black' : 'white'}`,
+                                            color: `${isLight(fillColor(d)) ? 'black' : 'white'}`,
                                         }}
                                     >
                                         {this.state.chartData[d]}
@@ -571,14 +583,10 @@ export class ChartList extends React.Component {
                                     <div className="table-entry" key={`table-entry-${d2.dataset.split('/')[2]}`}>
                                         <p><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></p>
                                         <div className="inset-table-entries">
-                                            {d2.biosample_ontology.organ_slims ?
+                                            {(d2.biosample_ontology.organ_slims.length > 0) ?
                                                 <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
                                             : null}
-                                            {d2.method ?
-                                                <p><span className="table-label">Method</span>{d2.method}</p>
-                                            :
-                                                <p><span className="table-label">Method</span>{d2.method}</p>
-                                            }
+                                            <p><span className="table-label">Method</span>{d2.method}</p>
                                             {d2.file ?
                                                 <p><span className="table-label">File</span>{d2.file}</p>
                                             : null}
@@ -689,8 +697,7 @@ export class HeatMap extends React.Component {
                                 key={`matrix${midx}`}
                                 className="color-block"
                                 style={{
-                                    backgroundColor: colorChromatinState(m.chromatin, m.count),
-                                    // width: `${(1 / this.state.chromatinStates.length) * 100}%`,
+                                    backgroundColor: lookupColorChromatinState(m.chromatin),
                                 }}
                             />
                         )}
@@ -737,7 +744,6 @@ export class ChartTable extends React.Component {
             data: [],
             filteredData: [],
             unsanitizedSearchTerm: '',
-            searchTerm: '',
             selectedStates: [],
         };
 
@@ -763,13 +769,14 @@ export class ChartTable extends React.Component {
         this.setState(prevState => ({
             selectedStates: modifiedSelectedStates,
             filteredData: prevState.data.filter((d) => {
-                if (this.state.searchTerm === '') {
-                    return (modifiedSelectedStates.includes(sanitizedString(mapChromatinNames(d.value))));
+                const searchTerm = String(sanitizedString(this.state.unsanitizedSearchTerm));
+                if (searchTerm === '') {
+                    return (modifiedSelectedStates.includes(sanitizedString(lookupChromatinNames(d.value))));
                 }
                 if (d.biosample_ontology.term_name) {
-                    return (sanitizedString(mapChromatinNames(d.value)).includes(this.state.searchTerm) || sanitizedString(d.biosample_ontology.term_name).includes(this.state.searchTerm) || sanitizedString(d.biosample_ontology.organ_slims.join(', ')).includes(this.state.searchTerm)) && modifiedSelectedStates.includes(sanitizedString(mapChromatinNames(d.value)));
+                    return (sanitizedString(lookupChromatinNames(d.value)).includes(searchTerm) || sanitizedString(d.biosample_ontology.term_name).includes(searchTerm) || sanitizedString(d.biosample_ontology.organ_slims.join(', ')).includes(searchTerm)) && modifiedSelectedStates.includes(sanitizedString(lookupChromatinNames(d.value)));
                 }
-                return (sanitizedString(mapChromatinNames(d.value)).includes(this.state.searchTerm)) && modifiedSelectedStates.includes(sanitizedString(mapChromatinNames(d.value)));
+                return (sanitizedString(lookupChromatinNames(d.value)).includes(searchTerm)) && modifiedSelectedStates.includes(sanitizedString(lookupChromatinNames(d.value)));
             }),
         }));
     }
@@ -779,17 +786,18 @@ export class ChartTable extends React.Component {
         this.setState({ unsanitizedSearchTerm: event.target.value });
         // Search term entered by the user
         const filterVal = String(sanitizedString(event.target.value));
-        this.setState({ searchTerm: filterVal });
-        const filteredData = this.state.data.filter((d) => {
-            if (filterVal === '') {
-                return true;
-            }
-            if (d.biosample_ontology.term_name) {
-                return sanitizedString(mapChromatinNames(d.value)).includes(filterVal) || sanitizedString(d.biosample_ontology.term_name).includes(filterVal) ||
-                sanitizedString(d.biosample_ontology.organ_slims.join(', ')).includes(filterVal);
-            }
-            return sanitizedString(mapChromatinNames(d.value)).includes(filterVal);
-        });
+        let filteredData = [];
+        if (filterVal === '') {
+            filteredData = this.state.data;
+        } else {
+            filteredData = this.state.data.filter((d) => {
+                if (d.biosample_ontology.term_name) {
+                    return sanitizedString(lookupChromatinNames(d.value)).includes(filterVal) || sanitizedString(d.biosample_ontology.term_name).includes(filterVal) ||
+                    sanitizedString(d.biosample_ontology.organ_slims.join(', ')).includes(filterVal);
+                }
+                return sanitizedString(lookupChromatinNames(d.value)).includes(filterVal);
+            });
+        }
         const fakeFacets = Object.keys(this.state.chartData)
             .reduce((obj, key) => {
                 obj[key] = 0;
@@ -797,8 +805,8 @@ export class ChartTable extends React.Component {
             }, {});
         const newSelectedStates = [];
         filteredData.forEach((d) => {
-            fakeFacets[mapChromatinNames(d.value)] += 1;
-            const chromatinValue = sanitizedString(mapChromatinNames(d.value));
+            fakeFacets[lookupChromatinNames(d.value)] += 1;
+            const chromatinValue = sanitizedString(lookupChromatinNames(d.value));
             if (!newSelectedStates.includes(chromatinValue)) {
                 newSelectedStates.push(chromatinValue);
             }
@@ -813,9 +821,8 @@ export class ChartTable extends React.Component {
     clearSearch() {
         // clear both search terms
         this.setState(prevState => ({
-            searchTerm: '',
             unsanitizedSearchTerm: '',
-            filteredData: prevState.data.filter(d => (prevState.selectedStates.includes(sanitizedString(mapChromatinNames(d.value))))),
+            filteredData: prevState.data.filter(d => (prevState.selectedStates.includes(sanitizedString(lookupChromatinNames(d.value))))),
             filteredChartData: prevState.chartData,
         }));
     }
@@ -824,7 +831,7 @@ export class ChartTable extends React.Component {
         const data = this.props.data;
         const initialChartData = Object.assign({}, initializedChromatinObject);
         data.forEach((d) => {
-            initialChartData[mapChromatinNames(d.value)] += 1;
+            initialChartData[lookupChromatinNames(d.value)] += 1;
         });
         const chartData = Object.keys(initialChartData)
             .filter(key => initialChartData[key] > 0)
@@ -842,7 +849,7 @@ export class ChartTable extends React.Component {
                 break;
             }
         }
-        const filteredData = data.filter(d => (selectedStates.includes(sanitizedString(mapChromatinNames(d.value)))));
+        const filteredData = data.filter(d => (selectedStates.includes(sanitizedString(lookupChromatinNames(d.value)))));
         // compute left margin
         let leftMargin = 60;
         Object.keys(chartData).forEach((d) => {
@@ -909,7 +916,7 @@ export class ChartTable extends React.Component {
                                         <div
                                             className="bar"
                                             style={{
-                                                backgroundColor: colorChromatinState(d),
+                                                backgroundColor: lookupColorChromatinState(d),
                                                 height: '22px',
                                                 width: `${barWidth}px`,
                                             }}
@@ -917,7 +924,7 @@ export class ChartTable extends React.Component {
                                         <div
                                             className="bar-annotation"
                                             style={{
-                                                color: `${(isLight(colorChromatinState(d)) || d === 'Enhancers' || barWidth <= 20) ? 'black' : 'white'}`,
+                                                color: `${(isLight(lookupColorChromatinState(d)) || d === 'Enhancers' || barWidth <= 20) ? 'black' : 'white'}`,
                                                 right: `${barWidth > 20 ? '5px' : '-12px'}`,
                                             }}
                                         >
@@ -946,5 +953,5 @@ export default {
     ChartList,
     ChartTable,
     HeatMap,
-    mapChromatinNames,
+    lookupChromatinNames,
 };
