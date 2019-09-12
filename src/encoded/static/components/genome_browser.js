@@ -41,7 +41,7 @@ const AutocompleteBox = (props) => {
                             postText={postText}
                         />
                     );
-                }, this)}
+                })}
             </ul>
         );
     }
@@ -200,10 +200,8 @@ class GenomeBrowser extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (!(this.state.disableBrowserForIE)) {
-            if (this.state.contig !== prevState.contig) {
-                if (this.state.visualizer) {
-                    this.state.visualizer.setLocation({ contig: this.state.contig, x0: this.state.x0, x1: this.state.x1 });
-                }
+            if (this.state.contig !== prevState.contig && this.state.visualizer) {
+                this.state.visualizer.setLocation({ contig: this.state.contig, x0: this.state.x0, x1: this.state.x1 });
             }
 
             if (this.props.assembly !== prevProps.assembly) {
@@ -289,7 +287,6 @@ class GenomeBrowser extends React.Component {
             // Locally we will display some default tracks
             newFiles = [...this.state.pinnedFiles, ...dummyFiles];
         } else {
-            // Filter files to include only bigWig and bigBed formats, and not 'bigBed bedMethyl' formats and only released or in progress files
             const files = this.props.files;
             if (files.length > 0) {
                 newFiles = [...this.state.pinnedFiles, ...files];
@@ -387,12 +384,10 @@ class GenomeBrowser extends React.Component {
         inputNode.value = term;
         newTerms[name] = id;
         this.setState({
-            // terms: newTerms,
             showAutoSuggest: false,
             searchTerm: term,
         });
         inputNode.focus();
-        // Now let the timer update the terms state when it gets around to it.
     }
 
     handleOnFocus() {

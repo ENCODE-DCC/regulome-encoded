@@ -299,8 +299,7 @@ AdvSearch.contextTypes = {
 };
 
 const QTLDetails = (props) => {
-    const context = props.context;
-    const allData = context['@graph'];
+    const allData = props.data;
     const QTLdata = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
     const eQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('eQTL') !== -1).length;
     const dsQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('dsQTL') !== -1).length;
@@ -313,7 +312,7 @@ const QTLDetails = (props) => {
 };
 
 QTLDetails.propTypes = {
-    context: React.PropTypes.object.isRequired,
+    data: React.PropTypes.array.isRequired,
 };
 
 const NearbySNPsDrawing = (props) => {
@@ -654,7 +653,6 @@ class RegulomeSearch extends React.Component {
                 assayMap[dataset['@id']] = dataset.assay_term_name || '';
                 targetMap[dataset['@id']] = dataset.target ? dataset.target.label : (dataset.targets) ? dataset.targets.map(t => t.label).join(', ') : '';
             });
-            console.log(`there are ${experimentDatasets.length} datasets`);
             // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
             const chipDatasets = experimentDatasets.filter(d => d.assay_title === 'ChIP-seq');
             const dnaseDatasets = experimentDatasets.filter(d => d.assay_title === 'DNase-seq');
@@ -727,18 +725,6 @@ class RegulomeSearch extends React.Component {
                     }
                     return true;
                 });
-
-                // this is entirely for debugging ---------
-                experimentDatasets.forEach((d) => {
-                    const originalFiles = sortedFiles.filter(f => f.dataset === d['@id']);
-                    console.log(`dataset ${d['@id'].split('/')[2]} originally had ${originalFiles.length} matching files: ${originalFiles.map(f => f.accession).join(', ')}`);
-
-                    const matchingFiles = trimmedFiles.filter(f => f.dataset === d['@id']);
-                    console.log(`after filtering, dataset ${d['@id'].split('/')[2]} has ${matchingFiles.length} matching files: ${matchingFiles.map(f => f.accession).join(', ')}`);
-                });
-                console.log(`there are ${trimmedFiles.length} files after filtering`);
-                // this is the end of the print statements for debugging ------------
-
                 // if there are more filtered files than we want to display on one page, we will paginate
                 if (trimmedFiles.length > displaySize) {
                     const includedFiles = trimmedFiles.slice(0, displaySize);
@@ -902,7 +888,7 @@ class RegulomeSearch extends React.Component {
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
                                                 <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
                                             </div>
-                                            <QTLDetails {...this.props} />
+                                            <QTLDetails data={this.props.context['@graph']} />
                                         </div>
                                     : null}
                                 </button>
