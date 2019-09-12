@@ -21,7 +21,7 @@ const snpsColumns = {
     regulome_score: {
         title: 'Regulome score',
         display: (item) => {
-            const hrefScore = `../regulome-search/?region=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
             if (item.regulome_score.probability && item.regulome_score.ranking) {
                 return <a href={hrefScore}>{item.regulome_score.probability} (probability); {item.regulome_score.ranking} (ranking)</a>;
             }
