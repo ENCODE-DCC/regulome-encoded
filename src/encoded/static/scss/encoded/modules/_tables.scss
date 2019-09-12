@@ -16,6 +16,9 @@ table>thead>tr>th {
     border-left: 2px solid #fff !important;
     padding: 12px 20px 8px 10px !important;
     font-size: 1.1em;
+    @media screen and (max-width: $screen-sm-min) {
+        font-size: 0.9rem;
+    }
 
     &:first-child {
         border-left: none !important;

@@ -22,24 +22,25 @@ const mapChromatinNames = {
 };
 
 const colorChromatinState = {
-    'Flanking Active TSS': 'rgba(255,69,0)',
-    'Active TSS': 'rgba(255,0,0)',
-    "Transcr. at gene 5' and 3'": 'rgba(50,205,50)',
-    'Strong transcription': 'rgba(0,128,0)',
-    'Weak transcription': 'rgba(0,100,0)',
-    'Genic enhancers': 'rgba(194,225,5)',
-    Enhancers: 'rgba(255,255,0)',
-    'ZNF genes & repeats': 'rgba(102,205,170)',
-    Heterochromatin: 'rgba(138,145,208)',
-    'Bivalent/Poised TSS': 'rgba(205,92,92)',
-    'Flanking Bivalent TSS/Enh': 'rgba(233,150,122)',
-    'Bivalent Enhancer': 'rgba(189,183,107)',
-    'Repressed PolyComb': 'rgba(128,128,128)',
-    'Weak Repressed PolyComb': 'rgba(192,192,192)',
+    'Flanking Active TSS': 'rgb(255,69,0)',
+    'Active TSS': 'rgb(255,0,0)',
+    "Transcr. at gene 5' and 3'": 'rgb(50,205,50)',
+    'Strong transcription': 'rgb(0,128,0)',
+    'Weak transcription': 'rgb(0,100,0)',
+    'Genic enhancers': 'rgb(194,225,5)',
+    Enhancers: 'rgb(255,255,0)',
+    'ZNF genes & repeats': 'rgb(102,205,170)',
+    Heterochromatin: 'rgb(138,145,208)',
+    'Bivalent/Poised TSS': 'rgb(205,92,92)',
+    'Flanking Bivalent TSS/Enh': 'rgb(233,150,122)',
+    'Bivalent Enhancer': 'rgb(189,183,107)',
+    'Repressed PolyComb': 'rgb(128,128,128)',
+    'Weak Repressed PolyComb': 'rgb(192,192,192)',
     'Quiescent/Low': '#DADADA', // this should be white but white is not visible against a white background
 };
 
 const lookupColorChromatinState = chrom => colorChromatinState[chrom];
+
 export const lookupChromatinNames = (chrom) => {
     let result;
     Object.keys(mapChromatinNames).forEach((m) => {
@@ -80,12 +81,12 @@ function drawHorizontalChart(d3, svgBars, chartData, fillColor, chartWidth) {
 
     // create SVG container for chart components
     const margin = {
-        top: 60,
+        top: 10,
         bottom: axisMax,
         right: 20,
         left: 30,
     };
-    const height = 310 + axisMax;
+    const height = 310 + axisMax + margin.top;
 
     const chartArray = chartData.map(d => d.value);
     const chartMax = Math.max(...chartArray);
@@ -142,7 +143,7 @@ function drawVerticalChart(d3, svgBars, chartData, fillColor, chartWidth) {
 
     // create SVG container for chart components
     const margin = {
-        top: 60,
+        top: 10,
         bottom: 40,
         right: 20,
         left: axisMax,
@@ -307,10 +308,15 @@ export class BarChart extends React.Component {
         }
         chartDataOrig = newFakeFacets;
 
-        // return subset of results if 'chartLimit' is defined
+        // return subset of results if 'chartLimit' is defined or for mobile sizes
         let chartData = [];
+        // subet of results is displayed on thumbnails
         if (this.props.chartLimit > 0 && (newFakeFacets.length > this.props.chartLimit)) {
             chartData = chartDataOrig.slice(0, this.props.chartLimit);
+        // mobile devices need to display a subset of results on the full view in addition to the thumbnail
+        } else if (this.props.chartLimit === 0 && this.props.chartWidth < 400) {
+            chartData = chartDataOrig.slice(0, 20);
+        // all results should be displayed on wide screens on full view
         } else {
             chartData = chartDataOrig;
         }
@@ -499,6 +505,7 @@ export class ChartList extends React.Component {
         } else {
             fillColor = lookupColorChromatinState;
         }
+        const chartWidth = this.props.chartWidth;
 
         return (
             <div className="bar-chart-container">
@@ -525,18 +532,28 @@ export class ChartList extends React.Component {
                             errorMessage = false;
                         }
                     }
-                    const barWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d];
-                    const remainderWidth = this.props.chartWidth - barWidth - this.state.leftMargin;
+                    let barWidth = 0;
+                    let remainderWidth = 0;
+                    let leftMargin = 0;
+                    if (chartWidth > 500) {
+                        leftMargin = this.state.leftMargin;
+                        barWidth = ((chartWidth - leftMargin) / this.state.chartMax) * this.state.chartData[d];
+                        remainderWidth = chartWidth - barWidth - leftMargin;
+                    } else {
+                        leftMargin = '100%';
+                        barWidth = (chartWidth / this.state.chartMax) * this.state.chartData[d];
+                        remainderWidth = chartWidth - barWidth;
+                    }
                     return (
                         <div
-                            className={`biosample-table table${dKey} ${searchTermMatch ? 'display-table' : ''}`}
+                            className={`biosample-table table-list table${dKey} ${searchTermMatch ? 'display-table' : ''}`}
                             key={`table${dKey}`}
                         >
                             <div className="bar-row" key={this.state.chartData[d]}>
                                 <button
                                     className="bar-label"
                                     style={{
-                                        width: `${this.state.leftMargin}px`,
+                                        width: `${leftMargin}px`,
                                     }}
                                     onClick={() => this.handleClick(dKey)}
                                     aria-expanded={this.state.currentTarget.includes(`table${dKey}`)}
@@ -549,7 +566,6 @@ export class ChartList extends React.Component {
                                 <div
                                     className="bar-container"
                                     style={{
-                                        height: '20px',
                                         width: `${barWidth}px`,
                                         marginRight: `${remainderWidth}px`,
                                     }}
@@ -558,7 +574,6 @@ export class ChartList extends React.Component {
                                         className="bar"
                                         style={{
                                             backgroundColor: fillColor(d),
-                                            height: '20px',
                                             width: `${barWidth}px`,
                                         }}
                                     />
@@ -575,15 +590,17 @@ export class ChartList extends React.Component {
                             <div
                                 className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
                                 style={{
-                                    marginLeft: `${this.state.leftMargin}px`,
+                                    marginLeft: `${leftMargin}px`,
                                 }}
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
                                 {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
                                     <div className="table-entry" key={`table-entry-${d2.file}`}>
-                                        <p><span className="table-label">Dataset</span><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></p>
-                                        <p><span className="table-label">File</span><a href={`../files/${d2.file}`}>{d2.file}</a></p>
+                                        <p>
+                                            <span className="table-label">File</span><a href={`../files/${d2.file}`}>{d2.file}</a>,
+                                            <span className="table-label dataset-label">Dataset</span><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a>
+                                        </p>
                                         {(d2.biosample_ontology.organ_slims.length > 0) ?
                                             <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
                                         : null}
@@ -896,7 +913,6 @@ export class ChartTable extends React.Component {
                                     <div
                                         className="bar-container"
                                         style={{
-                                            height: '22px',
                                             width: `${barWidth}px`,
                                             marginRight: `${remainderWidth}px`,
                                         }}
@@ -905,7 +921,6 @@ export class ChartTable extends React.Component {
                                             className="bar"
                                             style={{
                                                 backgroundColor: lookupColorChromatinState(d),
-                                                height: '22px',
                                                 width: `${barWidth}px`,
                                             }}
                                         />

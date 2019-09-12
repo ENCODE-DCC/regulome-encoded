@@ -605,8 +605,10 @@ class RegulomeSearch extends React.Component {
     updateDimensions() {
         const screenWidth = this.applicationRef.offsetWidth;
         let thumbnailWidth = 0;
-        if (screenWidth > 865) {
+        if (screenWidth > 787) {
             thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
+        } else if (screenWidth > 483) {
+            thumbnailWidth = (this.applicationRef.offsetWidth / 2) - 40;
         } else {
             thumbnailWidth = this.applicationRef.offsetWidth - 40;
         }
@@ -929,7 +931,7 @@ class RegulomeSearch extends React.Component {
                                     className={`thumbnail ${thumbnail === 'qtl' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('qtl')}
                                 >
-                                    <h4>QTL Data</h4>
+                                    <h4>QTL data</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.

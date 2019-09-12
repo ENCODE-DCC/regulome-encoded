@@ -31,6 +31,7 @@
         &:focus,
         &:hover {
             background-color: darken($regulomeGreen,10%);//#2f4961;
+            text-decoration: none;
         }
 
         /* Disabled sign-in link */
@@ -52,7 +53,6 @@
 }
 
 .navbar-fixed-top {
-    position: static;
 
     @media (min-width: $screen-md-min) {
         position: fixed;
@@ -125,8 +125,7 @@
     &>li {
         &>a {
             padding: 5px 20px;
-            color: #444 !important;
-            font-weight: 300;
+            font-weight: 600;
         }
     }
 
@@ -143,7 +142,6 @@
                 height: 100%;
                 padding: 2px 30px 2px 20px;
                 font-size: 1.1rem;
-                color: #444 !important;
                 border-top: 1px solid transparent;
                 border-bottom: 1px solid transparent;
                 border-left: none;
@@ -158,6 +156,7 @@
                     border-bottom: 1px solid darken($navbar-inverse-link-active-bg,20%);
                     background-color: darken($regulomeGreen,10%);
                     color: white !important;
+                    font-weight: 700;
                 }
             }
 
