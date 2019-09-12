@@ -734,14 +734,17 @@ table {
     flex-wrap: wrap;
     align-items: stretch;
     justify-content: space-between;
+    @media screen and (max-width: $screen-sm-min) {
+        margin-top: 30px;
+    }
     .thumbnail {
         flex: 0 0 32%;
         max-width: 32%;
         align-items: center;
         padding: 10px 15px;
-        transition: flex 0.3s ease-in-out;
-        -moz-transition: flex 0.3s ease-in-out;
-        -webkit-transition: flex 0.3s ease-in-out;
+        transition: flex 0.3s ease-in-out, font-size 0.3s ease-in-out;
+        -moz-transition: flex 0.3s ease-in-out, font-size 0.3s ease-in-out;
+        -webkit-transition: flex 0.3s ease-in-out, font-size 0.3s ease-in-out;
         color: #333;
         font-weight: 400;
         font-size: 14px;
@@ -749,6 +752,10 @@ table {
         -webkit-box-shadow: inset 0 0 4px #AAAAAA;
         box-shadow:         inset 0 0 4px #AAAAAA;
         @media screen and (max-width: $screen-md-min) {
+            flex: 0 0 48%;
+            max-width: 48%;
+        }
+        @media screen and (max-width: $screen-sm-min) {
             flex: 0 0 100%;
             max-width: 100%;
         }
@@ -781,6 +788,9 @@ table {
         }
         &.active {
             border: 3px solid $regulomeGreen;
+            @media screen and (max-width: $screen-sm-min) {
+                border: 2px solid $regulomeGreen;
+            }
         }
     }
     &.small-thumbnails {
@@ -788,6 +798,9 @@ table {
         max-width: 1200px;
         margin: auto;
         margin-bottom: 30px;
+        @media screen and (max-width: $screen-sm-min) {
+            padding: 20px 0 10px;
+        }
         .thumbnail {
             background: #f2f2f2;
             -moz-box-shadow: none;
@@ -801,14 +814,24 @@ table {
                 margin-top: 0;
                 margin-bottom: 0;
                 padding-top: 5px;
+                @media screen and (max-width: $screen-sm-min) {
+                    font-size: 0.9rem;
+                }
             }
             line {
                 font-size: 0.9rem;
             }
             flex: 0 1 160px;
+            @media screen and (max-width: $screen-sm-min) {
+                padding: 5px 10px;
+                flex: 0 1 80px;
+            }
             &.expand-thumbnail {
                 padding: 10px 10px 10px 15px;
                 flex: 0 1 10px;
+                @media screen and (max-width: $screen-sm-min) {
+                    padding: 5px 5px 5px 10px;
+                }
             }
             margin: 0;
             margin-bottom: 10px;
@@ -846,10 +869,16 @@ table {
         .notification-label {
             flex: 0 1 38%;
             text-align: left;
+            @media screen and (max-width: $screen-sm-min) {
+                flex: 0 1 55%;
+            }
         }
         .notification {
             flex: 0 1 62%;
             text-align: right;
+            @media screen and (max-width: $screen-sm-min) {
+                flex: 0 1 45%;
+            }
         }
     }
 }
@@ -907,8 +936,20 @@ button {
     .svg-title {
         font-weight: 600;
         text-align: center;
+        @media screen and (max-width: $screen-sm-min) {
+            font-size: 0.9rem;
+            font-weight: 400;
+            max-width: 260px;
+            margin: auto;
+            line-height: 1.2;
+            padding-bottom: 3px;
+        }
         &.top-title {
             font-size: 1.3rem;
+            @media screen and (max-width: $screen-sm-min) {
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
         }
     }
     svg {
@@ -934,6 +975,10 @@ button {
         font-size: 1.1rem;
         line-height: 1.1;
         text-align: left;
+        @media screen and (max-width: $screen-sm-min) {
+            margin-left: 0;
+            border-bottom: 0;
+        }
         .icon {
             margin-right: 10px;
             width: 6px;
@@ -951,6 +996,7 @@ button {
         position: absolute;
         top: 2px;
         right: 5px;
+        color: white;
         font-weight: 700;
     }
 }
@@ -1003,6 +1049,9 @@ button {
     }
     .inset-table-entries {
         padding-left: 100px;
+        @media screen and (max-width: $screen-sm-min) {
+            padding-left: 0;
+        }
     }
     &.active {
         display: block;
@@ -1018,6 +1067,21 @@ button {
         .table-label {
             font-weight: 300;
             margin-right: 5px;
+        }
+    }
+}
+
+.table-list {
+    .bar-container {
+        height: 20px;
+        @media screen and (max-width: $screen-sm-min) {
+            height: 22px;
+        }
+        .bar {
+            height: 20px;
+            @media screen and (max-width: $screen-sm-min) {
+                height: 22px;
+            }
         }
     }
 }
@@ -1041,6 +1105,9 @@ button {
     align-items: center;
     margin: 5px 0;
     position: relative;
+    @media screen and (max-width: $screen-sm-min) {
+        padding-top: 10px;
+    }
     .icon-search {
         margin-right: 5px;
         float: left;
@@ -1053,6 +1120,9 @@ button {
         border-radius: 5px;
         padding: 6px 10px 2px;
         width: 100%;
+        @media screen and (max-width: $screen-sm-min) {
+            font-size: 0.9rem;
+        }
     }
     .icon-times {
         position: absolute;
@@ -1126,6 +1196,10 @@ button {
         font-weight: 700;
         font-size: 1rem;
         padding: 4px 10px 3px;
+        @media screen and (max-width: $screen-sm-min) {
+            padding: 6px 10px 4px;
+            font-size: 0.9rem;
+        }
         &:hover, &.active {
             text-decoration: underline;
             font-weight: 800;
@@ -1135,6 +1209,10 @@ button {
             border: 2px solid;
             font-weight: 700;
             text-decoration: none;
+            @media screen and (max-width: $screen-sm-min) {
+                padding: 5px 10px 3px;
+                font-size: 0.9rem;
+            }
         }
         &.active {
             background: #ECECEC;
@@ -1142,6 +1220,18 @@ button {
     }
     .bar {
         margin-bottom: 0;
+    }
+    .bar-container {
+        height: 22px;
+        @media screen and (max-width: $screen-sm-min) {
+            height: 28px;
+        }
+        .bar {
+            height: 22px;
+            @media screen and (max-width: $screen-sm-min) {
+                height: 28px;
+            }
+        }
     }
 }
 

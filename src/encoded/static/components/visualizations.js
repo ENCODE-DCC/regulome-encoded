@@ -22,24 +22,25 @@ const mapChromatinNames = {
 };
 
 const colorChromatinState = {
-    'Flanking Active TSS': 'rgba(255,69,0)',
-    'Active TSS': 'rgba(255,0,0)',
-    "Transcr. at gene 5' and 3'": 'rgba(50,205,50)',
-    'Strong transcription': 'rgba(0,128,0)',
-    'Weak transcription': 'rgba(0,100,0)',
-    'Genic enhancers': 'rgba(194,225,5)',
-    Enhancers: 'rgba(255,255,0)',
-    'ZNF genes & repeats': 'rgba(102,205,170)',
-    Heterochromatin: 'rgba(138,145,208)',
-    'Bivalent/Poised TSS': 'rgba(205,92,92)',
-    'Flanking Bivalent TSS/Enh': 'rgba(233,150,122)',
-    'Bivalent Enhancer': 'rgba(189,183,107)',
-    'Repressed PolyComb': 'rgba(128,128,128)',
-    'Weak Repressed PolyComb': 'rgba(192,192,192)',
+    'Flanking Active TSS': 'rgb(255,69,0)',
+    'Active TSS': 'rgb(255,0,0)',
+    "Transcr. at gene 5' and 3'": 'rgb(50,205,50)',
+    'Strong transcription': 'rgb(0,128,0)',
+    'Weak transcription': 'rgb(0,100,0)',
+    'Genic enhancers': 'rgb(194,225,5)',
+    Enhancers: 'rgb(255,255,0)',
+    'ZNF genes & repeats': 'rgb(102,205,170)',
+    Heterochromatin: 'rgb(138,145,208)',
+    'Bivalent/Poised TSS': 'rgb(205,92,92)',
+    'Flanking Bivalent TSS/Enh': 'rgb(233,150,122)',
+    'Bivalent Enhancer': 'rgb(189,183,107)',
+    'Repressed PolyComb': 'rgb(128,128,128)',
+    'Weak Repressed PolyComb': 'rgb(192,192,192)',
     'Quiescent/Low': '#DADADA', // this should be white but white is not visible against a white background
 };
 
 const lookupColorChromatinState = chrom => colorChromatinState[chrom];
+
 export const lookupChromatinNames = (chrom) => {
     let result;
     Object.keys(mapChromatinNames).forEach((m) => {
@@ -498,6 +499,7 @@ export class ChartList extends React.Component {
         } else {
             fillColor = lookupColorChromatinState;
         }
+        const chartWidth = this.props.chartWidth;
 
         return (
             <div className="bar-chart-container">
@@ -524,18 +526,28 @@ export class ChartList extends React.Component {
                             errorMessage = false;
                         }
                     }
-                    const barWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d];
-                    const remainderWidth = this.props.chartWidth - barWidth - this.state.leftMargin;
+                    let barWidth = 0;
+                    let remainderWidth = 0;
+                    let leftMargin = 0;
+                    if (chartWidth > 500) {
+                        leftMargin = this.state.leftMargin;
+                        barWidth = ((chartWidth - leftMargin) / this.state.chartMax) * this.state.chartData[d];
+                        remainderWidth = chartWidth - barWidth - leftMargin;
+                    } else {
+                        leftMargin = '100%';
+                        barWidth = (chartWidth / this.state.chartMax) * this.state.chartData[d];
+                        remainderWidth = chartWidth - barWidth;
+                    }
                     return (
                         <div
-                            className={`biosample-table table${dKey} ${searchTermMatch ? 'display-table' : ''}`}
+                            className={`biosample-table table-list table${dKey} ${searchTermMatch ? 'display-table' : ''}`}
                             key={`table${dKey}`}
                         >
                             <div className="bar-row" key={this.state.chartData[d]}>
                                 <button
                                     className="bar-label"
                                     style={{
-                                        width: `${this.state.leftMargin}px`,
+                                        width: `${leftMargin}px`,
                                     }}
                                     onClick={() => this.handleClick(dKey)}
                                     aria-expanded={this.state.currentTarget.includes(`table${dKey}`)}
@@ -548,7 +560,6 @@ export class ChartList extends React.Component {
                                 <div
                                     className="bar-container"
                                     style={{
-                                        height: '20px',
                                         width: `${barWidth}px`,
                                         marginRight: `${remainderWidth}px`,
                                     }}
@@ -557,7 +568,6 @@ export class ChartList extends React.Component {
                                         className="bar"
                                         style={{
                                             backgroundColor: fillColor(d),
-                                            height: '20px',
                                             width: `${barWidth}px`,
                                         }}
                                     />
@@ -574,7 +584,7 @@ export class ChartList extends React.Component {
                             <div
                                 className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
                                 style={{
-                                    marginLeft: `${this.state.leftMargin}px`,
+                                    marginLeft: `${leftMargin}px`,
                                 }}
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
@@ -904,7 +914,6 @@ export class ChartTable extends React.Component {
                                     <div
                                         className="bar-container"
                                         style={{
-                                            height: '22px',
                                             width: `${barWidth}px`,
                                             marginRight: `${remainderWidth}px`,
                                         }}
@@ -913,7 +922,6 @@ export class ChartTable extends React.Component {
                                             className="bar"
                                             style={{
                                                 backgroundColor: lookupColorChromatinState(d),
-                                                height: '22px',
                                                 width: `${barWidth}px`,
                                             }}
                                         />
