@@ -514,7 +514,7 @@ ResultsTable.defaultProps = {
 const appendDatasetsToQuery = (query, chunkDatasets) => {
     let searchQuery = query;
     chunkDatasets.forEach((d) => {
-        const dataset = d['@id'];
+        const dataset = d.dataset;
         searchQuery += `&dataset=${dataset}`;
     });
     return searchQuery;
@@ -589,7 +589,10 @@ class RegulomeSearch extends React.Component {
     addNewFiles(searchQuery) {
         return new Promise((ok) => {
             requestSearch(searchQuery).then((results) => {
+                console.log(searchQuery);
                 const newFiles = results ? results['@graph'] : [];
+                console.log('new files');
+                console.log(newFiles.map(f => f.accession).join(', '));
                 this.setState(prevState => ({
                     allFiles: [...prevState.allFiles, ...newFiles],
                 }));
@@ -641,7 +644,9 @@ class RegulomeSearch extends React.Component {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
             const assembly = 'hg19';
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
-            const experimentDatasets = this.props.context['@graph'].filter(d => d['@id'].includes('experiment'));
+            const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
+            // for some reason we are getting duplicates here so we need to filter those out
+            const experimentDatasets = _.uniq(duplicatedExperimentDatasets, d => d.dataset);
             // each query corresponds to a promise and 'requests' keeps track of whether the query has successfully returned data
             const requests = [];
             // in order to append dataset information to file data, we generate lookups for biosample, assay, and target list by dataset
@@ -649,14 +654,16 @@ class RegulomeSearch extends React.Component {
             const assayMap = {};
             const targetMap = {};
             experimentDatasets.forEach((dataset) => {
-                biosampleMap[dataset['@id']] = dataset.biosample_ontology.term_name || '';
-                assayMap[dataset['@id']] = dataset.assay_term_name || '';
-                targetMap[dataset['@id']] = dataset.target ? dataset.target.label : (dataset.targets) ? dataset.targets.map(t => t.label).join(', ') : '';
+                biosampleMap[dataset.dataset] = dataset.biosample_ontology.term_name || '';
+                assayMap[dataset.dataset] = dataset.method || '';
+                targetMap[dataset.dataset] = dataset.target ? dataset.target.label : (dataset.targets) ? dataset.targets.map(t => t.label).join(', ') : '';
             });
+            console.log(`we started with ${duplicatedExperimentDatasets.length} datasets`);
+            console.log(`after de-duplicating there were ${experimentDatasets.length} datasets`);
             // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
-            const chipDatasets = experimentDatasets.filter(d => d.assay_title === 'ChIP-seq');
-            const dnaseDatasets = experimentDatasets.filter(d => d.assay_title === 'DNase-seq');
-            const faireDatasets = experimentDatasets.filter(d => d.assay_title === 'FAIRE-seq');
+            const chipDatasets = experimentDatasets.filter(d => d.method === 'ChIP-seq');
+            const dnaseDatasets = experimentDatasets.filter(d => d.method === 'DNase-seq');
+            const faireDatasets = experimentDatasets.filter(d => d.method === 'FAIRE-seq');
             // how many queries we need to run based on number of datasets per query
             const numChipChunks = Math.ceil(Object.keys(chipDatasets).length / chunkSize);
             const numDnaseChunks = Math.ceil(Object.keys(dnaseDatasets).length / chunkSize);
@@ -725,6 +732,18 @@ class RegulomeSearch extends React.Component {
                     }
                     return true;
                 });
+
+                // this is entirely for debugging ---------
+                experimentDatasets.forEach((d) => {
+                    const originalFiles = sortedFiles.filter(f => f.dataset === d.dataset);
+                    console.log(`dataset ${d.dataset.split('/')[2]} originally had ${originalFiles.length} matching files`);
+
+                    const matchingFiles = trimmedFiles.filter(f => f.dataset === d.dataset);
+                    console.log(`after filtering, dataset ${d.dataset.split('/')[2]} has ${matchingFiles.length} matching files`);
+                });
+                console.log(`there are ${trimmedFiles.length} files after filtering`);
+                // this is the end of the print statements for debugging ------------
+
                 // if there are more filtered files than we want to display on one page, we will paginate
                 if (trimmedFiles.length > displaySize) {
                     const includedFiles = trimmedFiles.slice(0, displaySize);
@@ -757,7 +776,7 @@ class RegulomeSearch extends React.Component {
     render() {
         const context = this.props.context;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
-        const coordinates = context.coordinates;
+        const coordinates = Object.keys(context.variants)[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');

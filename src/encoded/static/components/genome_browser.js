@@ -306,7 +306,7 @@ class GenomeBrowser extends React.Component {
                 return trackObj;
             } else if (file.file_format === 'bigWig') {
                 const trackObj = {};
-                trackObj.name = `${file.target ? ` ${file.target} ` : ''}${file.assay} - ${file.biosample}`;
+                trackObj.name = `${file.target ? ` ${file.target} ` : ''}${file.assay} - ${file.biosample} accession ${file.accession} dataset ${file.dataset.split('/')[2]} output ${file.output_type} rep ${file.biological_replicates.join(', ')} status ${file.status}`;
                 trackObj.type = 'signal';
                 trackObj.path = domain + file.href;
                 trackObj.heightPx = 50;
@@ -327,7 +327,7 @@ class GenomeBrowser extends React.Component {
                 return trackObj;
             }
             const trackObj = {};
-            trackObj.name = `${file.target ? ` ${file.target} ` : ''}${file.assay} - ${file.biosample}`;
+            trackObj.name = `${file.target ? ` ${file.target} ` : ''}${file.assay} - ${file.biosample} accession ${file.accession} dataset ${file.dataset.split('/')[2]} output ${file.output_type} rep ${file.biological_replicates.join(', ')} status ${file.status}`;
             trackObj.type = 'annotation';
             trackObj.path = domain + file.href;
             // bigBed bedRNAElements, bigBed peptideMapping, bigBed bedExonScore, bed12, and bed9 have two tracks and need extra height

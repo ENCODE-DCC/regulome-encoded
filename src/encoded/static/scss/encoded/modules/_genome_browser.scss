@@ -103,9 +103,9 @@
 }
 
 // this is a hack-y way to make the labels on the browser longer
-// .hpgv_ui-block.hpgv_track-header {
-//     width: 400px !important;
-// }
+.hpgv_ui-block.hpgv_track-header {
+    width: 400px !important;
+}
 
 .hpgv_track-close-button {
     display: none;
