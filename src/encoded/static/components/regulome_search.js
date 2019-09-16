@@ -589,10 +589,7 @@ class RegulomeSearch extends React.Component {
     addNewFiles(searchQuery) {
         return new Promise((ok) => {
             requestSearch(searchQuery).then((results) => {
-                console.log(searchQuery);
                 const newFiles = results ? results['@graph'] : [];
-                console.log('new files');
-                console.log(newFiles.map(f => f.accession).join(', '));
                 this.setState(prevState => ({
                     allFiles: [...prevState.allFiles, ...newFiles],
                 }));
@@ -658,8 +655,6 @@ class RegulomeSearch extends React.Component {
                 assayMap[dataset.dataset] = dataset.method || '';
                 targetMap[dataset.dataset] = dataset.target ? dataset.target.label : (dataset.targets) ? dataset.targets.map(t => t.label).join(', ') : '';
             });
-            console.log(`we started with ${duplicatedExperimentDatasets.length} datasets`);
-            console.log(`after de-duplicating there were ${experimentDatasets.length} datasets`);
             // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
             const chipDatasets = experimentDatasets.filter(d => d.method === 'ChIP-seq');
             const dnaseDatasets = experimentDatasets.filter(d => d.method === 'DNase-seq');
@@ -732,18 +727,6 @@ class RegulomeSearch extends React.Component {
                     }
                     return true;
                 });
-
-                // this is entirely for debugging ---------
-                experimentDatasets.forEach((d) => {
-                    const originalFiles = sortedFiles.filter(f => f.dataset === d.dataset);
-                    console.log(`dataset ${d.dataset.split('/')[2]} originally had ${originalFiles.length} matching files`);
-
-                    const matchingFiles = trimmedFiles.filter(f => f.dataset === d.dataset);
-                    console.log(`after filtering, dataset ${d.dataset.split('/')[2]} has ${matchingFiles.length} matching files`);
-                });
-                console.log(`there are ${trimmedFiles.length} files after filtering`);
-                // this is the end of the print statements for debugging ------------
-
                 // if there are more filtered files than we want to display on one page, we will paginate
                 if (trimmedFiles.length > displaySize) {
                     const includedFiles = trimmedFiles.slice(0, displaySize);
