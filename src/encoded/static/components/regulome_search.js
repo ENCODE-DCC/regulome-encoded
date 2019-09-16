@@ -653,7 +653,7 @@ class RegulomeSearch extends React.Component {
             experimentDatasets.forEach((dataset) => {
                 biosampleMap[dataset.dataset] = dataset.biosample_ontology.term_name || '';
                 assayMap[dataset.dataset] = dataset.method || '';
-                targetMap[dataset.dataset] = dataset.target ? dataset.target.label : (dataset.targets) ? dataset.targets.map(t => t.label).join(', ') : '';
+                targetMap[dataset.dataset] = dataset.targets ? dataset.targets.join(', ') : '';
             });
             // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
             const chipDatasets = experimentDatasets.filter(d => d.method === 'ChIP-seq');
