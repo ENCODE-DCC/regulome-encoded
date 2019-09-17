@@ -15,15 +15,28 @@ const snpsColumns = {
         title: 'dbSNP IDs',
         display: (item) => {
             const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
+            if (item.rsids.length > 0) {
+                return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
+            }
+            return <a href={hrefScore}>---</a>;
         },
     },
-    regulome_score: {
-        title: 'Regulome score',
+    ranking: {
+        title: 'Rank',
         display: (item) => {
             const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            if (item.regulome_score.probability && item.regulome_score.ranking) {
-                return <a href={hrefScore}>{item.regulome_score.probability} (probability); {item.regulome_score.ranking} (ranking)</a>;
+            if (item.regulome_score.ranking) {
+                return <a href={hrefScore}>{item.regulome_score.ranking}</a>;
+            }
+            return <a href={hrefScore}>See related experiments</a>;
+        },
+    },
+    probability: {
+        title: 'Score',
+        display: (item) => {
+            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
+            if (item.regulome_score.probability) {
+                return <a href={hrefScore}>{item.regulome_score.probability}</a>;
             }
             return <a href={hrefScore}>See related experiments</a>;
         },
