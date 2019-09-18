@@ -300,9 +300,9 @@ AdvSearch.contextTypes = {
 
 const QTLDetails = (props) => {
     const allData = props.data;
-    const QTLdata = allData.filter(d => (d.annotation_type && d.annotation_type.indexOf('QTL') !== -1));
-    const eQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('eQTL') !== -1).length;
-    const dsQTLcount = QTLdata.filter(d => d.annotation_type.indexOf('dsQTL') !== -1).length;
+    const QTLdata = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
+    const eQTLcount = QTLdata.filter(d => d.method.indexOf('eQTL') !== -1).length;
+    const dsQTLcount = QTLdata.filter(d => d.method.indexOf('dsQTL') !== -1).length;
     return (
         <div className="thumbnail-info">
             <div>There {eQTLcount > 1 ? 'are' : 'is'} <b>{eQTLcount}</b> eQTL result{eQTLcount > 1 ? 's' : ''}.</div>
