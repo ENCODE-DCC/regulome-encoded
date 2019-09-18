@@ -77,6 +77,7 @@ const dataColumnsQTL = {
     },
     value: {
         title: 'Targets',
+        getValue: item => (item.value ? item.value : 'N/A'),
     },
     dataset: {
         title: 'Dataset',
@@ -85,6 +86,20 @@ const dataColumnsQTL = {
     file: {
         title: 'File',
         display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
+    },
+};
+
+const dataColumnsQTLShort = {
+    method: {
+        title: 'Method',
+    },
+    biosample_term_name: {
+        title: 'Biosample',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+    },
+    value: {
+        title: 'Targets',
+        getValue: item => (item.value ? item.value : 'N/A'),
     },
 };
 
@@ -298,23 +313,6 @@ AdvSearch.contextTypes = {
     navigate: PropTypes.func,
 };
 
-const QTLDetails = (props) => {
-    const allData = props.data;
-    const QTLdata = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
-    const eQTLcount = QTLdata.filter(d => d.method.indexOf('eQTL') !== -1).length;
-    const dsQTLcount = QTLdata.filter(d => d.method.indexOf('dsQTL') !== -1).length;
-    return (
-        <div className="thumbnail-info">
-            <div>There {eQTLcount > 1 ? 'are' : 'is'} <b>{eQTLcount}</b> eQTL result{eQTLcount > 1 ? 's' : ''}.</div>
-            <div>There {dsQTLcount > 1 ? 'are' : 'is'} <b>{dsQTLcount}</b> dsQTL result{dsQTLcount > 1 ? 's' : ''}.</div>
-        </div>
-    );
-};
-
-QTLDetails.propTypes = {
-    data: React.PropTypes.array.isRequired,
-};
-
 const NearbySNPsDrawing = (props) => {
     const context = props.context;
 
@@ -478,6 +476,8 @@ export const ResultsTable = (props) => {
     let dataColumns = null;
     if (props.dataFilter === 'chromatin') {
         dataColumns = dataColumnsChromatin;
+    } else if (props.dataFilter === 'qtl' && props.shortened) {
+        dataColumns = dataColumnsQTLShort;
     } else if (props.dataFilter === 'qtl') {
         dataColumns = dataColumnsQTL;
     } else {
@@ -505,10 +505,12 @@ ResultsTable.propTypes = {
     dataFilter: PropTypes.string,
     displayTitle: PropTypes.string.isRequired,
     errorMessage: PropTypes.string.isRequired,
+    shortened: PropTypes.bool,
 };
 
 ResultsTable.defaultProps = {
     dataFilter: '',
+    shortened: false,
 };
 
 const appendDatasetsToQuery = (query, chunkDatasets) => {
@@ -890,7 +892,7 @@ class RegulomeSearch extends React.Component {
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
                                                 <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
                                             </div>
-                                            <QTLDetails data={this.props.context['@graph']} />
+                                            <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={'qtl'} errorMessage={'No result table is available for this SNP.'} shortened />
                                         </div>
                                     : null}
                                 </button>
