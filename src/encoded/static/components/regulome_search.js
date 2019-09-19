@@ -77,7 +77,7 @@ const dataColumnsQTL = {
     },
     value: {
         title: 'Targets',
-        getValue: item => (item.value ? item.value : 'N/A'),
+        getValue: item => item.value || 'N/A',
     },
     dataset: {
         title: 'Dataset',
@@ -99,7 +99,7 @@ const dataColumnsQTLShort = {
     },
     value: {
         title: 'Targets',
-        getValue: item => (item.value ? item.value : 'N/A'),
+        getValue: item => item.value || 'N/A',
     },
 };
 
@@ -476,10 +476,12 @@ export const ResultsTable = (props) => {
     let dataColumns = null;
     if (props.dataFilter === 'chromatin') {
         dataColumns = dataColumnsChromatin;
-    } else if (props.dataFilter === 'qtl' && props.shortened) {
-        dataColumns = dataColumnsQTLShort;
     } else if (props.dataFilter === 'qtl') {
-        dataColumns = dataColumnsQTL;
+        if (props.shortened) {
+            dataColumns = dataColumnsQTLShort;
+        } else {
+            dataColumns = dataColumnsQTL;
+        }
     } else {
         dataColumns = dataColumnsOther;
     }
