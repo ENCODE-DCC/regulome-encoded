@@ -580,26 +580,22 @@ export class ChartList extends React.Component {
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
                                 {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                    <div className="table-entry" key={`table-entry-${d2.dataset.split('/')[2]}`}>
-                                        <p><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></p>
-                                        <div className="inset-table-entries">
-                                            {(d2.biosample_ontology.organ_slims.length > 0) ?
-                                                <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
-                                            : null}
-                                            <p><span className="table-label">Method</span>{d2.method}</p>
-                                            {d2.file ?
-                                                <p><span className="table-label">File</span>{d2.file}</p>
-                                            : null}
-                                            {d2.biosample_ontology ?
-                                                <p><span className="table-label">Biosample</span>{d2.biosample_ontology.term_name}</p>
-                                            : null}
-                                            {(d2.chrom && this.props.dataFilter === 'chromatin') ?
-                                                <p><span className="table-label">Chromatin state window</span>{d2.chrom}:{d2.start}..{d2.end}</p>
-                                            : null}
-                                            {d2.description ?
-                                                <p><span className="table-label">Description</span>{d2.description}</p>
-                                            : null}
-                                        </div>
+                                    <div className="table-entry" key={`table-entry-${d2.file}`}>
+                                        <p><span className="table-label">Dataset</span><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></p>
+                                        <p><span className="table-label">File</span><a href={`../files/${d2.file}`}>{d2.file}</a></p>
+                                        {(d2.biosample_ontology.organ_slims.length > 0) ?
+                                            <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
+                                        : null}
+                                        <p><span className="table-label">Method</span>{d2.method}</p>
+                                        {d2.biosample_ontology ?
+                                            <p><span className="table-label">Biosample</span>{d2.biosample_ontology.term_name}</p>
+                                        : null}
+                                        {(d2.chrom && this.props.dataFilter === 'chromatin') ?
+                                            <p><span className="table-label">Chromatin state window</span>{d2.chrom}:{d2.start}..{d2.end}</p>
+                                        : null}
+                                        {d2.description ?
+                                            <p><span className="table-label">Description</span>{d2.description}</p>
+                                        : null}
                                     </div>
                                 )}
                             </div>
