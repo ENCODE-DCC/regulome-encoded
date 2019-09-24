@@ -48,7 +48,7 @@ function getLetterBaseTransform(i) {
  * @param {number} i - letter index. Range: [0,4)
  * @returns {string} SVG path corresponding to i.
  */
-function getLetterPath(i) {
+function getLetterPath(i, strand) {
     const letterA = 'M142.59,54.29l-5,15.27h-6.48L147.55,21h7.56l16.56,48.53H165l-5.18-15.27Zm15.91-4.9-4.75-14c-1.08-3.17-1.8-6-2.52-8.86h-.14c-.72,2.88-1.51,5.83-2.45,8.78l-4.75,14Z';
 
     const letterG = 'M171.68,67.39a45.22,45.22,0,0,1-14.91,2.66c-7.34,0-13.39-1.87-18.15-6.41-4.18-4-6.77-10.51-6.77-18.07.07-14.47,10-25.06,26.28-25.06a30,30,0,0,1,12.1,2.23l-1.51,5.11A25.15,25.15,0,0,0,158,25.77c-11.81,0-19.51,7.34-19.51,19.51s7.42,19.59,18.72,19.59c4.1,0,6.91-.58,8.35-1.3V49.1h-9.86v-5h16Z';
@@ -57,6 +57,20 @@ function getLetterPath(i) {
 
     const letterC = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
 
+    // if the strand is negative, we want the reverse complement
+    if (strand === '-') {
+        if (i === 0) {
+            return letterT;
+        } else if (i === 1) {
+            return letterG;
+        } else if (i === 2) {
+            return letterC;
+        } else if (i === 3) {
+            return letterA;
+        }
+        return null;
+    }
+    // if the strand is positive, we do not need to get the reverse complement
     if (i === 0) {
         return letterA;
     } else if (i === 1) {
@@ -294,7 +308,7 @@ function getRandomData(seqLenBounds, seqNumBounds) {
  * @param {number[]} seqLenBounds
  * @param {number[]} seqNumBounds
  */
-function entryPoint(logoSelector, PWM) {
+function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate, lastCoordinate, strand) {
     // skipping error checking for now
     // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
     //
@@ -308,11 +322,19 @@ function entryPoint(logoSelector, PWM) {
         n = Math.max(n, Math.max(...pwm));
     });
 
+    // if the strand is negative, we want the reverse complement
+    if (strand === '-') {
+        PWM.reverse();
+    }
+
     // number of nucleotides per sequence
     const m = PWM.length;
 
     // range of letter bounds at each nucleotide index position
     const yz = d3.range(m).map(i => offsets(PWM[i], n));
+
+    // find coordinate index
+    const alignmentIndex = +alignmentCoordinate - +firstCoordinate;
 
     /**
    * Next, we set local values that govern visual appearance.
@@ -338,13 +360,27 @@ function entryPoint(logoSelector, PWM) {
     const svgLetterHeight = 150;
 
     function colors(i) {
-        if (i === 0) {
+        // if the strand is negative, we want the reverse complement
+        if (strand === '-') {
+            if (i === 0) {
+                return '#489655';
+            } else if (i === 1) {
+                return '#335C95';
+            } else if (i === 2) {
+                return '#EFB549';
+            } else if (i === 3) {
+                return '#C13B42';
+            }
+            return null;
+        }
+        // if the strand is positive, we do not need to get the reverse complement
+        if (i === 3) {
             return '#489655';
-        } else if (i === 1) {
-            return '#335C95';
         } else if (i === 2) {
+            return '#335C95';
+        } else if (i === 1) {
             return '#EFB549';
-        } else if (i === 3) {
+        } else if (i === 0) {
             return '#C13B42';
         }
         return null;
@@ -360,6 +396,7 @@ function entryPoint(logoSelector, PWM) {
     // map: number of sequences -> svg letter height
     const yscale = d3.scaleLinear().domain([0, n]).range([0, svgLetterHeight]);
 
+    // only want to append one logo to an element, redraw logo if component is refreshed
     d3.select(logoSelector).select('svg').remove();
 
     const svg = d3.select(logoSelector)
@@ -457,9 +494,21 @@ function entryPoint(logoSelector, PWM) {
         .enter()
         .filter(d => (d[1] - d[0] > 0))
         .append('path')
-        .attr('d', d => getLetterPath(d[2]))
+        .attr('d', d => getLetterPath(d[2], strand))
         .style('fill', d => colors(d[2]))
+        /* eslint-disable func-names */
         .attr('transform', function (d) { return calcPathTransform(this, d, yscale, colWidth); }); // This line cannot be an arrow function or 'this' will be improperly assigned
+
+    // append red box around search coordinate position
+    svg.append('rect')
+        .attr('y', '-1px')
+        .attr('x', '-1px')
+        .attr('width', `${(svgLetterWidth / m)}px`)
+        .attr('height', `${svgFullHeight + 2}px`)
+        .attr('stroke', '#c13b42')
+        .attr('fill', 'none')
+        .attr('stroke-width', '4px')
+        .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
 }
 
 /**

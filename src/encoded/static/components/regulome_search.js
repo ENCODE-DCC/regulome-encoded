@@ -788,7 +788,16 @@ class RegulomeSearch extends React.Component {
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
-                {(context.total > 0) ?
+                { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total !== 0) ?
+                    <div>
+                        {Object.keys(this.props.context.notifications).map((note, noteIdx) =>
+                            <div className="notification-line wider" key={noteIdx}>
+                                <span className="notification-label">{note}</span>
+                                <span className="notification">{this.props.context.notifications[note]}</span>
+                            </div>
+                        )}
+                    </div>
+                : (context.total > 0) ?
                     <div>
                         <div className="lead-logo">
                             <a href="/">
@@ -910,7 +919,7 @@ class RegulomeSearch extends React.Component {
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
                                                 <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
                                             </div>
-                                            <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={'qtl'} errorMessage={'No result table is available for this SNP.'} shortened />
+                                            <ResultsTable data={QTLData} displayTitle={''} dataFilter={'qtl'} errorMessage={'No result table is available for this SNP.'} shortened />
                                         </div>
                                     : null}
                                 </button>

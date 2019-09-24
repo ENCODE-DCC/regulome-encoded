@@ -52,7 +52,8 @@ export class MotifElement extends React.Component {
     componentDidMount() {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
-            this.sequenceLogos = require('d3-sequence-logo'); // logos This is for local development when changes are needed to d3-sequence-logo.
+            // this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+            this.sequenceLogos = require('d3-sequence-logo');
             const pwmLink = this.generatePWMLink();
 
             getMotifData(pwmLink, this.context.fetch).then((response) => {
@@ -80,7 +81,11 @@ export class MotifElement extends React.Component {
         // Convert PWM text data to object
         const PWM = convertTextToObj(response);
         // Generate the logo from the PWM object
-        this.sequenceLogos.entryPoint(this.chartdisplay, PWM, this.d3);
+        const alignmentCoordinate = this.props.coordinates.split(':')[1].split('-')[0];
+        const startCoordinate = this.props.element.start;
+        const endCoordinate = this.props.element.end;
+        const strand = this.props.element.strand;
+        this.sequenceLogos.entryPoint(this.chartdisplay, PWM, this.d3, alignmentCoordinate, startCoordinate, endCoordinate, strand);
     }
 
     render() {
@@ -91,7 +96,7 @@ export class MotifElement extends React.Component {
 
         return (
             <div className="element" id={`element${accession}`}>
-                <div className="motif-description">
+                <div className={`motif-description ${this.props.shortened ? 'shortened-description' : ''}`}>
                     {!(this.props.shortened) ?
                         <p><a href={element.dataset}>{accession}</a></p>
                     : null}
@@ -100,6 +105,9 @@ export class MotifElement extends React.Component {
                     : null}
                     {(targetList.length > 0) ?
                         <p><span className="motif-label">{targetListLabel}</span>{targetList.join(', ')}</p>
+                    : null}
+                    {element.strand ?
+                        <p><span className="motif-label">Strand</span><i className={`icon ${element.strand === '+' ? 'icon-plus-circle' : 'icon-minus-circle'}`} /></p>
                     : null}
                     <p><span className="motif-label">Method</span>{element.method}</p>
                     {(element.biosample_ontology && element.biosample_ontology.term_name && element.biosample_ontology.term_name.length > 0) ?
@@ -119,6 +127,7 @@ MotifElement.propTypes = {
     element: PropTypes.object.isRequired,
     urlBase: PropTypes.string.isRequired,
     shortened: PropTypes.bool.isRequired,
+    coordinates: PropTypes.string.isRequired,
 };
 
 MotifElement.contextTypes = {
@@ -153,7 +162,14 @@ export const Motifs = (props) => {
             :
                 <div className={`sequence-logo-table ${classList}`}>
                     <div className="sequence-logo">
-                        {pwmLinkList.map(d => <MotifElement key={d.dataset.split('/')[2]} element={d} urlBase={urlBase} shortened={limit > 0} />)}
+                        {pwmLinkList.map(d =>
+                            <MotifElement
+                                key={d.dataset.split('/')[2]}
+                                element={d}
+                                urlBase={urlBase}
+                                shortened={limit > 0}
+                                coordinates={Object.keys(props.context.variants)[0]}
+                            />)}
                     </div>
                 </div>
             }

@@ -89,6 +89,7 @@ function drawHorizontalChart(d3, svgBars, chartData, fillColor, chartWidth) {
 
     const chartArray = chartData.map(d => d.value);
     const chartMax = Math.max(...chartArray);
+    const tickNum = Math.min(chartMax, 4);
 
     svgBars
         .attr('width', chartWidth)
@@ -117,7 +118,7 @@ function drawHorizontalChart(d3, svgBars, chartData, fillColor, chartWidth) {
     svgBars.append('g')
         .attr('transform', `translate(${margin.left},0)`)
         .call(d3.axisLeft(yScale)
-            .ticks(4)
+            .ticks(tickNum)
             .tickFormat(d3.format('d')));
 
     svgBars.selectAll('bar')
