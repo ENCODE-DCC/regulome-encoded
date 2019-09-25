@@ -535,10 +535,15 @@ export class ChartList extends React.Component {
                     let barWidth = 0;
                     let remainderWidth = 0;
                     let leftMargin = 0;
+                    // for screen widths wider than 500 px, we have a two column display
+                    // left column displays labels for the bars
+                    // right column displays the bars and data entries pertaining to the bars
                     if (chartWidth > 500) {
                         leftMargin = this.state.leftMargin;
                         barWidth = ((chartWidth - leftMargin) / this.state.chartMax) * this.state.chartData[d];
                         remainderWidth = chartWidth - barWidth - leftMargin;
+                    // for smaller screen widths, we stack the display
+                    // labels are displayed on top of bars which are displayed on top of data entries
                     } else {
                         leftMargin = '100%';
                         barWidth = (chartWidth / this.state.chartMax) * this.state.chartData[d];
