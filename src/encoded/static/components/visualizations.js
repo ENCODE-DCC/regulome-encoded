@@ -22,20 +22,20 @@ const mapChromatinNames = {
 };
 
 const colorChromatinState = {
-    'Flanking Active TSS': 'rgb(255,69,0)',
-    'Active TSS': 'rgb(255,0,0)',
-    "Transcr. at gene 5' and 3'": 'rgb(50,205,50)',
-    'Strong transcription': 'rgb(0,128,0)',
-    'Weak transcription': 'rgb(0,100,0)',
-    'Genic enhancers': 'rgb(194,225,5)',
-    Enhancers: 'rgb(255,255,0)',
-    'ZNF genes & repeats': 'rgb(102,205,170)',
-    Heterochromatin: 'rgb(138,145,208)',
-    'Bivalent/Poised TSS': 'rgb(205,92,92)',
-    'Flanking Bivalent TSS/Enh': 'rgb(233,150,122)',
-    'Bivalent Enhancer': 'rgb(189,183,107)',
-    'Repressed PolyComb': 'rgb(128,128,128)',
-    'Weak Repressed PolyComb': 'rgb(192,192,192)',
+    'Flanking Active TSS': '#FF4500',
+    'Active TSS': '#FF0000',
+    "Transcr. at gene 5' and 3'": '#32CD32',
+    'Strong transcription': '#008000',
+    'Weak transcription': '#006400',
+    'Genic enhancers': '#C2E105',
+    Enhancers: '#FFFF00',
+    'ZNF genes & repeats': '#66CDAA',
+    Heterochromatin: '#8A91D0',
+    'Bivalent/Poised TSS': '#CD5C5C',
+    'Flanking Bivalent TSS/Enh': '#E9967A',
+    'Bivalent Enhancer': '#BDB76B',
+    'Repressed PolyComb': '#808080',
+    'Weak Repressed PolyComb': '#C0C0C0',
     'Quiescent/Low': '#DADADA', // this should be white but white is not visible against a white background
 };
 
