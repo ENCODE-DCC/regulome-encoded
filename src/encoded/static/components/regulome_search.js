@@ -603,19 +603,22 @@ class RegulomeSearch extends React.Component {
     }
 
     updateDimensions() {
-        const screenWidth = this.applicationRef.offsetWidth;
-        let thumbnailWidth = 0;
-        if (screenWidth > 787) {
-            thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
-        } else if (screenWidth > 483) {
-            thumbnailWidth = (this.applicationRef.offsetWidth / 2) - 40;
-        } else {
-            thumbnailWidth = this.applicationRef.offsetWidth - 40;
+        // check for applicationRef because otherwise there are errors during resizing process
+        if (this.applicationRef) {
+            const screenWidth = this.applicationRef.offsetWidth;
+            let thumbnailWidth = 0;
+            if (screenWidth > 787) {
+                thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
+            } else if (screenWidth > 483) {
+                thumbnailWidth = (this.applicationRef.offsetWidth / 2) - 40;
+            } else {
+                thumbnailWidth = this.applicationRef.offsetWidth - 40;
+            }
+            this.setState({
+                thumbnailWidth,
+                screenWidth,
+            });
         }
-        this.setState({
-            thumbnailWidth,
-            screenWidth,
-        });
     }
 
     addNewFiles(searchQuery) {
