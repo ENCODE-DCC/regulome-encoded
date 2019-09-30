@@ -55,6 +55,7 @@ const loaders = [
             path.resolve(__dirname, 'node_modules/d3-sequence-logo'),
         ],
         loader: 'babel',
+        query: { compact: false },
     },
     {
         test: /\.json$/,

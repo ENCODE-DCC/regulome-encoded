@@ -72,6 +72,7 @@
     "dalliance": "git+https://github.com/ENCODE-DCC/dalliance.git#v1.0",
     "domready": "^0.3.0",
     "form-serialize": "^0.6.0",
+    "genome-visualizer": "github:VALIS-software/valis-hpgv",
     "google-analytics": "file:node_shims/google-analytics",
     "immutable": "^3.7.5",
     "jsonschema": "^1.1.0",
