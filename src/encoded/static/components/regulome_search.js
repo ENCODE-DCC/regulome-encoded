@@ -536,7 +536,6 @@ class RegulomeSearch extends React.Component {
 
         this.applicationRef = null;
         this.state = {
-            selectedThumbnail: null,
             thumbnailWidth: 0,
             screenWidth: 0,
             allFiles: [],
@@ -559,13 +558,19 @@ class RegulomeSearch extends React.Component {
     componentDidMount() {
         this.updateDimensions();
         window.addEventListener('resize', this.updateDimensions);
+        // if page loads on Valis thumbnail, we need to load extra data (all visualizable files associated with datasets for the page)
+        // if the page does not load on the Valis thumbnail, we don't want to bother because the page will load much faster without all those queries
+        if (this.context.location_href.split('/thumbnail=')[1] === 'valis') {
+            this.chooseThumbnail('valis');
+        }
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        const thumbnailUpdate = this.state.selectedThumbnail !== nextState.selectedThumbnail;
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        // update for new properties, new href, new page of results, or resizing of screen
+        const hrefUpdate = this.context.location_href !== nextContext.location_href;
         const screenSizeUpdate = this.state.screenWidth !== this.applicationRef.offsetWidth;
         const pageUpdate = this.state.browserCurrentPage !== nextState.browserCurrentPage;
-        return (!_.isEqual(this.props, nextProps) || thumbnailUpdate || screenSizeUpdate || pageUpdate);
+        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate);
     }
 
     onFilter(e) {
@@ -574,6 +579,16 @@ class RegulomeSearch extends React.Component {
             this.props.onChange(search);
             e.stopPropagation();
             e.preventDefault();
+        }
+    }
+
+    updateThumbnail(newThumbnail) {
+        // if thumbnail is selected, navigate to link which will trigger a re-rendering
+        const baseUri = this.context.location_href.split('/thumbnail=')[0];
+        if (newThumbnail === null) {
+            this.context.navigate(baseUri);
+        } else {
+            this.context.navigate(`${baseUri}/thumbnail=${newThumbnail}`);
         }
     }
 
@@ -743,21 +758,20 @@ class RegulomeSearch extends React.Component {
                         browserTotalPages,
                         browserCurrentPage: 1,
                     }, () => {
-                        this.setState({ selectedThumbnail: chosen });
+                        this.updateThumbnail(chosen);
                     });
                 } else {
                     this.setState({
                         allFiles: trimmedFiles,
                         includedFiles: trimmedFiles,
-                        selectedThumbnail: chosen,
                     }, () => {
-                        this.setState({ selectedThumbnail: chosen });
+                        this.updateThumbnail(chosen);
                     });
                 }
             });
         } else {
             // all necessary data is already available for all other tabs
-            this.setState({ selectedThumbnail: chosen });
+            this.updateThumbnail(chosen);
         }
     }
 
@@ -770,6 +784,7 @@ class RegulomeSearch extends React.Component {
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
         const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
+        const thumbnail = this.context.location_href.split('/thumbnail=')[1] || null;
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
@@ -810,13 +825,13 @@ class RegulomeSearch extends React.Component {
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
                             : null}
-                            <div className={`thumbnail-gallery ${this.state.selectedThumbnail ? 'small-thumbnails' : ''}`} >
+                            <div className={`thumbnail-gallery ${thumbnail ? 'small-thumbnails' : ''}`} >
                                 <button
-                                    className={`thumbnail ${this.state.selectedThumbnail === 'valis' ? 'active' : ''}`}
+                                    className={`thumbnail ${thumbnail === 'valis' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('valis')}
                                 >
                                     <h4>Genome browser</h4>
-                                    {(this.state.selectedThumbnail === null) ?
+                                    {(thumbnail === null) ?
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click here to view results in a genome browser.</div>
                                             <div className="image-container">
@@ -826,11 +841,11 @@ class RegulomeSearch extends React.Component {
                                     : null}
                                 </button>
                                 <button
-                                    className={`thumbnail ${this.state.selectedThumbnail === 'chip' ? 'active' : ''}`}
+                                    className={`thumbnail ${thumbnail === 'chip' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('chip')}
                                 >
                                     <h4>ChIP data</h4>
-                                    {(this.state.selectedThumbnail === null) ?
+                                    {(thumbnail === null) ?
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see detailed ChIP-seq data.
                                                 <div>(<b>{chipData.length}</b> result{chipData.length !== 1 ? 's' : ''})</div>
@@ -842,11 +857,11 @@ class RegulomeSearch extends React.Component {
                                     : null}
                                 </button>
                                 <button
-                                    className={`thumbnail ${this.state.selectedThumbnail === 'chromatin' ? 'active' : ''}`}
+                                    className={`thumbnail ${thumbnail === 'chromatin' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('chromatin')}
                                 >
                                     <h4>Chromatin state</h4>
-                                    {(this.state.selectedThumbnail === null) ?
+                                    {(thumbnail === null) ?
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.
                                                 <div>(<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})</div>
@@ -858,11 +873,11 @@ class RegulomeSearch extends React.Component {
                                     : null}
                                 </button>
                                 <button
-                                    className={`thumbnail ${this.state.selectedThumbnail === 'dnase' ? 'active' : ''}`}
+                                    className={`thumbnail ${thumbnail === 'dnase' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('dnase')}
                                 >
                                     <h4>Accessibility</h4>
-                                    {(this.state.selectedThumbnail === null) ?
+                                    {(thumbnail === null) ?
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.
                                                 <div>(<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})</div>
@@ -874,11 +889,11 @@ class RegulomeSearch extends React.Component {
                                     : null}
                                 </button>
                                 <button
-                                    className={`thumbnail ${this.state.selectedThumbnail === 'motifs' ? 'active' : ''}`}
+                                    className={`thumbnail ${thumbnail === 'motifs' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('motifs')}
                                 >
                                     <h4>Motifs</h4>
-                                    {(this.state.selectedThumbnail === null) ?
+                                    {(thumbnail === null) ?
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see PWM and Footprint data and their associated sequence logos.</div>
                                             <Motifs {...this.props} urlBase={urlBase} limit={4} />
@@ -886,11 +901,11 @@ class RegulomeSearch extends React.Component {
                                     : null}
                                 </button>
                                 <button
-                                    className={`thumbnail ${this.state.selectedThumbnail === 'qtl' ? 'active' : ''}`}
+                                    className={`thumbnail ${thumbnail === 'qtl' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('qtl')}
                                 >
                                     <h4>QTL Data</h4>
-                                    {(this.state.selectedThumbnail === null) ?
+                                    {(thumbnail === null) ?
                                         <div>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
                                                 <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
@@ -899,7 +914,7 @@ class RegulomeSearch extends React.Component {
                                         </div>
                                     : null}
                                 </button>
-                                {(this.state.selectedThumbnail) ?
+                                {(thumbnail) ?
                                     <button
                                         className="thumbnail expand-thumbnail"
                                         onClick={() => this.chooseThumbnail(null)}
@@ -908,14 +923,14 @@ class RegulomeSearch extends React.Component {
                                     </button>
                                 : null}
                             </div>
-                            {(this.state.selectedThumbnail) ?
+                            {(thumbnail) ?
                                 <div>
-                                    {(this.state.selectedThumbnail === 'motifs') ?
+                                    {(thumbnail === 'motifs') ?
                                         <div>
                                             <h4>Motifs</h4>
                                             <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
                                         </div>
-                                    : (this.state.selectedThumbnail === 'valis') ?
+                                    : (thumbnail === 'valis') ?
                                         <div>
                                             <GenomeBrowser
                                                 fixedHeight={this.state.multipleBrowserPages}
@@ -934,12 +949,12 @@ class RegulomeSearch extends React.Component {
                                                 </div>
                                             : null}
                                         </div>
-                                    : (this.state.selectedThumbnail === 'chip') ?
+                                    : (thumbnail === 'chip') ?
                                         <div>
                                             {chipData.length > 0 ?
                                                 <div>
                                                     <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.screenWidth} chartLimit={0} chartOrientation={'horizontal'} />
-                                                    <ResultsTable data={chipData} displayTitle={'ChIP data'} dataFilter={this.state.selectedThumbnail} errorMessage={'No result table is available for this SNP.'} />
+                                                    <ResultsTable data={chipData} displayTitle={'ChIP data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
                                                 </div>
                                             :
                                                 <div>
@@ -948,10 +963,10 @@ class RegulomeSearch extends React.Component {
                                                 </div>
                                             }
                                         </div>
-                                    : (this.state.selectedThumbnail === 'dnase') ?
+                                    : (thumbnail === 'dnase') ?
                                         <div>
                                             {dnaseData.length > 0 ?
-                                                <ChartList data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={this.state.selectedThumbnail} />
+                                                <ChartList data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={thumbnail} />
                                             :
                                                 <div>
                                                     <h4>FAIRE-seq and DNase-seq experiments</h4>
@@ -959,15 +974,15 @@ class RegulomeSearch extends React.Component {
                                                 </div>
                                             }
                                         </div>
-                                    : (this.state.selectedThumbnail === 'qtl') ?
-                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={this.state.selectedThumbnail} errorMessage={'No result table is available for this SNP.'} />
-                                    : (this.state.selectedThumbnail === 'chromatin') ?
+                                    : (thumbnail === 'qtl') ?
+                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
+                                    : (thumbnail === 'chromatin') ?
                                         <div>
                                             {chromatinData.length > 0 ?
                                                 <ChartTable data={chromatinData} displayTitle={'Chromatin state'} chartWidth={Math.min(this.state.screenWidth, 1000)} />
                                             : null}
                                         </div>
-                                    : (this.state.selectedThumbnail === 'valis') ?
+                                    : (thumbnail === 'valis') ?
                                         <div>
                                             <h4>Genome browser</h4>
                                             <div className="error-message">This will be added in the next PR!</div>
