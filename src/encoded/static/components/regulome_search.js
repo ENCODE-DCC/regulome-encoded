@@ -12,15 +12,15 @@ import GenomeBrowser from './genome_browser';
 const dataTypeStrings = [
     {
         type: 'dbSNP IDs',
-        explanation: 'Enter dbSNP ID(s) (example) or upload a list of dbSNP IDs to identify DNA features and regulatory elements that contain the coordinate of the SNP(s).',
+        explanation: 'Enter dbSNP IDs or upload a list of dbSNP IDs to identify DNA features and regulatory elements that contain the coordinate of the SNPs.',
     },
     {
         type: 'Single nucleotides',
-        explanation: 'Enter hg19 coordinates for a single nucleotide as 0-based (example) coordinates or in a BED file (example), VCF file (example), or GFF3 file (example). These coordinates will be mapped to a dbSNP IDs (if available) in addition to identifying DNA features and regulatory elements that contain the input coordinate(s).',
+        explanation: 'Enter hg19 coordinates for a single nucleotide as 0-based. These coordinates will be mapped to dbSNP IDs (if available) in addition to identifying DNA features and regulatory elements that contain the input coordinates.',
     },
     {
         type: 'A chromosomal region',
-        explanation: 'Enter hg19 chromosomal regions, such as a promoter region upstream of a gene, as 0-based (example) coordinates or in a BED file (example) or GFF3 file (example). All dbSNP IDs with an allele frequency &gt;1% that are found in this region will be used to identify DNA features and regulatory elements that contain the coordinate of the SNP(s).',
+        explanation: 'Enter hg19 chromosomal regions, such as a promoter region upstream of a gene, as 0-based coordinates. All dbSNP IDs with an minor allele frequency >0.05 that are found in this region will be used to identify DNA features and regulatory elements that contain the coordinate of the SNPs.',
     },
 ];
 

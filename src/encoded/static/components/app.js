@@ -17,7 +17,7 @@ import newsHead from './page';
 
 
 const portal = {
-    portal_title: 'ENCODE',
+    portal_title: 'Regulome',
     global_sections: [
         {
             id: 'data',
