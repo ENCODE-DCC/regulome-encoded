@@ -136,6 +136,7 @@ const dataColumnsOther = {
     },
     strand: {
         title: 'Strand',
+        display: item => <i className={`icon ${item.strand === '+' ? 'icon-plus-circle' : 'icon-minus-circle'}`} />,
     },
 };
 

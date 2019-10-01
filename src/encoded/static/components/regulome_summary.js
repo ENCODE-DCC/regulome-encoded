@@ -30,6 +30,7 @@ const snpsColumns = {
             }
             return <a href={hrefScore}>See related experiments</a>;
         },
+        getValue: item => item.regulome_score.ranking,
     },
     probability: {
         title: 'Score',
@@ -40,6 +41,7 @@ const snpsColumns = {
             }
             return <a href={hrefScore}>See related experiments</a>;
         },
+        getValue: item => item.regulome_score.probability,
     },
 };
 
