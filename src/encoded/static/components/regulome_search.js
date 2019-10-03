@@ -486,6 +486,7 @@ export const ResultsTable = (props) => {
     } else {
         dataColumns = dataColumnsOther;
     }
+    const colCount = Object.keys(dataColumns).length;
 
     return (
         <div>
@@ -494,10 +495,21 @@ export const ResultsTable = (props) => {
                     <SortTable list={data} columns={dataColumns} />
                 </SortTablePanel>
             :
-                <div>
-                    <h4>{displayTitle}</h4>
-                    <div className="error-message">{props.errorMessage}</div>
-                </div>
+                <table className="table table-sortable table-panel">
+                    {displayTitle ? <tr className="table-section" key="title"><th colSpan={colCount}>{displayTitle}</th></tr> : null}
+                    <thead>
+                        <tr key="header">
+                            {Object.keys(dataColumns).map((columnId) => {
+                                return <th key={columnId}>{dataColumns[columnId].title}</th>;
+                            })}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colSpan={`${colCount}`}>{props.errorMessage}</td>
+                        </tr>
+                    </tbody>
+                </table>
             }
         </div>
     );

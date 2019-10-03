@@ -838,14 +838,6 @@ export class ChartTable extends React.Component {
         const chartKeys = Object.keys(chartData);
         const chartArray = chartKeys.map(key => chartData[key]);
         const chartMax = Math.max(...chartArray);
-        let selectedStates = [];
-        for (let idx = 0; idx < chartKeys.length; idx += 1) {
-            if (chartData[chartKeys[idx]] > 0) {
-                selectedStates = [sanitizedString(chartKeys[idx])];
-                break;
-            }
-        }
-        const filteredData = data.filter(d => (selectedStates.includes(sanitizedString(lookupChromatinNames(d.value)))));
         // compute left margin
         let leftMargin = 60;
         Object.keys(chartData).forEach((d) => {
@@ -859,8 +851,7 @@ export class ChartTable extends React.Component {
             chartMax,
             leftMargin,
             data,
-            filteredData,
-            selectedStates,
+            selectedStates: [],
         });
     }
 
@@ -874,7 +865,7 @@ export class ChartTable extends React.Component {
                         <div className="chart-typeahead" role="search">
                             <i className="icon icon-search" />
                             <div className="searchform">
-                                <input type="search" aria-label="search to filter biosample results" placeholder="Search for a biosample name or chromatin state" value={this.state.unsanitizedSearchTerm} onChange={this.handleSearch} />
+                                <input type="search" aria-label="search to filter biosample results" placeholder="Search for a biosample name, chromatin state, or organ" value={this.state.unsanitizedSearchTerm} onChange={this.handleSearch} />
                             </div>
                             <i className="icon icon-times" aria-label="clear search and see all biosample results" onClick={this.clearSearch} onKeyDown={this.clearSearch} role="button" tabIndex="0" />
                         </div>
