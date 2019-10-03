@@ -9,6 +9,9 @@ import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visuali
 import { requestSearch } from './objectutils';
 import GenomeBrowser from './genome_browser';
 
+const screenMediumMax = 787;
+const screenSmallMax = 483;
+
 const dataTypeStrings = [
     {
         type: 'dbSNP IDs',
@@ -607,10 +610,13 @@ class RegulomeSearch extends React.Component {
         if (this.applicationRef) {
             const screenWidth = this.applicationRef.offsetWidth;
             let thumbnailWidth = 0;
-            if (screenWidth > 787) {
+            // for desktop screens, the display is 3x2 thumbnails
+            if (screenWidth > screenMediumMax) {
                 thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
-            } else if (screenWidth > 483) {
+            // for vertical tablets, the display is 2x3 thumbnails
+            } else if (screenWidth > screenSmallMax) {
                 thumbnailWidth = (this.applicationRef.offsetWidth / 2) - 40;
+            // anything narrower than a vertical tablet has a 1x3 display
             } else {
                 thumbnailWidth = this.applicationRef.offsetWidth - 40;
             }
@@ -624,9 +630,9 @@ class RegulomeSearch extends React.Component {
     addNewFiles(searchQuery) {
         return new Promise((ok) => {
             requestSearch(searchQuery).then((results) => {
-                const newFiles = results ? results['@graph'] : [];
+                const newFiles = (results && results['@graph']) ? results['@graph'] : [];
                 // only update state if new files have been retrieved
-                if (newFiles) {
+                if (newFiles.length > 0) {
                     this.setState(prevState => ({
                         allFiles: [...prevState.allFiles, ...newFiles],
                     }));
