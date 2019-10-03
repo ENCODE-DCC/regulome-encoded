@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-// import * as logos from '../libs/d3-sequence-logo'; // This is for local development when changes are needed to d3-sequence-logo.
+import * as logos from '../libs/d3-sequence-logo'; // This is for local development when changes are needed to d3-sequence-logo.
 
 // Convert PWM file into JavaScript object
 // Input "str" consists of PWM file
@@ -52,8 +52,8 @@ export class MotifElement extends React.Component {
     componentDidMount() {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
-            // this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
-            this.sequenceLogos = require('d3-sequence-logo');
+            this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+            // this.sequenceLogos = require('d3-sequence-logo');
             const pwmLink = this.generatePWMLink();
 
             getMotifData(pwmLink, this.context.fetch).then((response) => {
