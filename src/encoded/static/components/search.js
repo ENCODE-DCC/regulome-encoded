@@ -815,6 +815,7 @@ class Facet extends React.Component {
         // Sort numerical terms by value not by frequency
         // This should ultimately be accomplished in the back end, but the front end fix is much simpler so we are starting with that
         // We have to check the full list for now (until schema change) because some lists contain both numerical and string terms ('Encyclopedia version' under Annotations) and we do not want to sort those by value
+        /* eslint-disable no-restricted-globals */
         const numericalTest = a => !isNaN(a.key);
         // For date facets, sort by date
         let terms = [];
@@ -865,17 +866,17 @@ class Facet extends React.Component {
             return (
                 <div className={`facet facet${facet.field.replace('/ /g', '')}`}>
                     { ((field === 'annotation_type' || field === 'assay_term_name') && modifyFacetsFlag) ?
-                        <div>
+                        <React.Fragment>
                             { (field === 'assay_term_name' || assayTerms === false) ?
-                                <div>
+                                <React.Fragment>
                                     <h5 className="extra-padding-header">{titleComponent}</h5>
                                     <FacetLabel label={field} />
-                                </div>
+                                </React.Fragment>
                             :
                                 <FacetLabel label={field} />
                             }
 
-                        </div>
+                        </React.Fragment>
                     :
                         <h5>{titleComponent}</h5>
                     }
@@ -891,7 +892,7 @@ class Facet extends React.Component {
                         : null}
                         {/* If user has searched using the typeahead, we will not display the full set of facet terms, just those matching the search */}
                         {(filteredList !== null) ?
-                            <div>
+                            <React.Fragment>
                                 {/* Display error message if there is a search but no results found */}
                                 {(filteredList.length === 0) ?
                                     <div className="searcherror">
@@ -911,9 +912,9 @@ class Facet extends React.Component {
                                         <div className={`shading ${(filteredList.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
                                     </div>
                                 }
-                            </div>
+                            </React.Fragment>
                         :
-                            <div>
+                            <React.Fragment>
                                 {/* If the user has not searched, we will display the full set of facet terms */}
                                 {(((terms.length > 0) && terms.some(term => term.doc_count)) || (field.charAt(field.length - 1) === '!')) ?
                                     <div className="terms-block">
@@ -923,24 +924,24 @@ class Facet extends React.Component {
                                         <div className={`term-list${typeahead ? ` search${titleComponent.replace(/\s+/g, '')}` : ''}`} onScroll={shadeOverflowOnScroll}>
                                             {/* To prevent long render time, wait for component to mount to display all typeahead terms and display 50 terms in the interim. */}
                                             {(this.state.initialState && typeahead) ?
-                                                <div>
+                                                <React.Fragment>
                                                     {terms.slice(0, 50).map(term =>
                                                         <TermComponent {...this.props} key={term.key} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
                                                     )}
-                                                </div>
+                                                </React.Fragment>
                                             :
-                                                <div>
+                                                <React.Fragment>
                                                     {terms.map(term =>
                                                         <TermComponent {...this.props} key={term.key} term={term} filters={filters} total={total} canDeselect={canDeselect} statusFacet={statusFacet} />
                                                     )}
-                                                </div>
+                                                </React.Fragment>
                                             }
                                         </div>
                                         {/* Only show bottom shading when list of results overflows */}
                                         <div className={`shading ${(terms.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
                                     </div>
                                 : null}
-                            </div>
+                            </React.Fragment>
                         }
                     </ul>
                 </div>
@@ -1203,7 +1204,7 @@ export const BatchDownloadModal = ({ handleDownloadClick, title, additionalConte
                 The following command using cURL can be used to download all the files in the list:
             </p>
             <code>xargs -L 1 curl -O -L &lt; files.txt</code><br />
-            <div>{additionalContent}</div>
+            <React.Fragment>{additionalContent}</React.Fragment>
         </ModalBody>
         <ModalFooter
             closeModal={<button className="btn btn-info btn-sm">Close</button>}
@@ -1451,7 +1452,7 @@ export class ResultTable extends React.Component {
         }
 
         return (
-            <div>
+            <React.Fragment>
                 <div className="row">
                     {facets.length ?
                         <div className="col-sm-5 col-md-4 col-lg-3">
@@ -1468,7 +1469,7 @@ export class ResultTable extends React.Component {
                     <div className="col-sm-7 col-md-8 col-lg-9">
 
                         {context.notification === 'Success' ?
-                            <div>
+                            <React.Fragment>
                                 <h4>Showing {results.length} of {total} {label}</h4>
                                 <DisplayAsJson />
                                 <div className="results-table-control">
@@ -1529,13 +1530,13 @@ export class ResultTable extends React.Component {
                                 :
                                     <ResultTableList results={results} columns={columns} />
                                 }
-                            </div>
+                            </React.Fragment>
                         :
                             <h4>{context.notification}</h4>
                         }
                     </div>
                 </div>
-            </div>
+            </React.Fragment>
         );
     }
 }
@@ -1568,7 +1569,7 @@ ResultTable.contextTypes = {
 
 
 const BrowserTabQuickView = function BrowserTabQuickView() {
-    return <div>Quick View</div>;
+    return <React.Fragment>Quick View</React.Fragment>;
 };
 
 
@@ -1625,9 +1626,9 @@ export const ResultBrowser = (props) => {
         );
     }
     return (
-        <div>
+        <React.Fragment>
             <GenomeBrowser files={props.files} assembly={props.assembly} limitFiles={props.limitFiles} region={region} currentRegion={props.currentRegion} />
-        </div>
+        </React.Fragment>
     );
 };
 
@@ -1704,13 +1705,13 @@ export class Search extends React.Component {
         }
 
         return (
-            <div>
+            <React.Fragment>
                 {facetdisplay ?
                     <div className="panel data-display main-panel">
                         <ResultTable {...this.props} searchBase={searchBase} region={region} onChange={this.context.navigate} currentRegion={this.currentRegion} />
                     </div>
                 : <h4>{notification}</h4>}
-            </div>
+            </React.Fragment>
         );
     }
 }
@@ -1726,8 +1727,8 @@ Search.contextTypes = {
 
 // optionally make a persistent region
 Search.lastRegion = {
-    assembly: React.PropTypes.string,
-    region: React.PropTypes.string,
+    assembly: PropTypes.string,
+    region: PropTypes.string,
 };
 
 globals.contentViews.register(Search, 'Search');

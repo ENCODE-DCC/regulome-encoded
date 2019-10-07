@@ -365,7 +365,7 @@ class Matrix extends React.Component {
 }
 
 Matrix.propTypes = {
-    context: React.PropTypes.object.isRequired,
+    context: PropTypes.object.isRequired,
 };
 
 Matrix.contextTypes = {

@@ -212,7 +212,7 @@ class DerivedFiles extends React.Component {
 }
 
 DerivedFiles.propTypes = {
-    file: React.PropTypes.object.isRequired, // Query string fragment for the search that ultimately generates the table of files
+    file: PropTypes.object.isRequired, // Query string fragment for the search that ultimately generates the table of files
 };
 
 

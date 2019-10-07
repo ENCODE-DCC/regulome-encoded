@@ -228,7 +228,7 @@ class AuditMatrix extends React.Component {
             const type = pluralize(queryStringType.toLocaleLowerCase());
 
             return (
-                <div>
+                <React.Fragment>
                     <div className="panel data-display main-panel">
                         <div className="row matrix__facet--horizontal">
                             <div className="col-sm-5 col-md-4 col-lg-3 sm-no-padding" style={{ paddingRight: 0 }}>
@@ -421,7 +421,7 @@ class AuditMatrix extends React.Component {
                             </div>
                         </div>
                     </div>
-                </div>
+                </React.Fragment>
             );
         }
         return <h4>{notification}</h4>;
@@ -430,7 +430,7 @@ class AuditMatrix extends React.Component {
 }
 
 AuditMatrix.propTypes = {
-    context: React.PropTypes.object.isRequired,
+    context: PropTypes.object.isRequired,
 };
 
 AuditMatrix.contextTypes = {
