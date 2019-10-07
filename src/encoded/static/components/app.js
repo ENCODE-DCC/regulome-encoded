@@ -1058,6 +1058,7 @@ class App extends React.Component {
                                 <Provider store={this.cartStore}>
                                     <div>
                                         <Navigation isHomePage={isHomePage} />
+                                        <div className="corner-ribbon">BETA</div>
                                         <div id="content" className={containerClass} key={key}>
                                             {content}
                                         </div>
