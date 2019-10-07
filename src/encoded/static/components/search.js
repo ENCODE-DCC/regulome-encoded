@@ -1452,91 +1452,89 @@ export class ResultTable extends React.Component {
         }
 
         return (
-            <React.Fragment>
-                <div className="row">
-                    {facets.length ?
-                        <div className="col-sm-5 col-md-4 col-lg-3">
-                            <FilterList {...this.props} />
-                            <FacetList
-                                {...this.props}
-                                facets={facets}
-                                filters={filters}
-                                searchBase={searchBase ? `${searchBase}&` : `${searchBase}?`}
-                                onFilter={this.onFilter}
-                            />
-                        </div>
-                    : ''}
-                    <div className="col-sm-7 col-md-8 col-lg-9">
-
-                        {context.notification === 'Success' ?
-                            <React.Fragment>
-                                <h4>Showing {results.length} of {total} {label}</h4>
-                                <DisplayAsJson />
-                                <div className="results-table-control">
-                                    {context.views ?
-                                        <div className="btn-attached">
-                                            {context.views.map((view, i) =>
-                                                <a key={i} className="btn btn-info btn-sm btn-svgicon" href={view.href} title={view.title}>{svgIcon(view2svg[view.icon])}</a>
-                                            )}
-                                        </div>
-                                    : null}
-
-                                    {total > results.length && searchBase.indexOf('limit=all') === -1 ?
-                                        <a
-                                            rel="nofollow"
-                                            className="btn btn-info btn-sm"
-                                            href={searchBase ? `${searchBase}&limit=all` : '?limit=all'}
-                                            onClick={this.onFilter}
-                                        >
-                                            View All
-                                        </a>
-                                    :
-                                        <span>
-                                            {results.length > 25 ?
-                                                <a
-                                                    className="btn btn-info btn-sm"
-                                                    href={trimmedSearchBase || '/search/'}
-                                                    onClick={this.onFilter}
-                                                >
-                                                    View 25
-                                                </a>
-                                            : null}
-                                        </span>
-                                    }
-
-                                    {context.batch_download ?
-                                        <BatchDownload context={context} />
-                                    : null}
-
-                                    {visualizeKeys && context.visualize_batch ?
-                                        <BrowserSelector
-                                            visualizeCfg={context.visualize_batch}
-                                            disabled={visualizeDisabled}
-                                            title={visualizeDisabled ? `Filter to ${visualizeLimit} to visualize` : 'Visualize'}
-                                        />
-                                    : null}
-                                </div>
-                                <hr />
-                                {browserAvail ?
-                                    <TabPanel tabs={{ listpane: 'List', browserpane: <BrowserTabQuickView /> }} selectedTab={this.state.selectedTab} handleTabClick={this.handleTabClick} navCss="browser-tab-bg" tabFlange>
-                                        <TabPanelPane key="listpane">
-                                            <ResultTableList results={results} columns={columns} tabbed />
-                                        </TabPanelPane>
-                                        <TabPanelPane key="browserpane">
-                                            {assemblyChooser}
-                                            <ResultBrowser files={results} assembly={browserAssembly} region={this.props.region} datasets={browserDatasets} limitFiles={!browseAllFiles} currentRegion={this.props.currentRegion} />
-                                        </TabPanelPane>
-                                    </TabPanel>
-                                :
-                                    <ResultTableList results={results} columns={columns} />
-                                }
-                            </React.Fragment>
-                        :
-                            <h4>{context.notification}</h4>
-                        }
+            <div className="row">
+                {facets.length ?
+                    <div className="col-sm-5 col-md-4 col-lg-3">
+                        <FilterList {...this.props} />
+                        <FacetList
+                            {...this.props}
+                            facets={facets}
+                            filters={filters}
+                            searchBase={searchBase ? `${searchBase}&` : `${searchBase}?`}
+                            onFilter={this.onFilter}
+                        />
                     </div>
+                : ''}
+                <div className="col-sm-7 col-md-8 col-lg-9">
+
+                    {context.notification === 'Success' ?
+                        <React.Fragment>
+                            <h4>Showing {results.length} of {total} {label}</h4>
+                            <DisplayAsJson />
+                            <div className="results-table-control">
+                                {context.views ?
+                                    <div className="btn-attached">
+                                        {context.views.map((view, i) =>
+                                            <a key={i} className="btn btn-info btn-sm btn-svgicon" href={view.href} title={view.title}>{svgIcon(view2svg[view.icon])}</a>
+                                        )}
+                                    </div>
+                                : null}
+
+                                {total > results.length && searchBase.indexOf('limit=all') === -1 ?
+                                    <a
+                                        rel="nofollow"
+                                        className="btn btn-info btn-sm"
+                                        href={searchBase ? `${searchBase}&limit=all` : '?limit=all'}
+                                        onClick={this.onFilter}
+                                    >
+                                        View All
+                                    </a>
+                                :
+                                    <span>
+                                        {results.length > 25 ?
+                                            <a
+                                                className="btn btn-info btn-sm"
+                                                href={trimmedSearchBase || '/search/'}
+                                                onClick={this.onFilter}
+                                            >
+                                                View 25
+                                            </a>
+                                        : null}
+                                    </span>
+                                }
+
+                                {context.batch_download ?
+                                    <BatchDownload context={context} />
+                                : null}
+
+                                {visualizeKeys && context.visualize_batch ?
+                                    <BrowserSelector
+                                        visualizeCfg={context.visualize_batch}
+                                        disabled={visualizeDisabled}
+                                        title={visualizeDisabled ? `Filter to ${visualizeLimit} to visualize` : 'Visualize'}
+                                    />
+                                : null}
+                            </div>
+                            <hr />
+                            {browserAvail ?
+                                <TabPanel tabs={{ listpane: 'List', browserpane: <BrowserTabQuickView /> }} selectedTab={this.state.selectedTab} handleTabClick={this.handleTabClick} navCss="browser-tab-bg" tabFlange>
+                                    <TabPanelPane key="listpane">
+                                        <ResultTableList results={results} columns={columns} tabbed />
+                                    </TabPanelPane>
+                                    <TabPanelPane key="browserpane">
+                                        {assemblyChooser}
+                                        <ResultBrowser files={results} assembly={browserAssembly} region={this.props.region} datasets={browserDatasets} limitFiles={!browseAllFiles} currentRegion={this.props.currentRegion} />
+                                    </TabPanelPane>
+                                </TabPanel>
+                            :
+                                <ResultTableList results={results} columns={columns} />
+                            }
+                        </React.Fragment>
+                    :
+                        <h4>{context.notification}</h4>
+                    }
                 </div>
-            </React.Fragment>
+            </div>
         );
     }
 }
@@ -1626,9 +1624,7 @@ export const ResultBrowser = (props) => {
         );
     }
     return (
-        <React.Fragment>
-            <GenomeBrowser files={props.files} assembly={props.assembly} limitFiles={props.limitFiles} region={region} currentRegion={props.currentRegion} />
-        </React.Fragment>
+        <GenomeBrowser files={props.files} assembly={props.assembly} limitFiles={props.limitFiles} region={region} currentRegion={props.currentRegion} />
     );
 };
 

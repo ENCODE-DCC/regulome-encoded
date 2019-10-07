@@ -48,11 +48,9 @@ const snpsColumns = {
 const SNPSummary = (props) => {
     const snps = props.context.summaries;
     return (
-        <React.Fragment>
-            <SortTablePanel title="Summary of SNP analysis">
-                <SortTable list={snps} columns={snpsColumns} />
-            </SortTablePanel>
-        </React.Fragment>
+        <SortTablePanel title="Summary of SNP analysis">
+            <SortTable list={snps} columns={snpsColumns} />
+        </SortTablePanel>
     );
 };
 

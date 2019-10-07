@@ -867,9 +867,9 @@ class RegulomeSearch extends React.Component {
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see detailed ChIP-seq data.
-                                                <React.Fragment>
+                                                <div>
                                                     (<b>{chipData.length}</b> result{chipData.length !== 1 ? 's' : ''})
-                                                </React.Fragment>
+                                                </div>
                                             </div>
                                             {chipData.length > 0 ?
                                                 <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
@@ -885,9 +885,9 @@ class RegulomeSearch extends React.Component {
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.
-                                                <React.Fragment>
+                                                <div>
                                                     (<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})
-                                                </React.Fragment>
+                                                </div>
                                             </div>
                                             {chromatinData.length > 0 ?
                                                 <BarChart data={chromatinData} dataFilter={'chromatin'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
@@ -903,9 +903,9 @@ class RegulomeSearch extends React.Component {
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.
-                                                <React.Fragment>
+                                                <div>
                                                     (<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})
-                                                </React.Fragment>
+                                                </div>
                                             </div>
                                             {dnaseData.length > 0 ?
                                                 <BarChart data={dnaseData} dataFilter={'dnase'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
@@ -933,9 +933,9 @@ class RegulomeSearch extends React.Component {
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
-                                                <React.Fragment>
+                                                <div>
                                                     (<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})
-                                                </React.Fragment>
+                                                </div>
                                             </div>
                                             <ResultsTable data={QTLData} displayTitle={''} dataFilter={'qtl'} errorMessage={'No result table is available for this SNP.'} shortened />
                                         </React.Fragment>
