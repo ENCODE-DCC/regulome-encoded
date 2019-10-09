@@ -499,9 +499,7 @@ export const ResultsTable = (props) => {
                     {displayTitle ? <tr className="table-section" key="title"><th colSpan={colCount}>{displayTitle}</th></tr> : null}
                     <thead>
                         <tr key="header">
-                            {Object.keys(dataColumns).map((columnId) => {
-                                return <th key={columnId}>{dataColumns[columnId].title}</th>;
-                            })}
+                            {Object.keys(dataColumns).map(columnId => <th key={columnId}>{dataColumns[columnId].title}</th>)}
                         </tr>
                     </thead>
                     <tbody>
