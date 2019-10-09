@@ -469,7 +469,7 @@ class GenomeBrowser extends React.Component {
                         {(this.state.disableBrowserForIE) ?
                             <div className="browser-error valis-browser">The genome browser does not support Internet Explorer. Please upgrade your browser to Edge to visualize files on ENCODE.</div>
                         :
-                            <div className="browser-error valis-browser">There are no visualizable results.</div>
+                            <div className="browser-error valis-browser">There are no visualizable results. Please try a different SNP or different search parameters.</div>
                         }
                     </div>
                 }

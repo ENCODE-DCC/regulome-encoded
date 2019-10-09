@@ -6,11 +6,19 @@ import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
 import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visualizations';
-import { requestSearch } from './objectutils';
+import { requestSearch, shadeOverflowOnScroll } from './objectutils';
 import GenomeBrowser from './genome_browser';
 
 const screenMediumMax = 787;
 const screenSmallMax = 483;
+
+// Number of terms to show, the rest will be viewable on scroll
+const displayedTermsCount = 5;
+
+// Define facets (probably this should be in a schema really)
+const facetList = ['file_format', 'organ', 'biosample', 'assay', 'target'];
+const facetTitleList = ['File format', 'Organ / cell type', 'Biosample', 'Method', 'Target'];
+const typeaheadFacetList = [false, true, true, false, true];
 
 const dataTypeStrings = [
     {
@@ -433,18 +441,19 @@ const NearbySNPsDrawing = (props) => {
                     {context.nearby_snps.map((snp, snpIndex) => {
                         const snpX = (920 * ((snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
                         const labelX = snpX - 40;
+                        const labelWidth = snp.rsid.length * 9;
                         if (snpIndex % 2 === 0) {
                             if (snpX === coordinateX) {
                                 return (
                                     <g key={`snp${snpIndex}`}>
-                                        <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width="77" fill="white" opacity="0.6" />
+                                        <rect x={labelX - 8} y={42 - coordinateYOffset[snpIndex]} height="18" width={`${labelWidth}`} fill="#c13b42" opacity="1.0" rx="2px" />
                                         <text x={labelX} y={55 - coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
                                     </g>
                                 );
                             }
                             return (
                                 <g key={`snp${snpIndex}`}>
-                                    <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width="77" fill="white" opacity="0.6" />
+                                    <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width={`${labelWidth}`} fill="white" opacity="0.6" />
                                     <text x={labelX} y={55 - coordinateYOffset[snpIndex]}>{snp.rsid}</text>
                                 </g>
                             );
@@ -452,14 +461,14 @@ const NearbySNPsDrawing = (props) => {
                         if (snpX === coordinateX) {
                             return (
                                 <g key={`snp${snpIndex}`}>
-                                    <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width="77" fill="white" opacity="0.6" />
+                                    <rect x={labelX - 8} y={87 + coordinateYOffset[snpIndex]} height="22" width={`${labelWidth}`} fill="#c13b42" opacity="1.0" />
                                     <text x={labelX} y={105 + coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
                                 </g>
                             );
                         }
                         return (
                             <g key={`snp${snpIndex}`}>
-                                <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width="77" fill="white" opacity="0.6" />
+                                <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width={`${labelWidth}`} fill="white" opacity="0.6" />
                                 <text x={labelX} y={105 + coordinateYOffset[snpIndex]}>{snp.rsid}</text>
                             </g>
                         );
@@ -529,6 +538,333 @@ ResultsTable.defaultProps = {
     shortened: false,
 };
 
+// Sanitize user input and facet terms for comparison: convert to lowercase, remove white space and asterisks (which cause regular expression error)
+const sanitizedString = inputString => inputString.toLowerCase()
+    .replace(/ /g, '') // remove spaces (to allow multiple word searches)
+    .replace(/[*?()+[\]\\/]/g, ''); // remove certain special characters (these cause console errors)
+
+const FacetButton = (props) => {
+    const buttonLabel = props.buttonLabel;
+    const lookupFilterCount = props.lookupFilterCount;
+    const selectedFacets = props.selectedFacets;
+    const facetLabel = props.facetLabel;
+    const addGenomeFilter = props.addGenomeFilter;
+    return (
+        <button
+            className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
+            onClick={() => addGenomeFilter(buttonLabel, facetLabel)}
+            disabled={(lookupFilterCount(buttonLabel, facetLabel) === ' (0)')}
+        >
+            {buttonLabel}{lookupFilterCount(buttonLabel, facetLabel)}
+        </button>
+    );
+};
+
+FacetButton.propTypes = {
+    buttonLabel: PropTypes.string.isRequired,
+    facetLabel: PropTypes.string.isRequired,
+    lookupFilterCount: PropTypes.func.isRequired,
+    selectedFacets: PropTypes.array.isRequired,
+    addGenomeFilter: PropTypes.func.isRequired,
+};
+
+const Facet = (props) => {
+    const facetTitle = props.facetTitle;
+    const facetName = props.facetName;
+    const facetArray = props.facetArray;
+    const selectedFacets = props.selectedFacets;
+    return (
+        <div className="facet">
+            <h4>{facetTitle}</h4>
+            <div className="facet-scrollable">
+                {facetArray.map(d =>
+                    <FacetButton
+                        lookupFilterCount={props.lookupFilterCount}
+                        selectedFacets={selectedFacets}
+                        buttonLabel={d}
+                        facetLabel={facetName}
+                        addGenomeFilter={props.addGenomeFilter}
+                    />
+                )}
+            </div>
+        </div>
+    );
+};
+
+Facet.propTypes = {
+    facetTitle: PropTypes.string.isRequired,
+    facetName: PropTypes.string.isRequired,
+    facetArray: PropTypes.array.isRequired,
+    lookupFilterCount: PropTypes.func.isRequired,
+    addGenomeFilter: PropTypes.func.isRequired,
+    selectedFacets: PropTypes.array.isRequired,
+};
+
+const TypeaheadFacet = (props) => {
+    const facetTitle = props.facetTitle;
+    const facetName = props.facetName;
+    const facetArray = props.facetArray;
+    const unsanitizedSearchTerm = props.unsanitizedSearchTerm;
+    const selectedFacets = props.selectedFacets;
+    return (
+        <div className="facet">
+            <h4>{facetTitle}</h4>
+            <div className="typeahead-entry" role="search">
+                <i className="icon icon-search" />
+                <div className="searchform">
+                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => props.handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
+                </div>
+            </div>
+            <div className="facet-scrollable">
+                <div className="top-shading hide-shading" />
+                <div
+                    className="term-list"
+                    onScroll={shadeOverflowOnScroll}
+                >
+                    {facetArray.map(d =>
+                        <FacetButton
+                            lookupFilterCount={props.lookupFilterCount}
+                            selectedFacets={selectedFacets}
+                            buttonLabel={d}
+                            facetLabel={facetName}
+                            addGenomeFilter={props.addGenomeFilter}
+                        />
+                    )}
+                </div>
+                <div className={`shading ${(facetArray.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
+            </div>
+        </div>
+    );
+};
+
+TypeaheadFacet.propTypes = {
+    facetTitle: PropTypes.string.isRequired,
+    facetName: PropTypes.string.isRequired,
+    facetArray: PropTypes.array.isRequired,
+    handleSearch: PropTypes.func.isRequired,
+    lookupFilterCount: PropTypes.func.isRequired,
+    addGenomeFilter: PropTypes.func.isRequired,
+    selectedFacets: PropTypes.array.isRequired,
+    unsanitizedSearchTerm: PropTypes.string.isRequired,
+};
+
+const filterByAllSelectedFilters = (files, facets) => {
+    let newFiles = files;
+    facetList.forEach((facetName) => {
+        const facetFilters = facets.filter(d => d.includes(`AND${facetName}`)).map(d => d.split('AND')[0]);
+        if (facetFilters.length > 0) {
+            // for organ facet, need to check if any of the listed organ terms match any of the organ filters
+            if (facetName === 'organ') {
+                newFiles = newFiles.filter(d => d[facetName].split(', ').some(f => facetFilters.includes(f)));
+            // for non-organ facets, just check if the term matches any of the facet filters
+            } else {
+                newFiles = newFiles.filter(d => facetFilters.includes(d[facetName]));
+            }
+        }
+    });
+    return newFiles;
+};
+
+class GenomeFacets extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            selectedFacets: [],
+            unsanitizedSearchTerms: {},
+            searchTerms: {},
+        };
+        this.addGenomeFilter = this.addGenomeFilter.bind(this);
+        this.toggleFacetDisplay = this.toggleFacetDisplay.bind(this);
+        this.clearGenomeFilters = this.clearGenomeFilters.bind(this);
+        this.lookupFilterCount = this.lookupFilterCount.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
+        this.createFacets = this.createFacets.bind(this);
+    }
+
+    componentDidMount() {
+        this.setState({ selectedFacets: this.props.selectedFilters });
+    }
+
+    addGenomeFilter(item, category) {
+        const itemFacet = `${item}AND${category}`;
+        if (this.state.selectedFacets.includes(itemFacet)) {
+            this.setState(prevState => ({
+                selectedFacets: prevState.selectedFacets.filter(facet => facet !== itemFacet),
+            }), () => {
+                this.props.handleGenomeFacets(this.state.selectedFacets);
+            });
+        } else {
+            this.setState(prevState => ({
+                selectedFacets: [...prevState.selectedFacets, itemFacet],
+            }), () => {
+                this.props.handleGenomeFacets(this.state.selectedFacets);
+            });
+        }
+    }
+
+    clearGenomeFilters() {
+        this.setState({ selectedFacets: [] }, () => {
+            this.props.handleGenomeFacets(this.state.selectedFacets);
+        });
+    }
+
+    toggleFacetDisplay() {
+        this.setState(prevState => ({
+            facetDisplay: !(prevState.facetDisplay),
+        }));
+    }
+
+    handleSearch(e, typeaheadIdentifier) {
+        const filterVal = String(sanitizedString(e.target.value));
+        const targetValue = e.target.value;
+        this.setState((prevState) => {
+            const unsanitizedSearchTerms = { ...prevState.unsanitizedSearchTerms };
+            const searchTerms = { ...prevState.searchTerms };
+            unsanitizedSearchTerms[typeaheadIdentifier] = targetValue;
+            searchTerms[typeaheadIdentifier] = filterVal;
+            return {
+                searchTerms,
+                unsanitizedSearchTerms,
+            };
+        });
+    }
+
+    lookupFilterCount(filter, category) {
+        const fakeFilter = `${filter}AND${category}`;
+        if (!this.state.selectedFacets.includes(fakeFilter)) {
+            // if we add this filter to our selected filters, we need to know how many results there will be
+            const fakeFacets = [...this.state.selectedFacets, fakeFilter];
+            const fakeFilteredFiles = filterByAllSelectedFilters(this.props.files, fakeFacets);
+            // if a filter has already been selected in this category, we do not want to include results for those in our count
+            if (this.state.selectedFacets.filter(d => d.includes(category)).length > 0) {
+                return ` (${fakeFilteredFiles.length - this.props.filteredFiles.length})`;
+            }
+            return ` (${fakeFilteredFiles.length})`;
+        }
+        return '';
+    }
+
+    createFacets(files) {
+        // initialize facet object
+        const facetObject = {};
+        facetList.forEach((facet) => {
+            facetObject[facet] = [];
+        });
+        // compile term names for each facet from possible results
+        files.forEach((file) => {
+            facetList.forEach((facet) => {
+                // generating facets based on file parameters
+                // for every facet except organ, each file matches exactly 1 facet term
+                // for the organ facet, each file can have multiple organ slims and we are listing them individually
+                // so each file can match multiple organ facet terms whereas for other facets, each file matches exactly 1 term
+                // we will probably keep it but we are not sure if it is confusing (the counts don't add up to the number of results for the organ facet) so this may change in a future update
+                let slims;
+                if (facet === 'organ') {
+                    slims = file[facet].split(', ');
+                } else {
+                    slims = [file[facet]];
+                }
+                slims.forEach((slim) => {
+                    // if the facet has a typeahead, check that term matches typed search, if so, add if the term is not already present in facet list
+                    if (this.state.searchTerms[facet]) {
+                        if ((this.state.searchTerms[facet] === '') || sanitizedString(slim).match(this.state.searchTerms[facet])) {
+                            if ((facetObject[facet].indexOf(slim) === -1) && slim) {
+                                facetObject[facet].push(slim);
+                            }
+                        }
+                    // if the file has a term, add term to facet object if it does not exist yet
+                    } else if ((facetObject[facet].indexOf(slim) === -1) && slim) {
+                        facetObject[facet].push(slim);
+                    }
+                });
+            });
+        });
+        // sort facet term names alphabetically, ignoring capitalization
+        facetList.forEach((facet) => {
+            facetObject[facet].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        });
+        return facetObject;
+    }
+
+    render() {
+        const facetObject = this.createFacets(this.props.files);
+
+        return (
+            <React.Fragment>
+                {(this.state.selectedFacets.length > 0) ?
+                    <React.Fragment>
+                        <div className="browser-selected-facets">
+                            <span>Selected filters:</span>
+                            {this.state.selectedFacets.map((f) => {
+                                const fsplit = f.split('AND');
+                                return (
+                                    <button
+                                        className="browser-filter"
+                                        onClick={() => this.addGenomeFilter(fsplit[0], fsplit[1])}
+                                    >
+                                        <i className="icon icon-times-circle" />
+                                        {f.split('AND')[0]}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                className="browser-filter"
+                                onClick={() => this.clearGenomeFilters()}
+                            >
+                                <i className="icon icon-times-circle" />
+                                Clear all filters
+                            </button>
+                        </div>
+                        {(this.props.filteredFiles.length === 0) ?
+                            <div className="browser-selected-facets warning"><i className="icon icon-exclamation-circle" />No files match the selected filters. Try different filters to visualize results.</div>
+                        : null}
+                    </React.Fragment>
+                :
+                    <div className="browser-selected-facets">Selected filters: To select a filter, make a selection from &quot;Refine your search&quot; below.</div>
+                }
+                <button className={`browser-selections ${this.state.facetDisplay ? 'facets-without-border' : ''}`} onClick={this.toggleFacetDisplay}><i className={`icon ${this.state.facetDisplay ? 'icon-caret-down' : 'icon-caret-right'}`} /><span className="selection-header">Refine your search</span></button>
+                {this.state.facetDisplay ?
+                    <div className="browser-facet-container">
+                        {facetList.map((facet, facetIndex) => {
+                            if (typeaheadFacetList[facetIndex]) {
+                                return (
+                                    <TypeaheadFacet
+                                        facetTitle={facetTitleList[facetIndex]}
+                                        facetName={facet}
+                                        facetArray={facetObject[facet]}
+                                        handleSearch={this.handleSearch}
+                                        lookupFilterCount={this.lookupFilterCount}
+                                        addGenomeFilter={this.addGenomeFilter}
+                                        selectedFacets={this.state.selectedFacets}
+                                        unsanitizedSearchTerm={this.state.unsanitizedSearchTerms[facet]}
+                                    />
+                                );
+                            }
+                            return (
+                                <Facet
+                                    facetTitle={facetTitleList[facetIndex]}
+                                    facetName={facet}
+                                    facetArray={facetObject[facet]}
+                                    lookupFilterCount={this.lookupFilterCount}
+                                    addGenomeFilter={this.addGenomeFilter}
+                                    selectedFacets={this.state.selectedFacets}
+                                />
+                            );
+                        })}
+                    </div>
+                : null}
+            </React.Fragment>
+        );
+    }
+}
+
+GenomeFacets.propTypes = {
+    files: PropTypes.array.isRequired,
+    handleGenomeFacets: PropTypes.func.isRequired,
+    filteredFiles: PropTypes.array.isRequired,
+    selectedFilters: PropTypes.array.isRequired,
+};
+
 const appendDatasetsToQuery = (query, chunkDatasets) => {
     let searchQuery = query;
     chunkDatasets.forEach((d) => {
@@ -552,10 +888,13 @@ class RegulomeSearch extends React.Component {
             thumbnailWidth: 0,
             screenWidth: 0,
             allFiles: [],
+            filteredFiles: [],
             includedFiles: [],
             multipleBrowserPages: false,
             browserCurrentPage: 1,
             browserTotalPages: 1,
+            selectedFilters: [],
+            facetDisplay: false,
         };
 
         // Bind this to non-React methods.
@@ -566,6 +905,7 @@ class RegulomeSearch extends React.Component {
         this.addNewFiles = this.addNewFiles.bind(this);
         this.handlePagination = this.handlePagination.bind(this);
         this.chunkingDataset = this.chunkingDataset.bind(this);
+        this.handleGenomeFacets = this.handleGenomeFacets.bind(this);
     }
 
     componentDidMount() {
@@ -583,7 +923,10 @@ class RegulomeSearch extends React.Component {
         const hrefUpdate = this.context.location_href !== nextContext.location_href;
         const screenSizeUpdate = this.state.screenWidth !== this.applicationRef.offsetWidth;
         const pageUpdate = this.state.browserCurrentPage !== nextState.browserCurrentPage;
-        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate);
+        const filtersUpdate = this.state.selectedFilters !== nextState.selectedFilters;
+        const facetDisplayUpdate = this.state.facetDisplay !== nextState.facetDisplay;
+        const paginationChange = this.state.multipleBrowserPages !== nextState.multipleBrowserPages;
+        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange);
     }
 
     onFilter(e) {
@@ -647,7 +990,7 @@ class RegulomeSearch extends React.Component {
             const pageIdx = this.state.browserCurrentPage;
             const startIdx = pageIdx * displaySize;
             const endIdx = (pageIdx + 1) * displaySize;
-            const includedFiles = this.state.allFiles.slice(startIdx, endIdx);
+            const includedFiles = this.state.filteredFiles.slice(startIdx, endIdx);
             this.setState(prevState => ({
                 includedFiles,
                 browserCurrentPage: prevState.browserCurrentPage + 1,
@@ -656,7 +999,7 @@ class RegulomeSearch extends React.Component {
             const pageIdx = this.state.browserCurrentPage - 2;
             const startIdx = pageIdx * displaySize;
             const endIdx = ((pageIdx + 1) * displaySize);
-            const includedFiles = this.state.allFiles.slice(startIdx, endIdx);
+            const includedFiles = this.state.filteredFiles.slice(startIdx, endIdx);
             this.setState(prevState => ({
                 includedFiles,
                 browserCurrentPage: prevState.browserCurrentPage - 1,
@@ -680,8 +1023,34 @@ class RegulomeSearch extends React.Component {
         return requests;
     }
 
+    handleGenomeFacets(selectedFilters) {
+        const filteredFiles = filterByAllSelectedFilters(this.state.allFiles, selectedFilters);
+        // if there are more filtered files than we want to display on one page, we will paginate
+        const browserTotalPages = Math.ceil(filteredFiles.length / displaySize);
+        if (filteredFiles.length > displaySize) {
+            const includedFiles = filteredFiles.slice(0, displaySize);
+            this.setState({
+                selectedFilters,
+                filteredFiles,
+                includedFiles,
+                multipleBrowserPages: true,
+                browserTotalPages,
+                browserCurrentPage: 1,
+            });
+        } else {
+            this.setState({
+                selectedFilters,
+                filteredFiles,
+                includedFiles: filteredFiles,
+                multipleBrowserPages: false,
+                browserTotalPages,
+                browserCurrentPage: 1,
+            });
+        }
+    }
+
     chooseThumbnail(chosen) {
-        if (chosen === 'valis' && this.state.allFiles.length < 1) {
+        if (chosen === 'valis' && this.state.filteredFiles.length < 1) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
             const assembly = 'hg19';
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
@@ -694,10 +1063,12 @@ class RegulomeSearch extends React.Component {
             const biosampleMap = {};
             const assayMap = {};
             const targetMap = {};
+            const organMap = {};
             experimentDatasets.forEach((dataset) => {
                 biosampleMap[dataset.dataset] = dataset.biosample_ontology.term_name || '';
                 assayMap[dataset.dataset] = dataset.method || '';
                 targetMap[dataset.dataset] = dataset.targets ? dataset.targets.join(', ') : '';
+                organMap[dataset.dataset] = (dataset.biosample_ontology.classification === 'tissue') ? dataset.biosample_ontology.organ_slims.join(', ') : dataset.biosample_ontology.cell_slims.join(', ');
             });
             // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
             const chipDatasets = experimentDatasets.filter(d => d.method === 'ChIP-seq');
@@ -730,6 +1101,7 @@ class RegulomeSearch extends React.Component {
                     d.biosample = biosampleMap[d.dataset];
                     d.assay = assayMap[d.dataset];
                     d.target = targetMap[d.dataset];
+                    d.organ = organMap[d.dataset];
                 });
                 // do first pass at filtering down full file list
                 const trimmedFiles0 = sortedFiles.filter((file) => {
@@ -778,6 +1150,7 @@ class RegulomeSearch extends React.Component {
                     this.setState({
                         allFiles: trimmedFiles,
                         includedFiles,
+                        filteredFiles: trimmedFiles,
                         multipleBrowserPages: true,
                         browserTotalPages,
                         browserCurrentPage: 1,
@@ -787,6 +1160,7 @@ class RegulomeSearch extends React.Component {
                 } else {
                     this.setState({
                         allFiles: trimmedFiles,
+                        filteredFiles: trimmedFiles,
                         includedFiles: trimmedFiles,
                     }, () => {
                         this.updateThumbnail(chosen);
@@ -973,6 +1347,14 @@ class RegulomeSearch extends React.Component {
                                         </React.Fragment>
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
+                                            <h4>Visualize files for SNP {context.variants[coordinates]}</h4>
+                                            <h4>There {this.state.filteredFiles.length === 1 ? 'is' : 'are'} {this.state.filteredFiles.length} result{this.state.filteredFiles.length === 1 ? '' : 's'}.</h4>
+                                            <GenomeFacets
+                                                files={this.state.allFiles}
+                                                handleGenomeFacets={this.handleGenomeFacets}
+                                                filteredFiles={this.state.filteredFiles}
+                                                selectedFilters={this.state.selectedFilters}
+                                            />
                                             <GenomeBrowser
                                                 fixedHeight={this.state.multipleBrowserPages}
                                                 files={this.state.includedFiles}
@@ -982,13 +1364,13 @@ class RegulomeSearch extends React.Component {
                                             />
                                             {this.state.multipleBrowserPages ?
                                                 <div className="pagination-container">
-                                                    <React.Fragment>
+                                                    <div>
                                                         <button disabled={this.state.browserCurrentPage === 1} className="btn btn-page btn-page-left" onClick={() => this.handlePagination('minus')}><i className="icon icon-chevron-left" /></button>
                                                         <button disabled={this.state.browserCurrentPage === this.state.browserTotalPages} className="btn btn-page" onClick={() => this.handlePagination('plus')}><i className="icon icon-chevron-right" /></button>
-                                                    </React.Fragment>
-                                                    <React.Fragment>
+                                                    </div>
+                                                    <div>
                                                         Page <b>{this.state.browserCurrentPage}</b> of <b>{this.state.browserTotalPages}</b>
-                                                    </React.Fragment>
+                                                    </div>
                                                 </div>
                                             : null}
                                         </React.Fragment>
