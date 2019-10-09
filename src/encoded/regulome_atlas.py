@@ -42,12 +42,6 @@ TRAINED_REG_MODEL = pickle.load(
 )
 
 LOCAL_BIGWIGS = {
-    'ChIP_max_signal': pyBigWig.open(
-        resource_filename('encoded', '../../bigwig_files/ChIP_max_signal.bw')
-    ),
-    'DNase_max_signal': pyBigWig.open(
-        resource_filename('encoded', '../../bigwig_files/DNase_max_signal.bw')
-    ),
     'IC_matched_max': pyBigWig.open(
         resource_filename('encoded', '../../bigwig_files/IC_matched_max.bw')
     ),
@@ -235,7 +229,7 @@ class RegulomeAtlas(object):
     @staticmethod
     def evidence_categories():
         '''Returns a list of regulome evidence categories'''
-        return ['eQTL', 'ChIP', 'DNase', 'PWM', 'Footprint', 'PWM_matched', 'Footprint_matched']
+        return ['QTL', 'ChIP', 'DNase', 'PWM', 'Footprint', 'PWM_matched', 'Footprint_matched']
 
     @staticmethod
     def _score_category(dataset):
@@ -250,10 +244,8 @@ class RegulomeAtlas(object):
             return 'PWM'
         if collection_type == 'Footprints':
             return 'Footprint'
-        if collection_type in ['eQTLs', 'curated SNVs']:
-            return 'eQTL'
-        if collection_type == 'dsQTLs':
-            return 'dsQTL'
+        if collection_type in ['eQTLs', 'dsQTLs', 'curated SNVs']:
+            return 'QTL'
         return None
 
     def _regulome_category(self, score_category=None, dataset=None):
@@ -269,7 +261,7 @@ class RegulomeAtlas(object):
             return 'Chromatin_Structure'
         if score_category in ['PWM', 'Footprint']:
             return 'Motifs'
-        if score_category == 'eQTL':
+        if score_category == 'QTL':
             return 'Single_Nucleotides'
         return '???'
 
@@ -370,15 +362,12 @@ class RegulomeAtlas(object):
             'DNase',
             'PWM',
             'Footprint',
-            'eQTL',
-            'dsQTL',
+            'QTL',
             'PWM_matched',
             'Footprint_matched'
         ]
         query = [int(k in characterization) for k in binary_keys]
-        numeric_keys = [
-            'IC_max', 'IC_matched_max', 'ChIP_max_signal', 'DNase_max_signal'
-        ]
+        numeric_keys = ['IC_max', 'IC_matched_max']
         query += [characterization[k] for k in numeric_keys]
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
         # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
@@ -393,7 +382,7 @@ class RegulomeAtlas(object):
         # would like to output. So `[:, 1][0]` will be the desired score.
         probability = str(round(TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5))
         ranking = '7'
-        if ('eQTL' in characterization) or ('dsQTL' in characterization):
+        if 'QTL' in characterization:
             if 'ChIP' in characterization:
                 if 'DNase' in characterization:
                     if 'PWM_matched' in characterization and 'Footprint_matched' in characterization:

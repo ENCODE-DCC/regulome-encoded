@@ -260,60 +260,62 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                     'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93',
                     'target': ['ELK4']
                 }],
-                'dsQTL': [{
-                    'biosample_ontology': {
-                        '@id': '/biosample-types/cell_line_EFO_0005292/',
-                        '@type': ['BiosampleType', 'Item'],
-                        'aliases': [],
-                        'cell_slims': ['lymphoblast'],
-                        'classification': 'cell line',
-                        'dbxrefs': [],
-                        'developmental_slims': [],
-                        'name': 'cell_line_EFO_0005292',
-                        'organ_slims': [],
-                        'references': [],
-                        'schema_version': '1',
-                        'status': 'released',
-                        'synonyms': [],
-                        'system_slims': [],
-                        'term_id': 'EFO:0005292',
-                        'term_name': 'lymphoblastoid cell line',
-                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                'QTL': [
+                    {
+                        'biosample_ontology': {
+                            '@id': '/biosample-types/cell_line_EFO_0005292/',
+                            '@type': ['BiosampleType', 'Item'],
+                            'aliases': [],
+                            'cell_slims': ['lymphoblast'],
+                            'classification': 'cell line',
+                            'dbxrefs': [],
+                            'developmental_slims': [],
+                            'name': 'cell_line_EFO_0005292',
+                            'organ_slims': [],
+                            'references': [],
+                            'schema_version': '1',
+                            'status': 'released',
+                            'synonyms': [],
+                            'system_slims': [],
+                            'term_id': 'EFO:0005292',
+                            'term_name': 'lymphoblastoid cell line',
+                            'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                        },
+                        'biosample_term_name': 'lymphoblastoid cell line',
+                        'collection_type': 'dsQTLs',
+                        'documents': [],
+                        '@id': '/annotations/ENCSR061TST/',
+                        'annotation_type': 'dsQTLs',
+                        'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
                     },
-                    'biosample_term_name': 'lymphoblastoid cell line',
-                    'collection_type': 'dsQTLs',
-                    'documents': [],
-                    '@id': '/annotations/ENCSR061TST/',
-                    'annotation_type': 'dsQTLs',
-                    'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
-                }],
-                'eQTL': [{
-                    'biosample_ontology': {
-                        '@id': '/biosample-types/cell_line_EFO_0005292/',
-                        '@type': ['BiosampleType', 'Item'],
-                        'aliases': [],
-                        'cell_slims': ['lymphoblast'],
-                        'classification': 'cell line',
-                        'dbxrefs': [],
-                        'developmental_slims': [],
-                        'name': 'cell_line_EFO_0005292',
-                        'organ_slims': [],
-                        'references': [],
-                        'schema_version': '1',
-                        'status': 'released',
-                        'synonyms': [],
-                        'system_slims': [],
-                        'term_id': 'EFO:0005292',
-                        'term_name': 'lymphoblastoid cell line',
-                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
-                    },
-                    'biosample_term_name': 'lymphoblastoid cell line',
-                    'collection_type': 'eQTLs',
-                    'documents': [],
-                    '@id': '/annotations/ENCSR899TST/',
-                    'annotation_type': 'eQTLs',
-                    'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'
-                }],
+                    {
+                        'biosample_ontology': {
+                            '@id': '/biosample-types/cell_line_EFO_0005292/',
+                            '@type': ['BiosampleType', 'Item'],
+                            'aliases': [],
+                            'cell_slims': ['lymphoblast'],
+                            'classification': 'cell line',
+                            'dbxrefs': [],
+                            'developmental_slims': [],
+                            'name': 'cell_line_EFO_0005292',
+                            'organ_slims': [],
+                            'references': [],
+                            'schema_version': '1',
+                            'status': 'released',
+                            'synonyms': [],
+                            'system_slims': [],
+                            'term_id': 'EFO:0005292',
+                            'term_name': 'lymphoblastoid cell line',
+                            'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                        },
+                        'biosample_term_name': 'lymphoblastoid cell line',
+                        'collection_type': 'eQTLs',
+                        'documents': [],
+                        '@id': '/annotations/ENCSR899TST/',
+                        'annotation_type': 'eQTLs',
+                        'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'
+                    }
+                ],
                 'Footprint': [{
                     'biosample_ontology': {
                         '@id': '/biosample-types/cell_line_EFO_0002791/',
@@ -420,14 +422,12 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                     }],
                 }],
                 'PWM_matched': ['ELK4'],
-                'ChIP_max_signal': 460.9599914550781,
-                'DNase_max_signal': 5.46999979019165,
                 'IC_matched_max': 2.0,
                 'IC_max': 2.0,
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
             'strand': '-',
-            'score': {'probability': '0.94', 'ranking': '1a'},
+            'score': {'probability': '0.977', 'ranking': '1a'},
             'rsid': 'rs3768324',
             'assembly': 'hg19',
             'chrom': 'chr1'
@@ -436,28 +436,24 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
         [
             {
                 'evidence': {
-                    'ChIP_max_signal': 37.65999984741211,
-                    'DNase_max_signal': 3.890000104904175,
                     'IC_matched_max': 0.44999998807907104,
                     'IC_max': 0.44999998807907104,
                 },
                 'coordinates': {'lt': 104529668, 'gte': 104529667},
                 'strand': '+',
-                'score': {'probability': '0.08', 'ranking': '7'},
+                'score': {'probability': '0.43534', 'ranking': '7'},
                 'rsid': 'rs7092340',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
             },
             {
                 'evidence': {
-                    'ChIP_max_signal': 46.13999938964844,
-                    'DNase_max_signal': 1.3700000047683716,
                     'IC_matched_max': 0.1599999964237213,
                     'IC_max': 0.3700000047683716,
                 },
                 'coordinates': {'lt': 104574063, 'gte': 104574062},
                 'strand': '-',
-                'score': {'probability': '0.08', 'ranking': '7'},
+                'score': {'probability': '0.50976', 'ranking': '7'},
                 'rsid': 'rs284857',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
@@ -476,6 +472,17 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
     count = 0
     for snp in scored_snps:
         count += 1
+        # The following loop is a temporary patch for QTL evidence which has
+        # both dsQTL and eQTL data returned in arbitrary order.
+        for k in snp['evidence']:
+            if (
+                isinstance(snp['evidence'][k], list)
+                and len(snp['evidence'][k]) > 1
+                and all('uuid' in data for data in snp['evidence'][k])
+            ):
+                snp['evidence'][k] = sorted(
+                    snp['evidence'][k], key=lambda x: x['uuid']
+                )
         assert snp in result
     assert len(result) == count
 
@@ -512,60 +519,62 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                     'uuid': '5d9a1769-5bdf-40af-85a9-d08c9a3c9b93',
                     'target': ['ELK4']
                 }],
-                'dsQTL': [{
-                    'biosample_ontology': {
-                        '@id': '/biosample-types/cell_line_EFO_0005292/',
-                        '@type': ['BiosampleType', 'Item'],
-                        'aliases': [],
-                        'cell_slims': ['lymphoblast'],
-                        'classification': 'cell line',
-                        'dbxrefs': [],
-                        'developmental_slims': [],
-                        'name': 'cell_line_EFO_0005292',
-                        'organ_slims': [],
-                        'references': [],
-                        'schema_version': '1',
-                        'status': 'released',
-                        'synonyms': [],
-                        'system_slims': [],
-                        'term_id': 'EFO:0005292',
-                        'term_name': 'lymphoblastoid cell line',
-                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                'QTL': [
+                    {
+                        'biosample_ontology': {
+                            '@id': '/biosample-types/cell_line_EFO_0005292/',
+                            '@type': ['BiosampleType', 'Item'],
+                            'aliases': [],
+                            'cell_slims': ['lymphoblast'],
+                            'classification': 'cell line',
+                            'dbxrefs': [],
+                            'developmental_slims': [],
+                            'name': 'cell_line_EFO_0005292',
+                            'organ_slims': [],
+                            'references': [],
+                            'schema_version': '1',
+                            'status': 'released',
+                            'synonyms': [],
+                            'system_slims': [],
+                            'term_id': 'EFO:0005292',
+                            'term_name': 'lymphoblastoid cell line',
+                            'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                        },
+                        'biosample_term_name': 'lymphoblastoid cell line',
+                        'collection_type': 'dsQTLs',
+                        'documents': [],
+                        '@id': '/annotations/ENCSR061TST/',
+                        'annotation_type': 'dsQTLs',
+                        'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
                     },
-                    'biosample_term_name': 'lymphoblastoid cell line',
-                    'collection_type': 'dsQTLs',
-                    'documents': [],
-                    '@id': '/annotations/ENCSR061TST/',
-                    'annotation_type': 'dsQTLs',
-                    'uuid': '4109b15f-8bf7-4711-b644-43032f5c27e0'
-                }],
-                'eQTL': [{
-                    'biosample_ontology': {
-                        '@id': '/biosample-types/cell_line_EFO_0005292/',
-                        '@type': ['BiosampleType', 'Item'],
-                        'aliases': [],
-                        'cell_slims': ['lymphoblast'],
-                        'classification': 'cell line',
-                        'dbxrefs': [],
-                        'developmental_slims': [],
-                        'name': 'cell_line_EFO_0005292',
-                        'organ_slims': [],
-                        'references': [],
-                        'schema_version': '1',
-                        'status': 'released',
-                        'synonyms': [],
-                        'system_slims': [],
-                        'term_id': 'EFO:0005292',
-                        'term_name': 'lymphoblastoid cell line',
-                        'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
-                    },
-                    'biosample_term_name': 'lymphoblastoid cell line',
-                    'collection_type': 'eQTLs',
-                    'documents': [],
-                    '@id': '/annotations/ENCSR899TST/',
-                    'annotation_type': 'eQTLs',
-                    'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'
-                }],
+                    {
+                        'biosample_ontology': {
+                            '@id': '/biosample-types/cell_line_EFO_0005292/',
+                            '@type': ['BiosampleType', 'Item'],
+                            'aliases': [],
+                            'cell_slims': ['lymphoblast'],
+                            'classification': 'cell line',
+                            'dbxrefs': [],
+                            'developmental_slims': [],
+                            'name': 'cell_line_EFO_0005292',
+                            'organ_slims': [],
+                            'references': [],
+                            'schema_version': '1',
+                            'status': 'released',
+                            'synonyms': [],
+                            'system_slims': [],
+                            'term_id': 'EFO:0005292',
+                            'term_name': 'lymphoblastoid cell line',
+                            'uuid': '83c0535d-11fb-443f-9326-bbf381a6e2aa'
+                        },
+                        'biosample_term_name': 'lymphoblastoid cell line',
+                        'collection_type': 'eQTLs',
+                        'documents': [],
+                        '@id': '/annotations/ENCSR899TST/',
+                        'annotation_type': 'eQTLs',
+                        'uuid': 'f10dba36-d3dd-455a-ae25-57239b7b9e27'
+                    }
+                ],
                 'Footprint': [{
                     'biosample_ontology': {
                         '@id': '/biosample-types/cell_line_EFO_0002791/',
@@ -672,14 +681,12 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                     }],
                 }],
                 'PWM_matched': ['ELK4'],
-                'ChIP_max_signal': 460.9599914550781,
-                'DNase_max_signal': 5.46999979019165,
                 'IC_matched_max': 2.0,
                 'IC_max': 2.0,
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
             'strand': '-',
-            'score': {'probability': '0.94', 'ranking': '1a'},
+            'score': {'probability': '0.977', 'ranking': '1a'},
             'rsid': 'rs3768324',
             'assembly': 'hg19',
             'chrom': 'chr1'
@@ -688,28 +695,24 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
         [
             {
                 'evidence': {
-                    'ChIP_max_signal': 37.65999984741211,
-                    'DNase_max_signal': 3.890000104904175,
                     'IC_matched_max': 0.44999998807907104,
                     'IC_max': 0.44999998807907104,
                 },
                 'coordinates': {'lt': 104529668, 'gte': 104529667},
                 'strand': '+',
-                'score': {'probability': '0.08', 'ranking': '7'},
+                'score': {'probability': '0.43534', 'ranking': '7'},
                 'rsid': 'rs7092340',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
             },
             {
                 'evidence': {
-                    'ChIP_max_signal': 46.13999938964844,
-                    'DNase_max_signal': 1.3700000047683716,
                     'IC_matched_max': 0.1599999964237213,
                     'IC_max': 0.3700000047683716,
                 },
                 'coordinates': {'lt': 104574063, 'gte': 104574062},
                 'strand': '-',
-                'score': {'probability': '0.08', 'ranking': '7'},
+                'score': {'probability': '0.50976', 'ranking': '7'},
                 'rsid': 'rs284857',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
@@ -722,6 +725,17 @@ def test_nearby_snps_scored(assembly, chrom, pos, window, result, region_index, 
     count = 0
     for snp in scored_snps:
         count += 1
+        # The following loop is a temporary patch for QTL evidence which has
+        # both dsQTL and eQTL data returned in arbitrary order.
+        for k in snp['evidence']:
+            if (
+                isinstance(snp['evidence'][k], list)
+                and len(snp['evidence'][k]) > 1
+                and all('uuid' in data for data in snp['evidence'][k])
+            ):
+                snp['evidence'][k] = sorted(
+                    snp['evidence'][k], key=lambda x: x['uuid']
+                )
         assert snp in result
     assert len(result) == count
 
