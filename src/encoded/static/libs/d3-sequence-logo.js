@@ -16,6 +16,11 @@
 
 const d3 = require('d3');
 
+// ordering for positive strand
+const positiveStrandLetterOrder = ['A', 'C', 'G', 'T'];
+// letter ordering for negative strand (reverse complement)
+const negativeStrandLetterOrder = ['T', 'G', 'C', 'A'];
+
 /**
  * For each index, get the transform needed so that things line up
  * correctly. This is an artifact of the font->svg path conversion
@@ -48,44 +53,22 @@ function getLetterBaseTransform(i) {
  * @param {number} i - letter index. Range: [0,4)
  * @returns {string} SVG path corresponding to i.
  */
-function getLetterPath(i) {
-    const letterA = 'M142.59,54.29l-5,15.27h-6.48L147.55,21h7.56l16.56,48.53H165l-5.18-15.27Zm15.91-4.9-4.75-14c-1.08-3.17-1.8-6-2.52-8.86h-.14c-.72,2.88-1.51,5.83-2.45,8.78l-4.75,14Z';
+function getLetterPath(i, strand) {
+    const letterPaths = {};
+    letterPaths.A = 'M142.59,54.29l-5,15.27h-6.48L147.55,21h7.56l16.56,48.53H165l-5.18-15.27Zm15.91-4.9-4.75-14c-1.08-3.17-1.8-6-2.52-8.86h-.14c-.72,2.88-1.51,5.83-2.45,8.78l-4.75,14Z';
 
-    const letterG = 'M171.68,67.39a45.22,45.22,0,0,1-14.91,2.66c-7.34,0-13.39-1.87-18.15-6.41-4.18-4-6.77-10.51-6.77-18.07.07-14.47,10-25.06,26.28-25.06a30,30,0,0,1,12.1,2.23l-1.51,5.11A25.15,25.15,0,0,0,158,25.77c-11.81,0-19.51,7.34-19.51,19.51s7.42,19.59,18.72,19.59c4.1,0,6.91-.58,8.35-1.3V49.1h-9.86v-5h16Z';
+    letterPaths.G = 'M171.68,67.39a45.22,45.22,0,0,1-14.91,2.66c-7.34,0-13.39-1.87-18.15-6.41-4.18-4-6.77-10.51-6.77-18.07.07-14.47,10-25.06,26.28-25.06a30,30,0,0,1,12.1,2.23l-1.51,5.11A25.15,25.15,0,0,0,158,25.77c-11.81,0-19.51,7.34-19.51,19.51s7.42,19.59,18.72,19.59c4.1,0,6.91-.58,8.35-1.3V49.1h-9.86v-5h16Z';
 
-    const letterT = 'M144,26.35H129.19V21h35.93v5.33H150.29v43.2H144Z';
+    letterPaths.T = 'M144,26.35H129.19V21h35.93v5.33H150.29v43.2H144Z';
 
-    const letterC = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
+    letterPaths.C = 'M168.65,68c-2.3,1.15-6.91,2.3-12.82,2.3-13.68,0-24-8.64-24-24.55,0-15.19,10.3-25.49,25.35-25.49,6,0,9.86,1.3,11.52,2.16l-1.51,5.11a22.82,22.82,0,0,0-9.79-2c-11.38,0-18.94,7.27-18.94,20,0,11.88,6.84,19.51,18.65,19.51a25.08,25.08,0,0,0,10.23-2Z';
 
-    if (i === 0) {
-        return letterA;
-    } else if (i === 1) {
-        return letterC;
-    } else if (i === 2) {
-        return letterG;
-    } else if (i === 3) {
-        return letterT;
+    // if the strand is negative, we want the reverse complement
+    if (strand === '-') {
+        return letterPaths[negativeStrandLetterOrder[i]];
     }
-    return null;
-}
-
-/**
- * @param {string[]} s - sequence data. An array of equal-length strings.
- * @param {number} i - letter index. Range: [0,4)
- * @returns {number[]} counts of each letter.
- */
-function getLetterCnts(s, i) {
-    const dict = { A: 0,
-        C: 0,
-        G: 0,
-        T: 0 };
-
-    s.forEach((d) => {
-        dict[d[i]] += 1;
-    });
-
-    const out = Object.keys(dict).map(key => dict[key]);
-    return out;
+    // if the strand is positive, we do not need to get the reverse complement
+    return letterPaths[positiveStrandLetterOrder[i]];
 }
 
 /**
@@ -189,112 +172,13 @@ function calcPathTransform(path, d, yscale, colWidth) {
 }
 
 /**
- * Checks that sequence data obeys bounds, and that each
- * sequence has the same length.
- *
- * Possible change is to create more informative error msg.
- *
- * @param {string[]} data - sequenceData
- * @param {number[]} seqLenBounds - lower/upper bounds for
- *  number of bases in a sequence.
- * @param {number[]} seqNumBounds - lower/upper bounds for
- *  number of sequences.
- * @returns {boolean} true/false - does the data conform?
- */
-function isValidData(data, seqLenBounds, seqNumBounds) {
-    const n = data.length;
-
-    if (n > seqNumBounds[1] || n < seqNumBounds[0]) {
-        return false;
-    }
-    const m0 = d3.min(data, d => d.length);
-    const m1 = d3.max(data, d => d.length);
-
-    if (m0 !== m1) {
-        return false;
-    }
-    // m == m0 == m1
-    const m = m0;
-
-    if (m > seqLenBounds[1] || m < seqLenBounds[0]) {
-        return false;
-    }
-    return true;
-}
-
-/**
- * Yields nucleotide base string corresponding to given int.
- *
- * @param {number} i
- * @returns {string}
- */
-
-function intToLetter(i) {
-    if (i === 0) {
-        return 'A';
-    } else if (i === 1) {
-        return 'C';
-    } else if (i === 2) {
-        return 'G';
-    } else if (i === 3) {
-        return 'T';
-    }
-    return null;
-}
-
-/**
- * Standard, from MDN.
- * Returns a random integer between min (inclusive) and max
- * (inclusive)
- *
- * @param {number} min
- * @param {number} max
- * @returns {number}
- */
-function getRandomInt(min, max) {
-    return Math.floor(Math.random() * ((max - min) + 1)) + min;
-}
-
-
-/**
- * Generate random sequences by sampling from DiscreteUniform(0,4).
- *
- * A different approach could be to favor some bases more
- * than others at different positions by modeling the
- * distribution P(base | position) as a categorical that
- * has its parameters sampled from a Dirichlet.
- *
- * @param {number[]} seqLenBounds
- * @param {number[]} seqNumBounds
- * @returns {string[]} seqData
- */
-function getRandomData(seqLenBounds, seqNumBounds) {
-    const seqLen = getRandomInt(seqLenBounds[0], seqLenBounds[1]);
-    const seqNum = getRandomInt(seqNumBounds[0], seqNumBounds[1]);
-
-    const seqData = [];
-
-    for (let i = 0; i < seqNum; i += 1) {
-        const thisSeq = [];
-        for (let j = 0; j < seqLen; j += 1) {
-            // upper bound is inclusive (getRandomInt)
-            const newLetter = intToLetter(getRandomInt(0, 3));
-            thisSeq.push(newLetter);
-        }
-        seqData.push(thisSeq.join(''));
-    }
-
-    return seqData;
-}
-
-/**
  * Entry point for all functionality.
  *
  * @param {string[]} sequenceData
  * @param {number[]} seqLenBounds
  * @param {number[]} seqNumBounds
  */
-function entryPoint(logoSelector, PWM) {
+function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate, lastCoordinate, strand) {
     // skipping error checking for now
     // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
     //
@@ -308,11 +192,19 @@ function entryPoint(logoSelector, PWM) {
         n = Math.max(n, Math.max(...pwm));
     });
 
+    // if the strand is negative, we want the reverse complement
+    if (strand === '-') {
+        PWM.reverse();
+    }
+
     // number of nucleotides per sequence
     const m = PWM.length;
 
     // range of letter bounds at each nucleotide index position
     const yz = d3.range(m).map(i => offsets(PWM[i], n));
+
+    // find coordinate index
+    const alignmentIndex = +alignmentCoordinate - +firstCoordinate;
 
     /**
    * Next, we set local values that govern visual appearance.
@@ -337,18 +229,21 @@ function entryPoint(logoSelector, PWM) {
     // height of just the base letters
     const svgLetterHeight = 150;
 
-    function colors(i) {
-        if (i === 0) {
-            return '#489655';
-        } else if (i === 1) {
-            return '#335C95';
-        } else if (i === 2) {
-            return '#EFB549';
-        } else if (i === 3) {
-            return '#C13B42';
+    const colorBase = {
+        A: '#C13B42',
+        C: '#EFB549',
+        G: '#335C95',
+        T: '#489655',
+    };
+
+    const lookupBaseColor = (i) => {
+        // if the strand is negative, we want the reverse complement
+        if (strand === '-') {
+            return colorBase[negativeStrandLetterOrder[i]];
         }
-        return null;
-    }
+        // if the strand is positive, we do not need to get the reverse complement
+        return colorBase[positiveStrandLetterOrder[i]];
+    };
 
     // map: sequence length -> innerSVG
     const xscale = d3.scaleLinear().domain([0, m])
@@ -360,6 +255,7 @@ function entryPoint(logoSelector, PWM) {
     // map: number of sequences -> svg letter height
     const yscale = d3.scaleLinear().domain([0, n]).range([0, svgLetterHeight]);
 
+    // only want to append one logo to an element, redraw logo if component is refreshed
     d3.select(logoSelector).select('svg').remove();
 
     const svg = d3.select(logoSelector)
@@ -457,28 +353,21 @@ function entryPoint(logoSelector, PWM) {
         .enter()
         .filter(d => (d[1] - d[0] > 0))
         .append('path')
-        .attr('d', d => getLetterPath(d[2]))
-        .style('fill', d => colors(d[2]))
+        .attr('d', d => getLetterPath(d[2], strand))
+        .style('fill', d => lookupBaseColor(d[2]))
+        /* eslint-disable func-names */
         .attr('transform', function (d) { return calcPathTransform(this, d, yscale, colWidth); }); // This line cannot be an arrow function or 'this' will be improperly assigned
-}
 
-/**
-* Get random sequence data, then call entry point.
-*
-* @param {number[]} seqLenBounds
-* @param {number[]} seqNumBounds
-*/
-function refreshSVG(seqLenBounds, seqNumBounds) {
-    const sequenceData = getRandomData(seqLenBounds, seqNumBounds);
-
-    // clear SVG if it exists
-    const svg = d3.select('svg');
-
-    if (svg) {
-        svg.remove();
-    }
-
-    entryPoint(sequenceData, seqLenBounds, seqNumBounds);
+    // append red box around search coordinate position
+    svg.append('rect')
+        .attr('y', '-1px')
+        .attr('x', '-1px')
+        .attr('width', `${(svgLetterWidth / m)}px`)
+        .attr('height', `${svgFullHeight + 2}px`)
+        .attr('stroke', '#c13b42')
+        .attr('fill', 'none')
+        .attr('stroke-width', '4px')
+        .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
 }
 
 module.exports.entryPoint = entryPoint;

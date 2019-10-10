@@ -734,6 +734,7 @@ table {
     flex-wrap: wrap;
     align-items: stretch;
     justify-content: space-between;
+    margin-top: 15px;
     .thumbnail {
         flex: 0 0 32%;
         max-width: 32%;
@@ -960,6 +961,7 @@ button {
     svg {
         max-width: 100%;
         max-height: 90px;
+        overflow: visible;
         .domain {
             display: none;
         }
