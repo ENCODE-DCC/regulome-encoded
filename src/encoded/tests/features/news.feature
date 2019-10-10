@@ -4,7 +4,7 @@ Feature: Title
     Scenario: Title updates
         When I visit "/news/"
         And I wait for the content to load
-        Then the title should contain the text "/news/ – ENCODE"
+        Then the title should contain the text "/news/ – Regulome"
 
 @News @usefixtures(workbook)
 Feature: News
