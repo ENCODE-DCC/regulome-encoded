@@ -48,17 +48,15 @@ const snpsColumns = {
 const SNPSummary = (props) => {
     const snps = props.context.summaries;
     return (
-        <div>
-            <SortTablePanel title="Summary of SNP analysis">
-                <SortTable list={snps} columns={snpsColumns} />
-            </SortTablePanel>
-        </div>
+        <SortTablePanel title="Summary of SNP analysis">
+            <SortTable list={snps} columns={snpsColumns} />
+        </SortTablePanel>
     );
 };
 
 SNPSummary.propTypes = {
-    context: React.PropTypes.object.isRequired,
-    summaries: React.PropTypes.array,
+    context: PropTypes.object.isRequired,
+    summaries: PropTypes.array,
 };
 
 SNPSummary.defaultProps = {
@@ -72,7 +70,7 @@ const RegulomeSummary = (props) => {
     const notifications = Object.entries(context.notifications);
 
     return (
-        <div>
+        <React.Fragment>
             <div className="lead-logo">
                 <a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a>
             </div>
@@ -97,7 +95,7 @@ const RegulomeSummary = (props) => {
                 <div className="notification-label-centered">Try another search to see results.</div>
             }
 
-        </div>
+        </React.Fragment>
     );
 };
 

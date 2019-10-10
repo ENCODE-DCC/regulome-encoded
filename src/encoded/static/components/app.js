@@ -9,6 +9,7 @@ import url from 'url';
 import jsonScriptEscape from '../libs/jsonScriptEscape';
 import origin from '../libs/origin';
 import initializeCart, { cartAddElements, cartCacheSaved, cartSave } from './cart';
+import { BrowserFeat } from './browserfeat';
 import * as globals from './globals';
 import Navigation from './navigation';
 import Footer from './footer';
@@ -218,6 +219,9 @@ class App extends React.Component {
             session_cookie: sessionCookie,
             session,
         });
+        
+        // Set browser features in the <html> CSS class.
+        BrowserFeat.setHtmlFeatClass();
 
         // Make a URL for the logo.
         const hrefInfo = url.parse(this.state.href);
@@ -249,7 +253,7 @@ class App extends React.Component {
         // Add privacy link to auth0 login modal.
         this.lock.on('signin ready', () => {
             const lockElements = document.getElementsByClassName('auth0-lock-form');
-            if (lockElements && lockElements.length) {
+            if (lockElements && lockElements.length > 0) {
                 const privacyDiv = document.createElement('div');
                 const privacyLink = document.createElement('a');
                 const privacyLinkText = document.createTextNode('Privacy policy');

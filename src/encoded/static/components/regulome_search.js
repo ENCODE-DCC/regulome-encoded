@@ -164,14 +164,14 @@ class DataType extends React.Component {
 
     render() {
         return (
-            <div>
+            <React.Fragment>
                 <h4>
                     <div className="data-type" onClick={this.handleInfo} onKeyDown={this.handleInfo} role="button" tabIndex={0}>
                         <i className={`icon ${(this.state.open) ? ' icon-caret-down' : 'icon-caret-right'}`} /> {this.props.type}
                     </div>
                 </h4>
                 <p className={`data-type-explanation${(this.state.open) ? ' show' : ''}`}>{this.props.explanation}</p>
-            </div>
+            </React.Fragment>
         );
     }
 }
@@ -247,7 +247,7 @@ class AdvSearch extends React.Component {
         const searchBase = url.parse(this.context.location_href).search || '';
 
         return (
-            <div>
+            <React.Fragment>
                 <form id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
                     <div className="form-group">
                         <label htmlFor="annotation">
@@ -300,7 +300,7 @@ class AdvSearch extends React.Component {
                         <a className="btn btn-info btn-sm" href={context.download_elements[1]} data-bypass>Download peak details (JSON)</a>
                     </div>
                 : null}
-            </div>
+            </React.Fragment>
         );
     }
 }
@@ -468,7 +468,7 @@ const NearbySNPsDrawing = (props) => {
 };
 
 NearbySNPsDrawing.propTypes = {
-    context: React.PropTypes.object.isRequired,
+    context: PropTypes.object.isRequired,
 };
 
 export const ResultsTable = (props) => {
@@ -489,7 +489,7 @@ export const ResultsTable = (props) => {
     const colCount = Object.keys(dataColumns).length;
 
     return (
-        <div>
+        <React.Fragment>
             {data.length > 0 ?
                 <SortTablePanel title="Results">
                     <SortTable list={data} columns={dataColumns} />
@@ -509,12 +509,12 @@ export const ResultsTable = (props) => {
                     </tbody>
                 </table>
             }
-        </div>
+        </React.Fragment>
     );
 };
 
 ResultsTable.propTypes = {
-    data: React.PropTypes.array.isRequired,
+    data: PropTypes.array.isRequired,
     dataFilter: PropTypes.string,
     displayTitle: PropTypes.string.isRequired,
     errorMessage: PropTypes.string.isRequired,
@@ -799,22 +799,22 @@ class RegulomeSearch extends React.Component {
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
                 { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total !== 0) ?
-                    <div>
+                    <React.Fragment>
                         {Object.keys(this.props.context.notifications).map((note, noteIdx) =>
                             <div className="notification-line wider" key={noteIdx}>
                                 <span className="notification-label">{note}</span>
                                 <span className="notification">{this.props.context.notifications[note]}</span>
                             </div>
                         )}
-                    </div>
+                    </React.Fragment>
                 : (context.total > 0) ?
-                    <div>
+                    <React.Fragment>
                         <div className="lead-logo">
                             <a href="/">
                                 <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
                             </a>
                         </div>
-                        <div>
+                        <React.Fragment>
                             <div className="search-information">
                                 {(context.variants) ?
                                     <div className="notification-line">
@@ -829,7 +829,7 @@ class RegulomeSearch extends React.Component {
                                     </div>
                                 : null}
                                 {(context.regulome_score) ?
-                                    <div>
+                                    <React.Fragment>
                                         <div className="notification-line">
                                             <div className="notification-label">Rank</div>
                                             <div className="notification">{context.regulome_score.ranking}</div>
@@ -838,7 +838,7 @@ class RegulomeSearch extends React.Component {
                                             <div className="notification-label">Score</div>
                                             <div className="notification">{context.regulome_score.probability}</div>
                                         </div>
-                                    </div>
+                                    </React.Fragment>
                                 : null}
                             </div>
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
@@ -851,12 +851,12 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>Genome browser</h4>
                                     {(thumbnail === null) ?
-                                        <div>
+                                        <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click here to view results in a genome browser.</div>
                                             <div className="image-container">
                                                 <img src="/static/img/browser-thumbnail-v2.png" alt="Click to view the genome browser" />
                                             </div>
-                                        </div>
+                                        </React.Fragment>
                                     : null}
                                 </button>
                                 <button
@@ -865,14 +865,16 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>ChIP data</h4>
                                     {(thumbnail === null) ?
-                                        <div>
+                                        <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see detailed ChIP-seq data.
-                                                <div>(<b>{chipData.length}</b> result{chipData.length !== 1 ? 's' : ''})</div>
+                                                <div>
+                                                    (<b>{chipData.length}</b> result{chipData.length !== 1 ? 's' : ''})
+                                                </div>
                                             </div>
                                             {chipData.length > 0 ?
                                                 <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
                                             : null}
-                                        </div>
+                                        </React.Fragment>
                                     : null}
                                 </button>
                                 <button
@@ -881,14 +883,16 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>Chromatin state</h4>
                                     {(thumbnail === null) ?
-                                        <div>
+                                        <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to view chromatin data.
-                                                <div>(<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})</div>
+                                                <div>
+                                                    (<b>{chromatinData.length}</b> result{chromatinData.length !== 1 ? 's' : ''})
+                                                </div>
                                             </div>
                                             {chromatinData.length > 0 ?
                                                 <BarChart data={chromatinData} dataFilter={'chromatin'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
                                             : null}
-                                        </div>
+                                        </React.Fragment>
                                     : null}
                                 </button>
                                 <button
@@ -897,14 +901,16 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>Accessibility</h4>
                                     {(thumbnail === null) ?
-                                        <div>
+                                        <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.
-                                                <div>(<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})</div>
+                                                <div>
+                                                    (<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})
+                                                </div>
                                             </div>
                                             {dnaseData.length > 0 ?
                                                 <BarChart data={dnaseData} dataFilter={'dnase'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
                                             : null}
-                                        </div>
+                                        </React.Fragment>
                                     : null}
                                 </button>
                                 <button
@@ -913,10 +919,10 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>Motifs</h4>
                                     {(thumbnail === null) ?
-                                        <div>
+                                        <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see PWM and Footprint data and their associated sequence logos.</div>
                                             <Motifs {...this.props} urlBase={urlBase} limit={4} />
-                                        </div>
+                                        </React.Fragment>
                                     : null}
                                 </button>
                                 <button
@@ -925,12 +931,14 @@ class RegulomeSearch extends React.Component {
                                 >
                                     <h4>QTL Data</h4>
                                     {(thumbnail === null) ?
-                                        <div>
+                                        <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
-                                                <div>(<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})</div>
+                                                <div>
+                                                    (<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})
+                                                </div>
                                             </div>
                                             <ResultsTable data={QTLData} displayTitle={''} dataFilter={'qtl'} errorMessage={'No result table is available for this SNP.'} shortened />
-                                        </div>
+                                        </React.Fragment>
                                     : null}
                                 </button>
                                 {(thumbnail) ?
@@ -943,14 +951,14 @@ class RegulomeSearch extends React.Component {
                                 : null}
                             </div>
                             {(thumbnail) ?
-                                <div>
+                                <React.Fragment>
                                     {(thumbnail === 'motifs') ?
-                                        <div>
+                                        <React.Fragment>
                                             <h4>Motifs</h4>
                                             <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
-                                        </div>
+                                        </React.Fragment>
                                     : (thumbnail === 'valis') ?
-                                        <div>
+                                        <React.Fragment>
                                             <GenomeBrowser
                                                 fixedHeight={this.state.multipleBrowserPages}
                                                 files={this.state.includedFiles}
@@ -960,59 +968,61 @@ class RegulomeSearch extends React.Component {
                                             />
                                             {this.state.multipleBrowserPages ?
                                                 <div className="pagination-container">
-                                                    <div>
+                                                    <React.Fragment>
                                                         <button disabled={this.state.browserCurrentPage === 1} className="btn btn-page btn-page-left" onClick={() => this.handlePagination('minus')}><i className="icon icon-chevron-left" /></button>
                                                         <button disabled={this.state.browserCurrentPage === this.state.browserTotalPages} className="btn btn-page" onClick={() => this.handlePagination('plus')}><i className="icon icon-chevron-right" /></button>
-                                                    </div>
-                                                    <div>Page <b>{this.state.browserCurrentPage}</b> of <b>{this.state.browserTotalPages}</b></div>
+                                                    </React.Fragment>
+                                                    <React.Fragment>
+                                                        Page <b>{this.state.browserCurrentPage}</b> of <b>{this.state.browserTotalPages}</b>
+                                                    </React.Fragment>
                                                 </div>
                                             : null}
-                                        </div>
+                                        </React.Fragment>
                                     : (thumbnail === 'chip') ?
-                                        <div>
+                                        <React.Fragment>
                                             {chipData.length > 0 ?
-                                                <div>
+                                                <React.Fragment>
                                                     <BarChart data={chipData} dataFilter={'chip'} chartWidth={this.state.screenWidth} chartLimit={0} chartOrientation={'horizontal'} />
                                                     <ResultsTable data={chipData} displayTitle={'ChIP data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
-                                                </div>
+                                                </React.Fragment>
                                             :
-                                                <div>
+                                                <React.Fragment>
                                                     <h4>ChIP experiments</h4>
                                                     <div className="error-message">No results available to display, please choose a different SNP.</div>
-                                                </div>
+                                                </React.Fragment>
                                             }
-                                        </div>
+                                        </React.Fragment>
                                     : (thumbnail === 'dnase') ?
-                                        <div>
+                                        <React.Fragment>
                                             {dnaseData.length > 0 ?
                                                 <ChartList data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={thumbnail} />
                                             :
-                                                <div>
+                                                <React.Fragment>
                                                     <h4>FAIRE-seq and DNase-seq experiments</h4>
                                                     <div className="error-message">No results available to display, please choose a different SNP.</div>
-                                                </div>
+                                                </React.Fragment>
                                             }
-                                        </div>
+                                        </React.Fragment>
                                     : (thumbnail === 'qtl') ?
                                         <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
                                     : (thumbnail === 'chromatin') ?
-                                        <div>
+                                        <React.Fragment>
                                             {chromatinData.length > 0 ?
                                                 <ChartTable data={chromatinData} displayTitle={'Chromatin state'} chartWidth={Math.min(this.state.screenWidth, 1000)} />
                                             : null}
-                                        </div>
+                                        </React.Fragment>
                                     : (thumbnail === 'valis') ?
-                                        <div>
+                                        <React.Fragment>
                                             <h4>Genome browser</h4>
                                             <div className="error-message">This will be added in the next PR!</div>
-                                        </div>
+                                        </React.Fragment>
                                     : null}
-                                </div>
+                                </React.Fragment>
                             : null}
-                        </div>
-                    </div>
+                        </React.Fragment>
+                    </React.Fragment>
                 :
-                    <div>
+                    <React.Fragment>
                         <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a></div>
                         <AdvSearch {...this.props} />
                         <div className="data-types">
@@ -1023,7 +1033,7 @@ class RegulomeSearch extends React.Component {
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </React.Fragment>
                 }
 
             </div>

@@ -150,15 +150,15 @@ export const Motifs = (props) => {
     }
 
     return (
-        <div>
+        <React.Fragment>
             {(pwmLinkList.length === 0) ?
-                <div>
+                <React.Fragment>
                     {limit !== 0 ?
                         <div className="motif-error">(<b>0</b> results)</div>
                     :
                         <div className="error-message">There are no results that include PWM data. Try a different search.</div>
                     }
-                </div>
+                </React.Fragment>
             :
                 <div className={`sequence-logo-table ${classList}`}>
                     <div className="sequence-logo">
@@ -173,7 +173,7 @@ export const Motifs = (props) => {
                     </div>
                 </div>
             }
-        </div>
+        </React.Fragment>
     );
 };
 
