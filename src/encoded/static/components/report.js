@@ -6,7 +6,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/mo
 import { svgIcon } from '../libs/svg-icons';
 import { FetchedData, Param } from './fetched';
 import * as globals from './globals';
-import { FacetList } from './search';
+import { FacetList, FilterList } from './search';
 import StickyHeader from './StickyHeader';
 
 
@@ -667,6 +667,7 @@ class Report extends React.Component {
                 <div className="panel data-display main-panel">
                     <div className="row">
                         <div className="col-sm-5 col-md-4 col-lg-3">
+                            <FilterList {...this.props} />
                             <FacetList context={context} facets={context.facets} filters={context.filters} searchBase={searchBase} docTypeTitleSuffix="report" />
                         </div>
                         <div className="col-sm-7 col-md-8 col-lg-9">

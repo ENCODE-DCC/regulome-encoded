@@ -1,12 +1,12 @@
 .page-title {
-    margin-bottom: 30px;
+    max-width: 1200px;
+    margin: 30px auto 0;
 }
 
 
 // Applies to all block types, and specific news styles nest inside
 .block {
     margin-bottom: 10px;
-    box-shadow: 0 0 6px rgba(195, 202, 211, 0.5);
 
     @media screen and (min-width: $screen-md-min) {
         margin-bottom: 20px;
@@ -29,7 +29,7 @@
 
         .col-md-12 & {
             @media screen and (min-width: $screen-md-min) {
-                padding: 20px 10%;
+                padding: 0 10%;
             }
 
             &.full-width {

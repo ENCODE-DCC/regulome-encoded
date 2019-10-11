@@ -7,7 +7,7 @@ import url from 'url';
 import { svgIcon } from '../libs/svg-icons';
 import * as globals from './globals';
 import { BrowserSelector } from './objectutils';
-import { BatchDownload, FacetList, TextFilter } from './search';
+import { BatchDownload, FacetList, FilterList, TextFilter } from './search';
 
 
 class GroupMoreButton extends React.Component {
@@ -214,6 +214,7 @@ class Matrix extends React.Component {
                                         </div>
                                     </div>
                                 </div>
+                                <FilterList {...this.props} />
                                 <FacetList facets={facets} filters={context.filters} searchBase={matrixSearch} onFilter={this.onFilter} />
                             </div>
                             <div className="col-sm-7 col-md-8 col-lg-9 sm-no-padding">

@@ -11,7 +11,7 @@ body {
         li {
             .solitary-link {
                 padding: 14px 15px 10px;
-                line-height: unset;
+                line-height: inherit;
             }
             button {
                 padding: 14px 15px 10px;
@@ -439,7 +439,7 @@ table {
     }
 }
 
-.row {
+.row, .split-panel {
     max-width: 1200px;
     margin: auto;
 }
@@ -1315,4 +1315,21 @@ button {
         margin-right: 5px;
         padding: 8px 10px 4px 6px;
     }
+}
+
+.file-gallery-tab-bar {
+    border-left: 1px solid #a0a0a0;
+    border-right: 1px solid #a0a0a0;
+    border-bottom: 1px solid #a0a0a0;
+}
+
+.flexcol--doc {
+    .document {
+        border: 1px solid #a0a0a0;
+    }
+}
+
+.panel {
+    box-shadow: none;
+    -webkit-box-shadow: none;
 }

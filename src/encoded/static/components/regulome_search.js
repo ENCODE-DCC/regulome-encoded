@@ -382,7 +382,7 @@ const NearbySNPsDrawing = (props) => {
         <div className="svg-container">
             <div className="svg-title top-title">Chromosome {context.nearby_snps[0].chrom.split('chr')[1]}</div>
             <div className="svg-title">SNPs matching searched coordinates and nearby SNPs</div>
-            <svg className="nearby-snps" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMid meet" aria-labelledby="diagram-of-nearby-snps" role="img">
+            <svg className="nearby-snps" viewBox="0 -30 1000 220" preserveAspectRatio="xMidYMid meet" aria-labelledby="diagram-of-nearby-snps" role="img">
                 <title id="diagram-of-nearby-snps">Diagram of nearby SNPs</title>
                 <defs>
                     <marker
