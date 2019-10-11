@@ -41,7 +41,15 @@ const snpsColumns = {
             }
             return <a href={hrefScore}>See related experiments</a>;
         },
-        getValue: item => item.regulome_score.probability,
+        getValue: item => +item.regulome_score.probability,
+        sorter: (a, b) => {
+            if (a < b) {
+                return -1;
+            } else if (a > b) {
+                return 1;
+            }
+            return 0;
+        },
     },
 };
 
