@@ -703,7 +703,7 @@ TypeTerm.propTypes = {
 // Display list of selected filters
 export const FilterList = (props) => {
     const filters = props.filters;
-    if (filters.length > 0) {
+    if (filters && filters.length > 0) {
         const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
 
         if (filters.length < 15) {
