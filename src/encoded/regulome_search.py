@@ -375,12 +375,9 @@ def evidence_to_features(evidence):
         'DNase': False,
         'PWM': False,
         'Footprint': False,
-        'eQTL': False,
-        'dsQTL': False,
+        'QTL': False,
         'PWM_matched': False,
         'Footprint_matched': False,
-        'ChIP_max_signal': 0.0,
-        'DNase_max_signal': 0.0,
         'IC_matched_max': 0.0,
         'IC_max': 0.0,
     }
