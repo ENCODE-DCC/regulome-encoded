@@ -214,7 +214,7 @@ class Matrix extends React.Component {
                                         </div>
                                     </div>
                                 </div>
-                                <FilterList filters={this.props.context.filters} />
+                                <FilterList filters={context.filters} />
                                 <FacetList facets={facets} filters={context.filters} searchBase={matrixSearch} onFilter={this.onFilter} />
                             </div>
                             <div className="col-sm-7 col-md-8 col-lg-9 sm-no-padding">

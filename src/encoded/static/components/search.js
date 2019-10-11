@@ -703,19 +703,17 @@ TypeTerm.propTypes = {
 // Display list of selected filters
 export const FilterList = (props) => {
     const filters = props.filters;
-    if (filters && filters.length > 0) {
-        const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
+    const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
 
-        if (filters.length < 15) {
-            return (
-                <div className="filter-container">
-                    <div className="filter-hed">Selected filters:</div>
-                    {filters.map((filter, filterIdx) =>
-                        <a href={filter.remove} key={filter.term} className={negationFilters[filterIdx] ? 'negationFilter' : ''}><div className="filter-link"><i className="icon icon-times-circle" /> {filter.term}</div></a>
-                    )}
-                </div>
-            );
-        }
+    if (filters.length > 0 && filters.length < 15) {
+        return (
+            <div className="filter-container">
+                <div className="filter-hed">Selected filters:</div>
+                {filters.map((filter, filterIdx) =>
+                    <a href={filter.remove} key={filter.term} className={negationFilters[filterIdx] ? 'negationFilter' : ''}><div className="filter-link"><i className="icon icon-times-circle" /> {filter.term}</div></a>
+                )}
+            </div>
+        );
     }
     return null;
 };
@@ -1457,7 +1455,7 @@ export class ResultTable extends React.Component {
             <div className="row">
                 {facets.length ?
                     <div className="col-sm-5 col-md-4 col-lg-3">
-                        <FilterList filters={this.props.context.filters} />
+                        <FilterList filters={context.filters} />
                         <FacetList
                             {...this.props}
                             facets={facets}
