@@ -703,17 +703,19 @@ TypeTerm.propTypes = {
 // Display list of selected filters
 export const FilterList = (props) => {
     const filters = props.filters;
-    const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
+    if (filters.length > 0) {
+        const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
 
-    if (filters.length > 0 && filters.length < 15) {
-        return (
-            <div className="filter-container">
-                <div className="filter-hed">Selected filters:</div>
-                {filters.map((filter, filterIdx) =>
-                    <a href={filter.remove} key={filter.term} className={negationFilters[filterIdx] ? 'negationFilter' : ''}><div className="filter-link"><i className="icon icon-times-circle" /> {filter.term}</div></a>
-                )}
-            </div>
-        );
+        if (filters.length < 15) {
+            return (
+                <div className="filter-container">
+                    <div className="filter-hed">Selected filters:</div>
+                    {filters.map((filter, filterIdx) =>
+                        <a href={filter.remove} key={filter.term} className={negationFilters[filterIdx] ? 'negationFilter' : ''}><div className="filter-link"><i className="icon icon-times-circle" /> {filter.term}</div></a>
+                    )}
+                </div>
+            );
+        }
     }
     return null;
 };
