@@ -297,7 +297,7 @@ class SummaryVerticalFacets extends React.Component {
 
         return (
             <div className="summary-content__facets-vertical">
-                <FilterList {...this.props} />
+                <FilterList filters={this.props.context.filters} />
                 <FacetList
                     facets={vertFacets}
                     filters={context.filters}
