@@ -1,6 +1,6 @@
 /* top padding for small screens */
 #content {
-    padding-top: 0;
+    padding-top: 50px;
     
     @media screen and (min-width: $screen-md-min) {
         padding-top: 75px;

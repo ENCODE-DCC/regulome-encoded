@@ -702,7 +702,7 @@ TypeTerm.propTypes = {
 
 // Display list of selected filters
 export const FilterList = (props) => {
-    const filters = props.context.filters;
+    const filters = props.filters;
     const negationFilters = filters.map(filter => filter.field.charAt(filter.field.length - 1) === '!');
 
     if (filters.length > 0 && filters.length < 15) {
@@ -719,7 +719,7 @@ export const FilterList = (props) => {
 };
 
 FilterList.propTypes = {
-    context: PropTypes.object.isRequired,
+    filters: PropTypes.array.isRequired,
 };
 
 // Display header of facet list
@@ -1455,7 +1455,7 @@ export class ResultTable extends React.Component {
             <div className="row">
                 {facets.length ?
                     <div className="col-sm-5 col-md-4 col-lg-3">
-                        <FilterList {...this.props} />
+                        <FilterList filters={context.filters} />
                         <FacetList
                             {...this.props}
                             facets={facets}

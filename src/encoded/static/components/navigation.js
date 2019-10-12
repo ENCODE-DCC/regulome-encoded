@@ -205,24 +205,6 @@ ContextActions.contextTypes = {
     listActionsFor: PropTypes.func,
 };
 
-
-const Search = (props, context) => {
-    const id = url.parse(context.location_href, true);
-    const searchTerm = id.query.searchTerm || '';
-    return (
-        <ul className="nav navbar-nav navbar-nav-right">
-            <li className="dropdown">
-                <a href="https://encodeproject.org/" target="_blank">ENCODE</a>
-            </li>
-        </ul>
-    );
-};
-
-Search.contextTypes = {
-    location_href: PropTypes.string,
-};
-
-
 const UserActions = (props, context) => {
     const sessionProperties = context.session_properties;
     if (!sessionProperties['auth.userid']) {

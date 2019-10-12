@@ -52,8 +52,10 @@ const loaders = [
             path.resolve(__dirname, 'node_modules/dagre-d3'),
             path.resolve(__dirname, 'node_modules/dalliance'),
             path.resolve(__dirname, 'node_modules/superagent'),
+            path.resolve(__dirname, 'node_modules/d3-sequence-logo'),
         ],
         loader: 'babel',
+        query: { compact: false },
     },
     {
         test: /\.json$/,

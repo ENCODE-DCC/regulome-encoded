@@ -9,6 +9,9 @@ import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visuali
 import { requestSearch } from './objectutils';
 import GenomeBrowser from './genome_browser';
 
+const screenMediumMax = 787;
+const screenSmallMax = 483;
+
 const dataTypeStrings = [
     {
         type: 'dbSNP IDs',
@@ -379,7 +382,7 @@ const NearbySNPsDrawing = (props) => {
         <div className="svg-container">
             <div className="svg-title top-title">Chromosome {context.nearby_snps[0].chrom.split('chr')[1]}</div>
             <div className="svg-title">SNPs matching searched coordinates and nearby SNPs</div>
-            <svg className="nearby-snps" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMid meet" aria-labelledby="diagram-of-nearby-snps" role="img">
+            <svg className="nearby-snps" viewBox="0 -30 1000 220" preserveAspectRatio="xMidYMid meet" aria-labelledby="diagram-of-nearby-snps" role="img">
                 <title id="diagram-of-nearby-snps">Diagram of nearby SNPs</title>
                 <defs>
                     <marker
@@ -603,26 +606,37 @@ class RegulomeSearch extends React.Component {
     }
 
     updateDimensions() {
-        const screenWidth = this.applicationRef.offsetWidth;
-        let thumbnailWidth = 0;
-        if (screenWidth > 865) {
-            thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
-        } else {
-            thumbnailWidth = this.applicationRef.offsetWidth - 40;
+        // check for applicationRef because otherwise there are errors during resizing process
+        if (this.applicationRef) {
+            const screenWidth = this.applicationRef.offsetWidth;
+            let thumbnailWidth = 0;
+            // for desktop screens, the display is 3x2 thumbnails
+            if (screenWidth > screenMediumMax) {
+                thumbnailWidth = (this.applicationRef.offsetWidth / 3) - 40;
+            // for vertical tablets, the display is 2x3 thumbnails
+            } else if (screenWidth > screenSmallMax) {
+                thumbnailWidth = (this.applicationRef.offsetWidth / 2) - 40;
+            // anything narrower than a vertical tablet has a 1x3 display
+            } else {
+                thumbnailWidth = this.applicationRef.offsetWidth - 40;
+            }
+            this.setState({
+                thumbnailWidth,
+                screenWidth,
+            });
         }
-        this.setState({
-            thumbnailWidth,
-            screenWidth,
-        });
     }
 
     addNewFiles(searchQuery) {
         return new Promise((ok) => {
             requestSearch(searchQuery).then((results) => {
-                const newFiles = results ? results['@graph'] : [];
-                this.setState(prevState => ({
-                    allFiles: [...prevState.allFiles, ...newFiles],
-                }));
+                const newFiles = (results && results['@graph']) ? results['@graph'] : [];
+                // only update state if new files have been retrieved
+                if (newFiles.length > 0) {
+                    this.setState(prevState => ({
+                        allFiles: [...prevState.allFiles, ...newFiles],
+                    }));
+                }
                 ok('success');
             });
         });
@@ -929,7 +943,7 @@ class RegulomeSearch extends React.Component {
                                     className={`thumbnail ${thumbnail === 'qtl' ? 'active' : ''}`}
                                     onClick={() => this.chooseThumbnail('qtl')}
                                 >
-                                    <h4>QTL Data</h4>
+                                    <h4>QTL data</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.

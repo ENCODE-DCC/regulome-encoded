@@ -7,7 +7,7 @@ import { Panel, PanelBody } from '../libs/bootstrap/panel';
 import { svgIcon } from '../libs/svg-icons';
 import { LabChart, CategoryChart, ExperimentDate, createBarChart } from './award';
 import * as globals from './globals';
-import { FacetList } from './search';
+import { FacetList, FilterList } from './search';
 import { getObjectStatuses, sessionToAccessLevel } from './status';
 
 
@@ -297,6 +297,7 @@ class SummaryVerticalFacets extends React.Component {
 
         return (
             <div className="summary-content__facets-vertical">
+                <FilterList filters={this.props.context.filters} />
                 <FacetList
                     facets={vertFacets}
                     filters={context.filters}
@@ -421,7 +422,6 @@ const SummaryHeader = (props) => {
     return (
         <div className="summary-header">
             <SummaryTitle context={context} />
-            <SummaryHorizontalFacets context={context} />
         </div>
     );
 };
