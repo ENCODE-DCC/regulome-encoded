@@ -13,7 +13,7 @@ def test_one_regulome(testapp, workbook, region_index):
     assert res.json['title'] == 'Regulome search'
     assert res.json['@type'] == ['regulome-search']
     assert len(res.json['@graph']) == 8
-    assert res.json['regulome_score'] == {'probability': '0.977', 'ranking': '1a'}
+    assert res.json['regulome_score'] == {'probability': '0.99267', 'ranking': '1a'}
     assert 'chr1:39492461-39492462' in res.json['variants']
     assert {e['dataset'] for e in res.json['@graph']} == {
         '/annotations/ENCSR228TST/', '/annotations/ENCSR061TST/',
@@ -27,7 +27,7 @@ def test_dataset_size(testapp, workbook, region_index):
     ''' this doesn't actually test size but makes sure some properties were removed '''
     res = testapp.get('/regulome-search/?regions=rs10905307&genome=GRCh37')
     assert len(res.json['@graph']) == 3
-    assert res.json['regulome_score'] == {'probability': '0.6829', 'ranking': '1f'}
+    assert res.json['regulome_score'] == {'probability': '0.54789', 'ranking': '1f'}
     assert 'chr10:5894499-5894500' in res.json['variants']
     assert {e['dataset'] for e in res.json['@graph']} == {
         '/annotations/ENCSR061TST/',
@@ -45,7 +45,7 @@ def test_dataset_size(testapp, workbook, region_index):
 
 def test_regulome_score(testapp, workbook, region_index):
     res = testapp.get('/regulome-search/?regions=rs3768324&genome=GRCh37')
-    assert res.json['regulome_score'] == {'probability': '0.977', 'ranking': '1a'}
+    assert res.json['regulome_score'] == {'probability': '0.99267', 'ranking': '1a'}
 
 
 def test_regulome_summary(testapp, workbook, region_index):

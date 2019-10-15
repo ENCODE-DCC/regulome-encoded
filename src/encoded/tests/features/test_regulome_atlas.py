@@ -427,7 +427,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
             'strand': '-',
-            'score': {'probability': '0.977', 'ranking': '1a'},
+            'score': {'probability': '0.99267', 'ranking': '1a'},
             'rsid': 'rs3768324',
             'assembly': 'hg19',
             'chrom': 'chr1'
@@ -441,7 +441,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 },
                 'coordinates': {'lt': 104529668, 'gte': 104529667},
                 'strand': '+',
-                'score': {'probability': '0.43534', 'ranking': '7'},
+                'score': {'probability': '0.44299', 'ranking': '7'},
                 'rsid': 'rs7092340',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
@@ -453,7 +453,7 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 },
                 'coordinates': {'lt': 104574063, 'gte': 104574062},
                 'strand': '-',
-                'score': {'probability': '0.50976', 'ranking': '7'},
+                'score': {'probability': '0.47065', 'ranking': '7'},
                 'rsid': 'rs284857',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
@@ -686,7 +686,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
             },
             'coordinates': {'lt': 39492462, 'gte': 39492461},
             'strand': '-',
-            'score': {'probability': '0.977', 'ranking': '1a'},
+            'score': {'probability': '0.99267', 'ranking': '1a'},
             'rsid': 'rs3768324',
             'assembly': 'hg19',
             'chrom': 'chr1'
@@ -700,7 +700,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 },
                 'coordinates': {'lt': 104529668, 'gte': 104529667},
                 'strand': '+',
-                'score': {'probability': '0.43534', 'ranking': '7'},
+                'score': {'probability': '0.44299', 'ranking': '7'},
                 'rsid': 'rs7092340',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
@@ -712,7 +712,7 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 },
                 'coordinates': {'lt': 104574063, 'gte': 104574062},
                 'strand': '-',
-                'score': {'probability': '0.50976', 'ranking': '7'},
+                'score': {'probability': '0.47065', 'ranking': '7'},
                 'rsid': 'rs284857',
                 'assembly': 'hg19',
                 'chrom': 'chr10'
