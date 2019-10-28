@@ -571,21 +571,18 @@ FacetButton.propTypes = {
 };
 
 const Facet = (props) => {
-    const facetTitle = props.facetTitle;
-    const facetName = props.facetName;
-    const facetArray = props.facetArray;
-    const selectedFacets = props.selectedFacets;
+    const { facetTitle, facetName, facetArray, lookupFilterCount, addGenomeFilter, selectedFacets } = props;
     return (
         <div className="facet">
             <h4>{facetTitle}</h4>
             <div className="facet-scrollable">
                 {facetArray.map(d =>
                     <FacetButton
-                        lookupFilterCount={props.lookupFilterCount}
+                        lookupFilterCount={lookupFilterCount}
                         selectedFacets={selectedFacets}
                         buttonLabel={d}
                         facetLabel={facetName}
-                        addGenomeFilter={props.addGenomeFilter}
+                        addGenomeFilter={addGenomeFilter}
                     />
                 )}
             </div>

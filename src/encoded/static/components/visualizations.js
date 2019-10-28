@@ -495,7 +495,7 @@ export class ChartList extends React.Component {
     }
 
     render() {
-        const searchTerm = String(globals.sanitizedString(this.state.unsanitizedSearchTerm));
+        const searchTerm = String(sanitizedString(this.state.unsanitizedSearchTerm));
         let errorMessage = !!searchTerm;
         let fillColor;
         if (this.props.dataFilter === 'dnase') {
@@ -525,7 +525,7 @@ export class ChartList extends React.Component {
                     const dKey = d.replace(/[^\w\s]/gi, '').toLowerCase();
                     let searchTermMatch = true;
                     if (searchTerm) {
-                        searchTermMatch = globals.sanitizedString(d).match(searchTerm);
+                        searchTermMatch = sanitizedString(d).match(searchTerm);
                         if (searchTermMatch) {
                             errorMessage = false;
                         }
