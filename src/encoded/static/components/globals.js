@@ -275,6 +275,11 @@ export const dbxrefPrefixMap = {
     WormBase: 'http://www.wormbase.org/species/c_elegans/strain/',
 };
 
+// Sanitize user input and facet terms for comparison: convert to lowercase, remove white space and asterisks (which cause regular expression error)
+export const sanitizedString = inputString => inputString.toLowerCase()
+    .replace(/ /g, '') // remove spaces (to allow multiple word searches)
+    .replace(/[*?()+[\]\\/]/g, ''); // remove certain special characters (these cause console errors)
+
 
 // Keep lists of currently known project and biosample_type. As new project and biosample_type
 // enter the system, these lists must be updated. Used mostly to keep chart and matrix colors

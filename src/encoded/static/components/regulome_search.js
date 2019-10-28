@@ -446,14 +446,14 @@ const NearbySNPsDrawing = (props) => {
                             if (snpX === coordinateX) {
                                 return (
                                     <g key={`snp${snpIndex}`}>
-                                        <rect x={labelX - 8} y={42 - coordinateYOffset[snpIndex]} height="18" width={`${labelWidth}`} fill="#c13b42" opacity="1.0" rx="2px" />
+                                        <rect x={labelX - 8} y={42 - coordinateYOffset[snpIndex]} height="18" width={labelWidth} fill="#c13b42" opacity="1.0" rx="2px" />
                                         <text x={labelX} y={55 - coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
                                     </g>
                                 );
                             }
                             return (
                                 <g key={`snp${snpIndex}`}>
-                                    <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width={`${labelWidth}`} fill="white" opacity="0.6" />
+                                    <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width={labelWidth} fill="white" opacity="0.6" />
                                     <text x={labelX} y={55 - coordinateYOffset[snpIndex]}>{snp.rsid}</text>
                                 </g>
                             );
@@ -461,14 +461,14 @@ const NearbySNPsDrawing = (props) => {
                         if (snpX === coordinateX) {
                             return (
                                 <g key={`snp${snpIndex}`}>
-                                    <rect x={labelX - 8} y={87 + coordinateYOffset[snpIndex]} height="22" width={`${labelWidth}`} fill="#c13b42" opacity="1.0" />
+                                    <rect x={labelX - 8} y={87 + coordinateYOffset[snpIndex]} height="22" width={labelWidth} fill="#c13b42" opacity="1.0" />
                                     <text x={labelX} y={105 + coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
                                 </g>
                             );
                         }
                         return (
                             <g key={`snp${snpIndex}`}>
-                                <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width={`${labelWidth}`} fill="white" opacity="0.6" />
+                                <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width={labelWidth} fill="white" opacity="0.6" />
                                 <text x={labelX} y={105 + coordinateYOffset[snpIndex]}>{snp.rsid}</text>
                             </g>
                         );
@@ -538,27 +538,25 @@ ResultsTable.defaultProps = {
     shortened: false,
 };
 
-// Sanitize user input and facet terms for comparison: convert to lowercase, remove white space and asterisks (which cause regular expression error)
-const sanitizedString = inputString => inputString.toLowerCase()
-    .replace(/ /g, '') // remove spaces (to allow multiple word searches)
-    .replace(/[*?()+[\]\\/]/g, ''); // remove certain special characters (these cause console errors)
+class FacetButton extends React.Component {
+    constructor() {
+        super();
+        this.addGenomeFilter = this.props.addGenomeFilter.bind(this);
+    }
 
-const FacetButton = (props) => {
-    const buttonLabel = props.buttonLabel;
-    const lookupFilterCount = props.lookupFilterCount;
-    const selectedFacets = props.selectedFacets;
-    const facetLabel = props.facetLabel;
-    const addGenomeFilter = props.addGenomeFilter;
-    return (
-        <button
-            className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
-            onClick={() => addGenomeFilter(buttonLabel, facetLabel)}
-            disabled={(lookupFilterCount(buttonLabel, facetLabel) === ' (0)')}
-        >
-            {buttonLabel}{lookupFilterCount(buttonLabel, facetLabel)}
-        </button>
-    );
-};
+    render() {
+        const { buttonLabel, facetLabel, lookupFilterCount, selectedFacets } = this.props;
+        return (
+            <button
+                className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
+                onClick={this.addGenomeFilter(buttonLabel, facetLabel)}
+                disabled={(lookupFilterCount(buttonLabel, facetLabel) === ' (0)')}
+            >
+                {buttonLabel}{lookupFilterCount(buttonLabel, facetLabel)}
+            </button>
+        );
+    }
+}
 
 FacetButton.propTypes = {
     buttonLabel: PropTypes.string.isRequired,
@@ -601,18 +599,14 @@ Facet.propTypes = {
 };
 
 const TypeaheadFacet = (props) => {
-    const facetTitle = props.facetTitle;
-    const facetName = props.facetName;
-    const facetArray = props.facetArray;
-    const unsanitizedSearchTerm = props.unsanitizedSearchTerm;
-    const selectedFacets = props.selectedFacets;
+    const { facetTitle, facetName, facetArray, handleSearch, lookupFilterCount, addGenomeFilter, selectedFacets, unsanitizedSearchTerm } = props;
     return (
         <div className="facet">
             <h4>{facetTitle}</h4>
             <div className="typeahead-entry" role="search">
                 <i className="icon icon-search" />
                 <div className="searchform">
-                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => props.handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
+                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
                 </div>
             </div>
             <div className="facet-scrollable">
@@ -623,11 +617,12 @@ const TypeaheadFacet = (props) => {
                 >
                     {facetArray.map(d =>
                         <FacetButton
-                            lookupFilterCount={props.lookupFilterCount}
+                            lookupFilterCount={lookupFilterCount}
                             selectedFacets={selectedFacets}
                             buttonLabel={d}
                             facetLabel={facetName}
-                            addGenomeFilter={props.addGenomeFilter}
+                            addGenomeFilter={addGenomeFilter}
+                            key={d}
                         />
                     )}
                 </div>
@@ -715,7 +710,7 @@ class GenomeFacets extends React.Component {
     }
 
     handleSearch(e, typeaheadIdentifier) {
-        const filterVal = String(sanitizedString(e.target.value));
+        const filterVal = String(globals.sanitizedString(e.target.value));
         const targetValue = e.target.value;
         this.setState((prevState) => {
             const unsanitizedSearchTerms = { ...prevState.unsanitizedSearchTerms };
@@ -767,7 +762,7 @@ class GenomeFacets extends React.Component {
                 slims.forEach((slim) => {
                     // if the facet has a typeahead, check that term matches typed search, if so, add if the term is not already present in facet list
                     if (this.state.searchTerms[facet]) {
-                        if ((this.state.searchTerms[facet] === '') || sanitizedString(slim).match(this.state.searchTerms[facet])) {
+                        if ((this.state.searchTerms[facet] === '') || globals.sanitizedString(slim).match(this.state.searchTerms[facet])) {
                             if ((facetObject[facet].indexOf(slim) === -1) && slim) {
                                 facetObject[facet].push(slim);
                             }
@@ -801,6 +796,7 @@ class GenomeFacets extends React.Component {
                                     <button
                                         className="browser-filter"
                                         onClick={() => this.addGenomeFilter(fsplit[0], fsplit[1])}
+                                        key={f}
                                     >
                                         <i className="icon icon-times-circle" />
                                         {f.split('AND')[0]}
