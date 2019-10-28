@@ -661,6 +661,37 @@ const filterByAllSelectedFilters = (files, facets) => {
     return newFiles;
 };
 
+class FilterButton extends React.Component {
+    constructor() {
+        super();
+        this._addGenomeFilter = this._addGenomeFilter.bind(this);
+    }
+
+    _addGenomeFilter() {
+        this.props.addGenomeFilter(this.props.buttonLabel, this.props.facetLabel);
+    }
+
+    render() {
+        return (
+            <button
+                className="browser-filter"
+                onClick={this._addGenomeFilter}
+                key={this.props.facetKey}
+            >
+                <i className="icon icon-times-circle" />
+                {this.props.buttonLabel}
+            </button>
+        );
+    }
+}
+
+FilterButton.propTypes = {
+    buttonLabel: PropTypes.string.isRequired,
+    facetLabel: PropTypes.string.isRequired,
+    facetKey: PropTypes.string.isRequired,
+    addGenomeFilter: PropTypes.func.isRequired,
+};
+
 class GenomeFacets extends React.Component {
     constructor() {
         super();
@@ -794,14 +825,12 @@ class GenomeFacets extends React.Component {
                             {this.state.selectedFacets.map((f) => {
                                 const fsplit = f.split('AND');
                                 return (
-                                    <button
-                                        className="browser-filter"
-                                        onClick={() => this.addGenomeFilter(fsplit[0], fsplit[1])}
-                                        key={f}
-                                    >
-                                        <i className="icon icon-times-circle" />
-                                        {f.split('AND')[0]}
-                                    </button>
+                                    <FilterButton
+                                        buttonLabel={fsplit[0]}
+                                        facetLabel={fsplit[1]}
+                                        facetKey={f}
+                                        addGenomeFilter={this.addGenomeFilter}
+                                    />
                                 );
                             })}
                             <button
