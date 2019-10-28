@@ -541,15 +541,19 @@ ResultsTable.defaultProps = {
 class FacetButton extends React.Component {
     constructor() {
         super();
-        this.addGenomeFilter = this.props.addGenomeFilter.bind(this);
+        this._addGenomeFilter = this._addGenomeFilter.bind(this);
+    }
+
+    _addGenomeFilter() {
+        this.props.addGenomeFilter(this.props.buttonLabel, this.props.facetLabel);
     }
 
     render() {
-        const { buttonLabel, facetLabel, lookupFilterCount, selectedFacets } = this.props;
+        const { buttonLabel, lookupFilterCount, selectedFacets, facetLabel } = this.props;
         return (
             <button
                 className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
-                onClick={this.addGenomeFilter(buttonLabel, facetLabel)}
+                onClick={this._addGenomeFilter}
                 disabled={(lookupFilterCount(buttonLabel, facetLabel) === ' (0)')}
             >
                 {buttonLabel}{lookupFilterCount(buttonLabel, facetLabel)}
