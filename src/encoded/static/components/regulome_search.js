@@ -550,13 +550,14 @@ class FacetButton extends React.Component {
 
     render() {
         const { buttonLabel, lookupFilterCount, selectedFacets, facetLabel } = this.props;
+        const filterCount = lookupFilterCount(buttonLabel, facetLabel);
         return (
             <button
                 className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
                 onClick={this._addGenomeFilter}
-                disabled={(lookupFilterCount(buttonLabel, facetLabel) === ' (0)')}
+                disabled={(filterCount === ' (0)')}
             >
-                {buttonLabel}{lookupFilterCount(buttonLabel, facetLabel)}
+                {buttonLabel}{filterCount}
             </button>
         );
     }
