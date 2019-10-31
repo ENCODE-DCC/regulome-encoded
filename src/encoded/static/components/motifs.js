@@ -1,4 +1,5 @@
 import React from 'react';
+import _ from 'underscore';
 import PropTypes from 'prop-types';
 // import * as logos from '../libs/d3-sequence-logo'; // This is for local development when changes are needed to d3-sequence-logo.
 
@@ -74,47 +75,90 @@ export class MotifElement extends React.Component {
     generatePWMLink() {
         const element = this.props.element;
         const urlBase = this.props.urlBase;
-        return `${urlBase}${element.documents[0]['@id']}${element.documents[0].attachment.href}`;
+        return `${urlBase}${element.pwm}${element.href}`;
     }
 
     addMotifElement(response) {
         // Convert PWM text data to object
         const PWM = convertTextToObj(response);
-        // Generate the logo from the PWM object
-        const alignmentCoordinate = this.props.coordinates.split(':')[1].split('-')[0];
-        const startCoordinate = this.props.element.start;
-        const endCoordinate = this.props.element.end;
+
+        // Determine padding required for alignment of logos
+        const alignmentCoordinate = +this.props.coordinates.split(':')[1].split('-')[0];
+        const startCoordinate = +this.props.element.start;
+        const endCoordinate = +this.props.element.end;
         const strand = this.props.element.strand;
-        this.sequenceLogos.entryPoint(this.chartdisplay, PWM, this.d3, alignmentCoordinate, startCoordinate, endCoordinate, strand);
+        const currentLength = +endCoordinate - +startCoordinate;
+        const totalLength = +this.props.alignedEndCoordinate - +this.props.alignedStartCoordinate;
+        let startAlignmentNeeded = 0;
+        let endAlignmentNeeded = 0;
+        if (strand === '-') {
+            endAlignmentNeeded = +startCoordinate - +this.props.alignedStartCoordinate;
+            startAlignmentNeeded = totalLength - endAlignmentNeeded - currentLength;
+        } else {
+            startAlignmentNeeded = +startCoordinate - +this.props.alignedStartCoordinate;
+            endAlignmentNeeded = totalLength - startAlignmentNeeded - currentLength;
+        }
+
+        // Insert padding for alignment
+        const newPWM = [...PWM];
+        /* eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }] */
+        for (let startIdx = 0; startIdx < startAlignmentNeeded; startIdx++) {
+            newPWM.unshift([0, 0, 0, 0]);
+        }
+        for (let endIdx = 0; endIdx < endAlignmentNeeded; endIdx++) {
+            newPWM.push([0, 0, 0, 0]);
+        }
+
+        // Generate the logo from the PWM object
+        this.sequenceLogos.entryPoint(this.chartdisplay, newPWM, this.d3, alignmentCoordinate, this.props.alignedStartCoordinate, this.props.alignedEndCoordinate, strand);
     }
 
     render() {
         const element = this.props.element;
         const targetList = element.targets;
-        const targetListLabel = targetList.length > 1 ? 'Targets' : 'Target';
-        const accession = element.dataset.split('/')[2];
+        const footprintList = {};
+        const pwmList = {};
+        element.datasets.forEach((d, dIndex) => {
+            const biosample = element.biosamples[dIndex];
+            const accession = element.accessions[dIndex];
+            if (element.biosamples[dIndex] !== undefined) {
+                footprintList[biosample] = d;
+            } else {
+                pwmList[accession] = d;
+            }
+        });
+
+        const targetListLabel = (targetList.indexOf(',') !== -1) ? 'Targets' : 'Target';
+        const pwmsLabel = (Object.keys(pwmList).length > 1) ? 'PWMs' : 'PWM';
+        const footprintsLabel = (Object.keys(footprintList).length > 1) ? 'Footprints' : 'Footprint';
 
         return (
-            <div className="element" id={`element${accession}`}>
+            <div className="element" id={`element${element.pwm}`}>
                 <div className={`motif-description ${this.props.shortened ? 'shortened-description' : ''}`}>
-                    {!(this.props.shortened) ?
-                        <p><a href={element.dataset}>{accession}</a></p>
-                    : null}
-                    {element.organ_slims ?
-                        <p><span className="motif-label">Organ</span>{element.organ_slims.join(', ')}</p>
-                    : null}
                     {(targetList.length > 0) ?
-                        <p><span className="motif-label">{targetListLabel}</span>{targetList.join(', ')}</p>
+                        <p><span className="motif-label">{targetListLabel}</span>{targetList}</p>
                     : null}
                     {element.strand ?
                         <p><span className="motif-label">Strand</span><i className={`icon ${element.strand === '+' ? 'icon-plus-circle' : 'icon-minus-circle'}`} /></p>
                     : null}
-                    <p><span className="motif-label">Method</span>{element.method}</p>
-                    {(element.biosample_ontology && element.biosample_ontology.term_name && element.biosample_ontology.term_name.length > 0) ?
-                        <p><span className="motif-label">Biosample</span>{element.biosample_ontology.term_name}</p>
-                    : null}
                     {element.description && !(this.props.shortened) ?
                         <p><span className="motif-label">Description</span>{element.description}</p>
+                    : null}
+                    {!(this.props.shortened) ?
+                        <React.Fragment>
+                            {(Object.keys(footprintList).length > 0) ?
+                                <p>
+                                    <span className="motif-label">{footprintsLabel}</span>
+                                    {Object.keys(footprintList).map((d, dIndex) => <a key={d} href={footprintList[d]}>{d}{dIndex === (Object.keys(footprintList).length - 1) ? '' : ', '}</a>)}
+                                </p>
+                            : null}
+                            {(Object.keys(pwmList).length > 0) ?
+                                <p>
+                                    <span className="motif-label">{pwmsLabel}</span>
+                                    {Object.keys(pwmList).map((d, dIndex) => <a key={d} href={pwmList[d]}>{d}{dIndex === (Object.keys(pwmList).length - 1) ? '' : ', '}</a>)}
+                                </p>
+                            : null}
+                        </React.Fragment>
                     : null}
                 </div>
                 <div ref={(div) => { this.chartdisplay = div; }} className="motif-element" />
@@ -128,6 +172,8 @@ MotifElement.propTypes = {
     urlBase: PropTypes.string.isRequired,
     shortened: PropTypes.bool.isRequired,
     coordinates: PropTypes.string.isRequired,
+    alignedStartCoordinate: PropTypes.number.isRequired,
+    alignedEndCoordinate: PropTypes.number.isRequired,
 };
 
 MotifElement.contextTypes = {
@@ -142,12 +188,38 @@ export const Motifs = (props) => {
 
     // Filter results to find ones with associated PWM data
     const pwmLinkListFull = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
-    let pwmLinkList = [];
-    if (limit > 0 && pwmLinkListFull.length !== 0) {
-        pwmLinkList = pwmLinkListFull.slice(0, limit);
+
+    const groupedList = _.groupBy(pwmLinkListFull, link => `${link.documents[0]['@id']}#${link.targets.join('-')}`);
+
+    let groupedListMapped = _.map(groupedList, group => ({
+        pwm: group[0].documents[0]['@id'],
+        href: group[0].documents[0].attachment.href,
+        targets: group[0].targets.join(', '),
+        accessions: _.pluck(group, 'file'),
+        datasets: _.pluck(group, 'dataset'),
+        start: group[0].start,
+        end: group[0].end,
+        strand: group[0].strand,
+        biosamples: _.pluck(group, 'biosample_ontology').map(d => d.term_name),
+        description: group[0].description ? group[0].description : null,
+    }));
+
+    groupedListMapped = _.sortBy(groupedListMapped, o => o.targets);
+
+    let pwmLinkList = {};
+    if (limit > 0 && groupedListMapped.length !== 0) {
+        pwmLinkList = groupedListMapped.slice(0, limit);
     } else {
-        pwmLinkList = pwmLinkListFull;
+        pwmLinkList = groupedListMapped;
     }
+
+    // compute offsets for the different pwms
+    let alignedStartCoordinate = Infinity;
+    let alignedEndCoordinate = 0;
+    pwmLinkList.forEach((p) => {
+        alignedStartCoordinate = Math.min(p.start, alignedStartCoordinate);
+        alignedEndCoordinate = Math.max(p.end, alignedEndCoordinate);
+    });
 
     return (
         <React.Fragment>
@@ -164,11 +236,13 @@ export const Motifs = (props) => {
                     <div className="sequence-logo">
                         {pwmLinkList.map(d =>
                             <MotifElement
-                                key={d.dataset.split('/')[2]}
+                                key={d.pwm}
                                 element={d}
                                 urlBase={urlBase}
                                 shortened={limit > 0}
                                 coordinates={Object.keys(props.context.variants)[0]}
+                                alignedStartCoordinate={alignedStartCoordinate}
+                                alignedEndCoordinate={alignedEndCoordinate}
                             />)}
                     </div>
                 </div>

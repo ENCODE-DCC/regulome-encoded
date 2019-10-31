@@ -1,6 +1,7 @@
 .element {
     display: flex;
     padding: 10px 0 5px;
+    align-items: center;
     .motif-element {
         flex: 0 0 60%;
         svg {
@@ -24,9 +25,6 @@
         text-align: left;
         @media screen and (max-width: $screen-md-min) {
             overflow-x: scroll;
-        }
-        a {
-            font-weight: 700;
         }
         p {
             margin-bottom: 0;
