@@ -13,7 +13,7 @@ const screenMediumMax = 787;
 const screenSmallMax = 483;
 
 // Number of terms to show, the rest will be viewable on scroll
-const displayedTermsCount = 5;
+const displayedTermsCount = 14;
 
 // Define facets (probably this should be in a schema really)
 const facetList = ['file_format', 'organ', 'biosample', 'assay', 'target'];
