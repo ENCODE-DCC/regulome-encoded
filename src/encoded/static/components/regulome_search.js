@@ -577,15 +577,18 @@ const Facet = (props) => {
         <div className="facet">
             <h4>{facetTitle}</h4>
             <div className="facet-scrollable">
-                {facetArray.map(d =>
-                    <FacetButton
+                {facetArray.map((d) => {
+                    if (d === '') {
+                        return <hr />;
+                    }
+                    return <FacetButton
                         lookupFilterCount={lookupFilterCount}
                         selectedFacets={selectedFacets}
                         buttonLabel={d}
                         facetLabel={facetName}
                         addGenomeFilter={addGenomeFilter}
-                    />
-                )}
+                    />;
+                })}
             </div>
         </div>
     );
@@ -617,16 +620,19 @@ const TypeaheadFacet = (props) => {
                     className="term-list"
                     onScroll={shadeOverflowOnScroll}
                 >
-                    {facetArray.map(d =>
-                        <FacetButton
+                    {facetArray.map((d) => {
+                        if (d === '') {
+                            return <hr />;
+                        }
+                        return <FacetButton
                             lookupFilterCount={lookupFilterCount}
                             selectedFacets={selectedFacets}
                             buttonLabel={d}
                             facetLabel={facetName}
                             addGenomeFilter={addGenomeFilter}
                             key={d}
-                        />
-                    )}
+                        />;
+                    })}
                 </div>
                 <div className={`shading ${(facetArray.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
             </div>
@@ -707,6 +713,9 @@ class GenomeFacets extends React.Component {
         this.lookupFilterCount = this.lookupFilterCount.bind(this);
         this.handleSearch = this.handleSearch.bind(this);
         this.createFacets = this.createFacets.bind(this);
+        this.isntZero = this.isntZero.bind(this);
+        this.isZero = this.isZero.bind(this);
+        this.placeZerosAtEnd = this.placeZerosAtEnd.bind(this);
     }
 
     componentDidMount() {
@@ -772,6 +781,25 @@ class GenomeFacets extends React.Component {
         return '';
     }
 
+    isntZero(arr, category) {
+        return arr.filter(el => this.lookupFilterCount(el, category) !== ' (0)');
+    }
+
+    isZero(arr, category) {
+        return arr.filter(el => this.lookupFilterCount(el, category) === ' (0)');
+    }
+
+    placeZerosAtEnd(arr, facet) {
+        let arrBegin = [...arr];
+        arrBegin = this.isntZero(arrBegin, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        let arrEnd = [...arr];
+        arrEnd = this.isZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        if (arrBegin.length > 0 && arrEnd.length > 0) {
+            return [...arrBegin, '', ...arrEnd];
+        }
+        return [...arrBegin, ...arrEnd];
+    }
+
     createFacets(files) {
         // initialize facet object
         const facetObject = {};
@@ -807,11 +835,12 @@ class GenomeFacets extends React.Component {
                 });
             });
         });
-        // sort facet term names alphabetically, ignoring capitalization
+        const newFacetObject = {};
+        // sort facet term names by counts with zeros at the end
         facetList.forEach((facet) => {
-            facetObject[facet].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            newFacetObject[facet] = this.placeZerosAtEnd(facetObject[facet], facet);
         });
-        return facetObject;
+        return newFacetObject;
     }
 
     render() {
