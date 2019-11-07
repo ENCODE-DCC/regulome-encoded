@@ -608,12 +608,14 @@ const TypeaheadFacet = (props) => {
     return (
         <div className="facet">
             <h4>{facetTitle}</h4>
-            <div className="typeahead-entry" role="search">
-                <i className="icon icon-search" />
-                <div className="searchform">
-                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
+            {((facetArray.length > displayedTermsCount) || (unsanitizedSearchTerm !== '')) ?
+                <div className="typeahead-entry" role="search">
+                    <i className="icon icon-search" />
+                    <div className="searchform">
+                        <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
+                    </div>
                 </div>
-            </div>
+            : null}
             <div className="facet-scrollable">
                 <div className="top-shading hide-shading" />
                 <div
@@ -794,10 +796,11 @@ class GenomeFacets extends React.Component {
         arrBegin = this.isntZero(arrBegin, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         let arrEnd = [...arr];
         arrEnd = this.isZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        if (arrBegin.length > 0 && arrEnd.length > 0) {
-            return [...arrBegin, '', ...arrEnd];
-        }
-        return [...arrBegin, ...arrEnd];
+        return arrBegin;
+        // if (arrBegin.length > 0 && arrEnd.length > 0) {
+        //     return [...arrBegin, '', ...arrEnd];
+        // }
+        // return [...arrBegin, ...arrEnd];
     }
 
     createFacets(files) {
