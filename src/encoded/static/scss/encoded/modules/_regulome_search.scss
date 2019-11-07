@@ -1381,7 +1381,7 @@ button {
     left: 0;
     right: 0;
     opacity: 0.95;
-    z-index: 99999;
+    z-index: 9998;
     @media screen and (max-width: 1096px) {
         width: calc(100% - 20px);
     }
