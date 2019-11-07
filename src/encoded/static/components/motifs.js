@@ -101,11 +101,10 @@ export class MotifElement extends React.Component {
 
         // Insert padding for alignment
         const newPWM = [...PWM];
-        /* eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }] */
-        for (let startIdx = 0; startIdx < startAlignmentNeeded; startIdx++) {
+        for (let startIdx = 0; startIdx < startAlignmentNeeded; startIdx += 1) {
             newPWM.unshift([0, 0, 0, 0]);
         }
-        for (let endIdx = 0; endIdx < endAlignmentNeeded; endIdx++) {
+        for (let endIdx = 0; endIdx < endAlignmentNeeded; endIdx += 1) {
             newPWM.push([0, 0, 0, 0]);
         }
 
@@ -121,7 +120,7 @@ export class MotifElement extends React.Component {
         element.datasets.forEach((d, dIndex) => {
             const biosample = element.biosamples[dIndex];
             const accession = element.accessions[dIndex];
-            if (element.biosamples[dIndex] !== undefined) {
+            if (biosample !== undefined) {
                 footprintList[biosample] = d;
             } else {
                 pwmList[accession] = d;
@@ -189,8 +188,13 @@ export const Motifs = (props) => {
     // Filter results to find ones with associated PWM data
     const pwmLinkListFull = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
 
+    // Group list of pwms by property that is a combination of PWM document and list of targets
     const groupedList = _.groupBy(pwmLinkListFull, link => `${link.documents[0]['@id']}#${link.targets.join('-')}`);
+    console.log(groupedList);
 
+    // Flatten group:
+    // Merge properties that are the same across the group
+    // Create array for properties that are not the same across the group
     let groupedListMapped = _.map(groupedList, group => ({
         pwm: group[0].documents[0]['@id'],
         href: group[0].documents[0].attachment.href,
@@ -203,9 +207,12 @@ export const Motifs = (props) => {
         biosamples: _.pluck(group, 'biosample_ontology').map(d => d.term_name),
         description: group[0].description ? group[0].description : null,
     }));
+    console.log(groupedListMapped);
 
+    // Sort grouped list by targets
     groupedListMapped = _.sortBy(groupedListMapped, o => o.targets);
 
+    // Limit pwm link list for thumbnails
     let pwmLinkList = {};
     if (limit > 0 && groupedListMapped.length !== 0) {
         pwmLinkList = groupedListMapped.slice(0, limit);
@@ -213,7 +220,7 @@ export const Motifs = (props) => {
         pwmLinkList = groupedListMapped;
     }
 
-    // compute offsets for the different pwms
+    // Compute offsets for the different pwms
     let alignedStartCoordinate = Infinity;
     let alignedEndCoordinate = 0;
     pwmLinkList.forEach((p) => {
