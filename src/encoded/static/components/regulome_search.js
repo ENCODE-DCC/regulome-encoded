@@ -23,7 +23,7 @@ const dataTypeStrings = [
     },
     {
         type: 'A chromosomal region',
-        explanation: 'Enter hg19 chromosomal regions, such as a promoter region upstream of a gene, as 0-based coordinates. All dbSNP IDs with an minor allele frequency >0.05 that are found in this region will be used to identify DNA features and regulatory elements that contain the coordinate of the SNPs.',
+        explanation: 'Enter hg19 chromosomal regions, such as a promoter region upstream of a gene, as 0-based coordinates. All dbSNP IDs with an minor allele frequency >1% that are found in this region will be used to identify DNA features and regulatory elements that contain the coordinate of the SNPs.',
     },
 ];
 
