@@ -1432,6 +1432,8 @@ button {
             }
             &:disabled {
                 color: #B9B9B9;
+                font-weight: 400;
+                font-style: italic;
             }
         }
         input {

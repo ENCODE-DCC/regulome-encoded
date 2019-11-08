@@ -555,7 +555,7 @@ class FacetButton extends React.Component {
             <button
                 className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
                 onClick={this._addGenomeFilter}
-                disabled={(filterCount === ' (0)')}
+                disabled={(filterCount === ' (0)' && !(selectedFacets.includes(`${buttonLabel}AND${facetLabel}`)))}
             >
                 {buttonLabel}{filterCount}
             </button>
@@ -608,14 +608,12 @@ const TypeaheadFacet = (props) => {
     return (
         <div className="facet">
             <h4>{facetTitle}</h4>
-            {((facetArray.length > displayedTermsCount) || (unsanitizedSearchTerm !== '')) ?
-                <div className="typeahead-entry" role="search">
-                    <i className="icon icon-search" />
-                    <div className="searchform">
-                        <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
-                    </div>
+            <div className="typeahead-entry" role="search">
+                <i className="icon icon-search" />
+                <div className="searchform">
+                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
                 </div>
-            : null}
+            </div>
             <div className="facet-scrollable">
                 <div className="top-shading hide-shading" />
                 <div
@@ -667,6 +665,19 @@ const filterByAllSelectedFilters = (files, facets) => {
             }
         }
     });
+    return newFiles;
+};
+
+const filterByOneFilter = (files, facet) => {
+    const facetFilter = facet.split('AND')[0];
+    const facetName = facet.split('AND')[1];
+    let newFiles = files;
+    if (facetName === 'organ') {
+        newFiles = newFiles.filter(d => d[facetName].split(', ').some(f => facetFilter.includes(f)));
+    // for non-organ facets, just check if the term matches the facet
+    } else {
+        newFiles = newFiles.filter(d => facetFilter === d[facetName]);
+    }
     return newFiles;
 };
 
@@ -770,17 +781,25 @@ class GenomeFacets extends React.Component {
 
     lookupFilterCount(filter, category) {
         const fakeFilter = `${filter}AND${category}`;
+        // for filters that are not selected, we want to display how many new results would be added if that filter were selected
         if (!this.state.selectedFacets.includes(fakeFilter)) {
             // if we add this filter to our selected filters, we need to know how many results there will be
             const fakeFacets = [...this.state.selectedFacets, fakeFilter];
             const fakeFilteredFiles = filterByAllSelectedFilters(this.props.files, fakeFacets);
             // if a filter has already been selected in this category, we do not want to include results for those in our count
-            if (this.state.selectedFacets.filter(d => d.includes(category)).length > 0) {
+            if ((this.state.selectedFacets.filter(d => d.includes(category)).length > 0)) {
+                if (category === 'organ') {
+                    const alreadyMatchingFiles = filterByOneFilter(this.props.filteredFiles, fakeFilter);
+                    return ` (${(fakeFilteredFiles.length - this.props.filteredFiles.length) + alreadyMatchingFiles.length})`;
+                }
                 return ` (${fakeFilteredFiles.length - this.props.filteredFiles.length})`;
             }
             return ` (${fakeFilteredFiles.length})`;
         }
-        return '';
+        // for filters that are already selected, we want to display how many results that are displayed match this filter
+        // we have an extra space here so that selected terms do not match the string pattern that other terms do, so that if a selected term has a (0), it will not get filtered out as a zero, it will stay in the top category with non-zero matching terms
+        const matchingFiles = filterByOneFilter(this.props.filteredFiles, fakeFilter);
+        return `  (${matchingFiles.length})`;
     }
 
     isntZero(arr, category) {
@@ -796,11 +815,10 @@ class GenomeFacets extends React.Component {
         arrBegin = this.isntZero(arrBegin, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         let arrEnd = [...arr];
         arrEnd = this.isZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        return arrBegin;
-        // if (arrBegin.length > 0 && arrEnd.length > 0) {
-        //     return [...arrBegin, '', ...arrEnd];
-        // }
-        // return [...arrBegin, ...arrEnd];
+        if (arrBegin.length > 0 && arrEnd.length > 0) {
+            return [...arrBegin, '', ...arrEnd];
+        }
+        return [...arrBegin, ...arrEnd];
     }
 
     createFacets(files) {
