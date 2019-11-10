@@ -830,10 +830,10 @@ class RegulomeSearch extends React.Component {
                         </div>
                         <React.Fragment>
                             <div className="search-information">
-                                {(context.variants) ?
+                                {(context.query_coordinates) ?
                                     <div className="notification-line">
                                         <div className="notification-label">Searched coordinates</div>
-                                        <div className="notification">{Object.keys(context.variants)[0]}</div>
+                                        <div className="notification">{context.query_coordinates[0]}</div>
                                     </div>
                                 : null}
                                 {allData && allData.length > 0 ?
