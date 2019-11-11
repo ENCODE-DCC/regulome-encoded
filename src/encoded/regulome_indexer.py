@@ -284,11 +284,17 @@ def index_settings():
 
 
 def regulome_regionable_datasets(request):
-    query = '/search/?type=Dataset&field=uuid&limit=all'
-    query += '&internal_tags=RegulomeDB'
-    for status in REGULOME_ALLOWED_STATUSES:
-        query += '&status=' + status
-    results = request.embed(query)['@graph']
+    type_query = '&'.join(
+        'type={}'.format(typ) for typ in REGULOME_DATASET_TYPES
+    )
+    status_query = '&'.join(
+        'status={}'.format(status) for status in REGULOME_ALLOWED_STATUSES
+    )
+    results = request.embed(
+        '/search/?{}&{}&files=*&field=uuid&limit=all'.format(
+            type_query, status_query
+        )
+    )['@graph']
     return [result['uuid'] for result in results]
 
 
@@ -732,7 +738,7 @@ class RegionIndexer(Indexer):
             last_exc = repr(e)
 
         if last_exc is None and not self.is_candidate_dataset(dataset):
-                return  # Note if dataset is NO LONGER a candidate its files won't get removed.
+            return  # Note if dataset is NO LONGER a candidate its files won't get removed.
 
         if last_exc is None:
             files = dataset.get('files', [])
@@ -822,20 +828,22 @@ class RegionIndexer(Indexer):
 
     @staticmethod
     def is_candidate_dataset(dataset):
-        '''returns None, or a list of uses which may include region search and/or regulome.'''
-        if 'Experiment' not in dataset['@type'] and 'FileSet' not in dataset['@type']:
-            return False
+        '''returns None, or a list of uses which may include region search 
+        and/or regulome.
+        '''
 
+        if not (set(REGULOME_DATASET_TYPES) & set(dataset['@type'])):
+            return False
+        if (
+            'Reference' in dataset['@type']
+            and 'RegulomeDB' not in dataset.get('internal_tags', [])
+        ):
+            return False
         if len(dataset.get('files', [])) == 0:
             return False
-
-        if 'RegulomeDB' in dataset.get('internal_tags', []):
-            collection_type = regulome_collection_type(dataset)
-            if collection_type is not None and \
-               collection_type in list(REGULOME_REGION_REQUIREMENTS.keys()):
-                return True
-
-        return False
+        return regulome_collection_type(dataset) in list(
+            REGULOME_REGION_REQUIREMENTS.keys()
+        )
 
     @staticmethod
     def metadata_doc(afile, dataset, assembly):
@@ -889,7 +897,7 @@ class RegionIndexer(Indexer):
             if dataset_type in dataset['@type']:
                 meta_doc['dataset_type'] = dataset_type
                 break
-        if afile['submitted_file_name'] in SNP_FILES:
+        if afile.get('submitted_file_name') in SNP_FILES:
             meta_doc['snps'] = True
         return meta_doc
 
