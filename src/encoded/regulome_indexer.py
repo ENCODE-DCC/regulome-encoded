@@ -68,7 +68,7 @@ RESIDENT_REGIONSET_KEY = 'resident_regionsets'  # keeps track of what datsets ar
 FOR_REGULOME_DB = 'regulomedb'
 
 REGULOME_SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
-REGULOME_ALLOWED_STATUSES = ['released', 'archived', 'in progress']  # no 'in progress' permission!
+REGULOME_ALLOWED_STATUSES = ['released', 'archived']  # no 'in progress' permission!
 REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 # NOTE: regDB requirements keyed on "collection_type": assay_term_name or else annotation_type
@@ -742,6 +742,8 @@ class RegionIndexer(Indexer):
 
         if last_exc is None:
             files = dataset.get('files', [])
+            candidate_files = []
+            released_only = False
             for afile in files:
                 # files may not be embedded
                 if isinstance(afile, str):
@@ -761,36 +763,41 @@ class RegionIndexer(Indexer):
                 if afile.get('file_format') not in ALLOWED_FILE_FORMATS:
                     continue  # Note: if file_format changed, it doesn't get removed from region index.
 
-                file_uuid = afile['uuid']
-
-                file_doc = self.candidate_file(request, afile, dataset)
-                if file_doc:
-
-                    using = ""
-                    if force:
-                        using = "with FORCE"
-                        self.remove_from_regions_es(file_uuid)  # remove all regions first
-                    else:
-                        if self.in_regions_es(file_uuid):
-                            # TODO: update residence doc but not file!
-                            continue
-
-                    try:
-                        self.add_file_to_regions_es(request, afile, file_doc)
-                    except Exception as e:
-                        log.warn("Fail to index file %s of dataset %s; "
-                                 "skip the rest of files in this dataset.",
-                                 file_uuid, dataset_uuid)
-                        last_exc = repr(e)
-                        break
-                    else:
-                        log.info("added file: %s %s %s", dataset['accession'], afile['href'], using)
-                        self.state.file_added(file_uuid)
-
+                if self.is_candidate_file(request, afile, dataset):
+                    candidate_files.append(afile)
+                    if afile.get('status', 'unknown') == 'released':
+                        released_only = True
                 else:
-                    if self.remove_from_regions_es(file_uuid):
+                    if self.remove_from_regions_es(afile['uuid']):
                         log.warn("dropped file: %s %s", dataset['accession'], afile['@id'])
-                        self.state.file_dropped(file_uuid)
+                        self.state.file_dropped(afile['uuid'])
+
+        if last_exc is None:
+            for afile in candidate_files:
+                if released_only and afile.get('status', 'unknown') != 'released':
+                    continue
+                file_uuid = afile['uuid']
+                file_doc = self.metadata_doc(afile, dataset)
+                using = ""
+                if force:
+                    using = "with FORCE"
+                    self.remove_from_regions_es(file_uuid)  # remove all regions first
+                else:
+                    if self.in_regions_es(file_uuid):
+                        # TODO: update residence doc but not file!
+                        continue
+
+                try:
+                    self.add_file_to_regions_es(request, afile, file_doc)
+                except Exception as e:
+                    log.warn("Fail to index file %s of dataset %s; "
+                             "skip the rest of files in this dataset.",
+                             file_uuid, dataset_uuid)
+                    last_exc = repr(e)
+                    break
+                else:
+                    log.info("added file: %s %s %s", dataset['accession'], afile['href'], using)
+                    self.state.file_added(file_uuid)
 
         if last_exc is not None:
             timestamp = datetime.datetime.now().isoformat()
@@ -846,7 +853,7 @@ class RegionIndexer(Indexer):
         )
 
     @staticmethod
-    def metadata_doc(afile, dataset, assembly):
+    def metadata_doc(afile, dataset):
         '''returns file and dataset metadata document'''
         meta_doc = {
             'uuid': str(afile['uuid']),
@@ -854,7 +861,7 @@ class RegionIndexer(Indexer):
             'file': {
                 'uuid': str(afile['uuid']),
                 '@id': afile['@id'],
-                'assembly': assembly
+                'assembly': afile.get('assembly', 'unknown')
             },
             'dataset': {
                 'uuid': str(dataset['uuid']),
@@ -901,12 +908,12 @@ class RegionIndexer(Indexer):
             meta_doc['snps'] = True
         return meta_doc
 
-    def candidate_file(self, request, afile, dataset):
+    def is_candidate_file(self, request, afile, dataset):
         '''returns None or a document with file details to save in the residence index'''
         if afile.get('href') is None:
-            return None
+            return False
         if afile['file_format'] not in ALLOWED_FILE_FORMATS:
-            return None
+            return False
 
         file_status = afile.get('status', 'imagined')
         assembly = afile.get('assembly', 'unknown')
@@ -919,12 +926,10 @@ class RegionIndexer(Indexer):
                 dataset = request.embed(afile['dataset'], as_user=True)
             except Exception:
                 log.warn("dataset is not found: %s", afile['dataset'])
-                return None
+                return False
         target = self.check_embedded_targets(request, dataset)
         if target is not None:
             dataset['target'] = target
-
-        is_candidate_file = False
 
         if file_status in REGULOME_ALLOWED_STATUSES \
            and assembly in REGULOME_SUPPORTED_ASSEMBLIES:
@@ -932,15 +937,12 @@ class RegionIndexer(Indexer):
                 regulome_collection_type(dataset)
             )
             if required_properties:
-                is_candidate_file = all(
+                return all(
                     afile.get(prop) in vals
                     for prop, vals in required_properties.items()
                 )
 
-        if is_candidate_file:
-            return self.metadata_doc(afile, dataset, assembly)
-        else:
-            return None
+        return False
 
     def in_regions_es(self, uuid, use_type=None):
         '''returns True if a uuid is in regions es'''
