@@ -315,6 +315,11 @@ def parse_region_query(request):
     variants = dict()
     notifications = {}
     atlas = RegulomeAtlas(request.registry[SNP_SEARCH_ES])
+    # Return query coordinates. i.e. dbSNP ID inputs will be mapped, so that
+    # 1) Users can double check their queries in return results;
+    # 2) regulome_search will use and will only use one single coordinate from
+    # this list.
+    query_coordinates = []
     for region_query in region_queries:
         # Get coordinate for queried region
         try:
@@ -322,13 +327,15 @@ def parse_region_query(request):
         except ValueError:
             notifications[region_query] = 'Failed: invalid region input'
             continue
+        query_coordinates.append('{}:{}-{}'.format(chrom, int(start), int(end)))
         snps = atlas.find_snps(
             _GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end
         )
         if not snps:
             if (int(end) - int(start)) > 1:
                 notifications[region_query] = (
-                    'Failed: no variants found in this multi-nucleotide region'
+                    'Failed: no known variants found in this multi-nucleotide '
+                    'region.'
                 )
                 continue
             else:
@@ -361,6 +368,7 @@ def parse_region_query(request):
         '@context': request.route_path('jsonld_context'),
         '@id': request.path_qs,
         'assembly': assembly,
+        'query_coordinates': query_coordinates,
         'from': from_,
         'total': total,
         'variants': {k: list(v) for k, v in sorted(variants.items())[from_:to_]},
@@ -448,7 +456,7 @@ def regulome_summary(context, request):
 @view_config(route_name='regulome-search', request_method='GET', permission='search')
 def regulome_search(context, request):
     """
-    Regulome peak analysis.
+    Regulome peak analysis for a single region.
     """
     if 'from' in request.params or 'size' in request.params:
         return {
@@ -466,26 +474,24 @@ def regulome_search(context, request):
     result['title'] = 'Regulome search'
     result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
 
-    if len(result['variants']) != 1:
-        result['notifications'].setdefault(
-            'Failed',
-            (
-                'One and only one variant can be processed. '
-                '{} variants found. Please refine the search.'
-            ).format(len(result['variants']))
-        )
+    if len(result['query_coordinates']) != 1:
+        result['notifications'] = {
+            'Failed': 'Received {} region queries. Exact one region or one '
+            'variant can be processed by regulome-search'.format(
+                len(result['query_coordinates'])
+            )
+        }
         return result
 
     # Start search
+    begin = time.time()  # DEBUG: timing
     regulome_es = request.registry[SNP_SEARCH_ES]
     atlas = RegulomeAtlas(regulome_es)
     assembly = result['assembly']
-    coord = list(result['variants'])[0]
-    begin = time.time()  # DEBUG: timing
+    coord = result['query_coordinates'][0]
     chrom, start_end = coord.split(':')
     start, end = start_end.split('-')
 
-    begin = time.time()  # DEBUG: timing
     try:
         all_hits = region_get_hits(
             atlas, assembly, chrom, start, end, peaks_too=True
@@ -524,7 +530,8 @@ def regulome_search(context, request):
         _GENOME_TO_ALIAS.get(assembly, 'hg19'),
         chrom,
         int(start),
-        max_snps=len(result['variants'][coord])+10
+        # No guarentee the query coordinate corresponds to one RefSNP.
+        max_snps=len(result['variants'].get(coord, []))+10
     )
     result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
     return result
