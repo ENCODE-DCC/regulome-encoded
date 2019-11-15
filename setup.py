@@ -101,6 +101,7 @@ setup(
         migrate-dataset-type = encoded.commands.migrate_dataset_type:main
         localhost-es-region-test = encoded.commands.localhost_es_region_tests:main
         alembic = encoded.commands.alembic:main
+        regulome-search = encoded.commands.regulome_search:main
 
         [paste.app_factory]
         main = encoded:main
