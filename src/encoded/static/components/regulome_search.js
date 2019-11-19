@@ -671,12 +671,12 @@ const filterByAllSelectedFilters = (files, facets) => {
 const filterByOneFilter = (files, facet) => {
     const facetFilter = facet.split('AND')[0];
     const facetName = facet.split('AND')[1];
-    let newFiles = files;
+    let newFiles;
     if (facetName === 'organ') {
-        newFiles = newFiles.filter(d => d[facetName].split(', ').some(f => facetFilter.includes(f)));
+        newFiles = files.filter(d => d[facetName].split(', ').some(f => facetFilter.includes(f)));
     // for non-organ facets, just check if the term matches the facet
     } else {
-        newFiles = newFiles.filter(d => facetFilter === d[facetName]);
+        newFiles = files.filter(d => facetFilter === d[facetName]);
     }
     return newFiles;
 };
@@ -811,10 +811,8 @@ class GenomeFacets extends React.Component {
     }
 
     placeZerosAtEnd(arr, facet) {
-        let arrBegin = [...arr];
-        arrBegin = this.isntZero(arrBegin, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        let arrEnd = [...arr];
-        arrEnd = this.isZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const arrBegin = this.isntZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const arrEnd = this.isZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         if (arrBegin.length > 0 && arrEnd.length > 0) {
             return [...arrBegin, '', ...arrEnd];
         }
