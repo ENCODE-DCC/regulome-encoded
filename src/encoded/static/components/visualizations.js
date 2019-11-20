@@ -1,7 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import * as globals from './globals';
 import { ResultsTable } from './regulome_search';
 import { isLight } from './datacolors';
+
+const sanitizedString = globals.sanitizedString;
 
 const mapChromatinNames = {
     TssAFlnk: 'Flanking Active TSS',
@@ -375,11 +378,6 @@ function filterForKey(element, key, dataFilter) {
     }
     return false;
 }
-
-// Sanitize user input and facet terms for comparison: convert to lowercase, remove white space and asterisks (which cause regular expression error)
-const sanitizedString = inputString => inputString.toLowerCase()
-    .replace(/ /g, '') // remove spaces (to allow multiple word searches)
-    .replace(/[*?()+[\]\\/]/g, ''); // remove certain special characters (these cause console errors)
 
 // Display information on page as JSON formatted data
 export class ChartList extends React.Component {
