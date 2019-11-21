@@ -1383,7 +1383,7 @@ class RegulomeSearch extends React.Component {
                                     <h4>Motifs</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see PWM and Footprint data and their associated sequence logos.</div>
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see PWM and Footprint data.</div>
                                             <Motifs {...this.props} urlBase={urlBase} limit={4} />
                                         </React.Fragment>
                                     : null}
