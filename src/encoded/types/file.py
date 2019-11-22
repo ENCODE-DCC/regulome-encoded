@@ -555,6 +555,9 @@ def download(context, request):
     mapping = context.schema['file_format_file_extension']
     file_extension = mapping[properties['file_format']]
     accession_or_external = properties.get('accession') or properties['external_accession']
+    # TODO: fix ENCODE file links and provide better syncing with ENCODE portal
+    # REG-168: the following five lines are filthy hacks which try to get links
+    # from ENCODE portal
     if accession_or_external.startswith('ENCFF'):
         location = 'https://www.encodeproject.org/files/{}/@@download'.format(
             accession_or_external
