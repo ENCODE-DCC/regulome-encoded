@@ -230,10 +230,10 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     const svgLetterHeight = 150;
 
     const colorBase = {
-        A: '#C13B42',
-        C: '#EFB549',
-        G: '#335C95',
-        T: '#489655',
+        A: '#489655',
+        C: '#335C95',
+        G: '#EFB549',
+        T: '#C13B42',
     };
 
     const lookupBaseColor = (i) => {
