@@ -145,11 +145,7 @@ REGULOME_VALUE_STRAND_COL = {
 }
 # Less than ideal way to recognize the SNP files by submitted_file_name
 # SNP_DATASET_UUID = 'ff8dff4e-1de5-446b-8a13-bb6243bc64aa'  # works on demo, but...
-SNP_FILES = [
-    's3://regulomedb/snp141/snp141_hg19.bed.gz',
-    's3://regulomedb/snp141/snp141_GRCh38.bed.gz'
-]
-SNP_INDEX_PREFIX = 'snp141_'
+SNP_INDEX_PREFIX = 'snp_'
 
 # If files are too large then they will be copied locally and read
 MAX_IN_MEMORY_FILE_SIZE = (700 * 1024 * 1024)  # most files will be below this and index faster
@@ -257,9 +253,6 @@ def get_snp_index_mapping(chrom='chr1'):
                 },
                 'coordinates': {
                     'type': 'integer_range'
-                },
-                'strand': {
-                    'type': 'string'  # + - .
                 },
             }
         }
@@ -405,14 +398,6 @@ class RemoteReader(object):
     def snp(row):
         '''Read a SNP from an in memory row and returns chrom and document to index.'''
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]
-        strand = '.'
-        if len(row) > 5:
-            if row[5] in ['.', '+', '-']:
-                strand = row[5]
-            else:
-                log.warn('{} has invalid strand info {} on column 6'.format(
-                    rsid, row[5]
-                ))
         if start == end:
             end = end + 1
         return (chrom, {
@@ -422,7 +407,6 @@ class RemoteReader(object):
                   'gte': start,
                   'lt': end
                 },
-              'strand': strand,
         })
 
     # TODO: support bigBeds
@@ -841,11 +825,14 @@ class RegionIndexer(Indexer):
 
         if not (set(REGULOME_DATASET_TYPES) & set(dataset['@type'])):
             return False
-        if (
-            'Reference' in dataset['@type']
-            and 'RegulomeDB' not in dataset.get('internal_tags', [])
-        ):
-            return False
+        if 'Reference' in dataset['@type']:
+            if (
+                'RegulomeDB' in dataset.get('internal_tags', [])
+                and dataset['status'] == 'released'
+            ):
+                return True
+            else:
+                return False
         if len(dataset.get('files', [])) == 0:
             return False
         return regulome_collection_type(dataset) in list(
@@ -904,7 +891,7 @@ class RegionIndexer(Indexer):
             if dataset_type in dataset['@type']:
                 meta_doc['dataset_type'] = dataset_type
                 break
-        if afile.get('submitted_file_name') in SNP_FILES:
+        if dataset_type == 'Reference':
             meta_doc['snps'] = True
         return meta_doc
 

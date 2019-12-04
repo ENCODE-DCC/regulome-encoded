@@ -2370,7 +2370,7 @@
         "file_format": "bed",
         "award": "ROADMAP",
         "dataset": "ENCSR916TST",
-        "status": "archived",
+        "status": "released",
         "date_created": "2018-09-07T16:18:49.289287+00:00",
         "lab": "roadmap-epigenomics",
         "md5sum": "2b32b95b9ba6c4a94696ef464a86d418",
