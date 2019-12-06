@@ -34,6 +34,12 @@
                 font-weight: 300;
                 margin-right: 5px;
             }
+            .biosample-label {
+                font-weight: 400;
+            }
+        }
+        .motifs-list {
+            margin-top: 7px;
         }
         .icon-minus-circle, .icon-plus-circle {
             color: #9F9F9F;
@@ -53,7 +59,7 @@
     margin: 0 0 30px;
 }
 
-.motif-error {
+.motif-count {
     margin-top: -20px;
     padding-bottom: 20px;
 }

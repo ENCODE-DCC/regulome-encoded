@@ -127,9 +127,13 @@ export class MotifElement extends React.Component {
             }
         });
 
+        const footprintKeysSorted = Object.keys(footprintList).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const pwmsLength = Object.keys(pwmList).length;
+        const footprintsLength = Object.keys(footprintList).length;
+
         const targetListLabel = (targetList.indexOf(',') !== -1) ? 'Targets' : 'Target';
-        const pwmsLabel = (Object.keys(pwmList).length > 1) ? 'PWMs' : 'PWM';
-        const footprintsLabel = (Object.keys(footprintList).length > 1) ? 'Footprints' : 'Footprint';
+        const pwmsLabel = (pwmsLength > 1 || pwmsLength === 0) ? 'PWMs' : 'PWM';
+        const footprintsLabel = (footprintsLength > 1 || footprintsLength === 0) ? 'Footprints' : 'Footprint';
 
         return (
             <div className="element" id={`element${element.pwm}`}>
@@ -145,20 +149,34 @@ export class MotifElement extends React.Component {
                     : null}
                     {!(this.props.shortened) ?
                         <React.Fragment>
-                            {(Object.keys(footprintList).length > 0) ?
+                            {(footprintsLength > 0) ?
                                 <p>
                                     <span className="motif-label">{footprintsLabel}</span>
-                                    {Object.keys(footprintList).map((d, dIndex) => <a key={d} href={footprintList[d]}>{d}{dIndex === (Object.keys(footprintList).length - 1) ? '' : ', '}</a>)}
+                                    {footprintKeysSorted.map((d, dIndex) => <a key={d} href={footprintList[d]}>{d}{dIndex === (footprintsLength - 1) ? '' : ', '}</a>)}
                                 </p>
                             : null}
-                            {(Object.keys(pwmList).length > 0) ?
+                            {(pwmsLength > 0) ?
                                 <p>
                                     <span className="motif-label">{pwmsLabel}</span>
                                     {Object.keys(pwmList).map((d, dIndex) => <a key={d} href={pwmList[d]}>{d}{dIndex === (Object.keys(pwmList).length - 1) ? '' : ', '}</a>)}
                                 </p>
                             : null}
                         </React.Fragment>
-                    : null}
+                    :
+                        <React.Fragment>
+                            <p>{footprintsLength} {footprintsLabel}</p>
+                            <p>{pwmsLength} {pwmsLabel}</p>
+                            {(footprintsLength > 0) ?
+                                <p className="motifs-list">
+                                    <span className="motif-label">{footprintsLabel}</span>
+                                    {footprintKeysSorted.slice(0, 5).map((d, dIndex) => <span className="biosample-label" key={d}>{d}{dIndex === (footprintsLength - 1) ? '' : ', '}</span>)}
+                                    {(footprintsLength > 5) ?
+                                        <span>...</span>
+                                    : null}
+                                </p>
+                            : null}
+                        </React.Fragment>
+                    }
                 </div>
                 <div ref={(div) => { this.chartdisplay = div; }} className="motif-element" />
             </div>
@@ -233,26 +251,31 @@ export const Motifs = (props) => {
             {(pwmLinkList.length === 0) ?
                 <React.Fragment>
                     {limit !== 0 ?
-                        <div className="motif-error">(<b>0</b> results)</div>
+                        <div className="motif-count">(<b>0</b> results)</div>
                     :
                         <div className="error-message">There are no results that include PWM data. Try a different search.</div>
                     }
                 </React.Fragment>
             :
-                <div className={`sequence-logo-table ${classList}`}>
-                    <div className="sequence-logo">
-                        {pwmLinkList.map(d =>
-                            <MotifElement
-                                key={d.pwm}
-                                element={d}
-                                urlBase={urlBase}
-                                shortened={limit > 0}
-                                coordinates={Object.keys(props.context.variants)[0]}
-                                alignedStartCoordinate={alignedStartCoordinate}
-                                alignedEndCoordinate={alignedEndCoordinate}
-                            />)}
+                <React.Fragment>
+                    {(limit > 0) ?
+                        <div className="motif-count">(<b>{groupedListMapped.length}</b> results)</div>
+                    : null}
+                    <div className={`sequence-logo-table ${classList}`}>
+                        <div className="sequence-logo">
+                            {pwmLinkList.map(d =>
+                                <MotifElement
+                                    key={d.pwm}
+                                    element={d}
+                                    urlBase={urlBase}
+                                    shortened={limit > 0}
+                                    coordinates={Object.keys(props.context.variants)[0]}
+                                    alignedStartCoordinate={alignedStartCoordinate}
+                                    alignedEndCoordinate={alignedEndCoordinate}
+                                />)}
+                        </div>
                     </div>
-                </div>
+                </React.Fragment>
             }
         </React.Fragment>
     );
