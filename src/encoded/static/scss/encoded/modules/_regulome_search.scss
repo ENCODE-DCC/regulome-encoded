@@ -1143,6 +1143,11 @@ button {
 }
 
 .biosample-table {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.biosample-table {
     display: none;
     &.display-table {
         display: block;
