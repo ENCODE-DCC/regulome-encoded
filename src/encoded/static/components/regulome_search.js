@@ -549,10 +549,11 @@ class FacetButton extends React.Component {
     }
 
     render() {
-        const { buttonLabel, lookupFilterCount, selectedFacets, facetLabel } = this.props;
+        const { buttonLabel, lookupFilterCount, selectedFacets, facetLabel, key } = this.props;
         const filterCount = lookupFilterCount(buttonLabel, facetLabel);
         return (
             <button
+                key={key}
                 className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
                 onClick={this._addGenomeFilter}
                 disabled={(filterCount === ' (0)' && !(selectedFacets.includes(`${buttonLabel}AND${facetLabel}`)))}
@@ -569,6 +570,7 @@ FacetButton.propTypes = {
     lookupFilterCount: PropTypes.func.isRequired,
     selectedFacets: PropTypes.array.isRequired,
     addGenomeFilter: PropTypes.func.isRequired,
+    key: PropTypes.string.isRequired,
 };
 
 const Facet = (props) => {
@@ -587,6 +589,7 @@ const Facet = (props) => {
                         buttonLabel={d}
                         facetLabel={facetName}
                         addGenomeFilter={addGenomeFilter}
+                        key={facetName}
                     />;
                 })}
             </div>

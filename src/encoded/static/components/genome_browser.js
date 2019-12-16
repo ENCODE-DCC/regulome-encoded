@@ -186,6 +186,7 @@ class GenomeBrowser extends React.Component {
         this.handleOnFocus = this.handleOnFocus.bind(this);
         this.compileFiles = this.compileFiles.bind(this);
         this.setGenomeAndTracks = this.setGenomeAndTracks.bind(this);
+        this.resetLocation = this.resetLocation.bind(this);
     }
 
     componentDidMount() {
@@ -433,6 +434,10 @@ class GenomeBrowser extends React.Component {
         });
     }
 
+    resetLocation() {
+        this.state.visualizer.setLocation({ contig: this.state.contig, x0: this.state.x0, x1: this.state.x1 });
+    }
+
     render() {
         return (
             <div className={`${this.props.fixedHeight ? 'tall-browser-container' : ''}`}>
@@ -462,6 +467,10 @@ class GenomeBrowser extends React.Component {
                                 <button className="submit-gene-search btn btn-info" onClick={this.handleOnFocus}>Submit</button>
                             </div>
                         : null}
+                        <button className="reset-browser-button" onClick={this.resetLocation}>
+                            <i className="icon icon-undo" />
+                            <span className="reset-title">Reset to query variant</span>
+                        </button>
                         <div ref={(div) => { this.chartdisplay = div; }} className="valis-browser" />
                     </div>
                 :
