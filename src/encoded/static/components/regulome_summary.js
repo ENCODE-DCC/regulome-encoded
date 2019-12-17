@@ -76,6 +76,7 @@ const RegulomeSummary = (props) => {
     const summaries = context.summaries || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
+    console.log(context['@id']);
 
     return (
         <React.Fragment>
@@ -94,6 +95,10 @@ const RegulomeSummary = (props) => {
                         <span className="notification">{note[1]}</span>
                     </div>
                 )}
+            </div>
+            <div className="btn">
+                <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-tsv">Download BED</a>
+                <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
             </div>
             {summaries.length > 0 ?
                 <div className="summary-table-hoverable">
