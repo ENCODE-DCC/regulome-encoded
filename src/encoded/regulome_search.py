@@ -294,6 +294,7 @@ def parse_region_query(request):
         regions = request.params.getall('regions')
         from_ = request.params.get('from', 0)
         size = request.params.get('limit', 200)
+        format = request.params.get('format', 'json')
     else:  # request.method == 'POST'
         assembly = request.json_body.get('genome', 'GRCh37')
         regions = request.json_body.get('regions', [])
@@ -301,6 +302,7 @@ def parse_region_query(request):
             regions = [regions]
         from_ = request.json_body.get('from', 0)
         size = request.json_body.get('limit', 200)
+        format = request.json_body.get('format', 'json')
 
     # Parse parameters
     if assembly not in _GENOME_TO_ALIAS.keys():
@@ -369,6 +371,7 @@ def parse_region_query(request):
         '@id': request.path_qs,
         'assembly': assembly,
         'query_coordinates': query_coordinates,
+        'format': format,
         'from': from_,
         'total': total,
         'variants': {k: list(v) for k, v in sorted(variants.items())[from_:to_]},
@@ -470,6 +473,7 @@ def regulome_search(context, request):
         }
     begin = time.time()  # DEBUG: timing
     result = parse_region_query(request)
+    result['format'] = result['format'].lower()
     result['@type'] = ['regulome-search']
     result['title'] = 'Regulome search'
     result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
@@ -506,8 +510,21 @@ def regulome_search(context, request):
     except Exception as e:
         result['notifications'][coord] = 'Failed: (exception) {}'.format(e)
     peak_details = []
+    columns = [
+        'chrom',
+        'start',
+        'end',
+        'file',
+        'value',
+        'strand',
+        'method',
+        'biosample',
+        'target',
+        'PWM',
+        'dataset',
+    ]
     for peak in all_hits.get('peaks', []):
-        peak_details.append({
+        peak_detail = {
             'chrom': peak['_index'],
             'start': peak['_source']['coordinates']['gte'],
             'end': peak['_source']['coordinates']['lt'],
@@ -521,7 +538,33 @@ def regulome_search(context, request):
             'biosample_ontology': peak['resident_detail']['dataset']['biosample_ontology'],
             'method': peak['resident_detail']['dataset']['collection_type'],
             'targets': peak['resident_detail']['dataset'].get('target', []),
-        })
+        }
+        if result['format'] in ['tsv', 'bed']:
+            if not peak_details and result['format'] == 'tsv':
+                peak_details.append('\t'.join(columns).encode())
+            peak_detail['biosample'] = peak_detail['biosample_ontology'].get(
+                'term_name'
+            )
+            peak_detail['target'] = ', '.join(peak_detail['targets'])
+            peak_detail['PWM'] = ', '.join(
+                doc.get('description', '')
+                for doc in peak_detail['documents']
+                if doc.get('document_type') == 'position weight matrix'
+            )
+            peak_details.append(
+                '\t'.join(str(peak_detail[col]) for col in columns).encode()
+            )
+            continue
+        peak_details.append(peak_detail)
+    if result['format'] in ['tsv', 'bed']:
+        request.response.content_type = 'text/tsv'
+        request.response.content_disposition = (
+            'attachment;filename="regulome_{}.{}"'.format(
+                time.strftime('%Y%m%d-%Hh%Mm%Ss'), result['format']
+            )
+        )
+        request.response.app_iter = (row + b'\n' for row in peak_details)
+        return request.response
     result['@graph'] = peak_details
     result['timing'].append({'regulome_search_scoring': (time.time() - begin)})  # DEBUG: timing
 

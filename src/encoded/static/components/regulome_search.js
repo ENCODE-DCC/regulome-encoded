@@ -1307,6 +1307,10 @@ class RegulomeSearch extends React.Component {
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
                             : null}
+                            <div className="btn">
+                                <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-tsv">Download BED</a>
+                                <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
+                            </div>
                             <div className={`thumbnail-gallery ${thumbnail ? 'small-thumbnails' : ''}`} >
                                 <button
                                     className={`thumbnail ${thumbnail === 'valis' ? 'active' : ''}`}
