@@ -76,7 +76,6 @@ const RegulomeSummary = (props) => {
     const summaries = context.summaries || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
-    console.log(context['@id']);
 
     return (
         <React.Fragment>
