@@ -94,10 +94,10 @@ const RegulomeSummary = (props) => {
                         <span className="notification">{note[1]}</span>
                     </div>
                 )}
-            </div>
-            <div className="btn">
-                <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-tsv">Download BED</a>
-                <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
+                <div className="btn">
+                    <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-tsv">Download BED</a>
+                    <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
+                </div>
             </div>
             {summaries.length > 0 ?
                 <div className="summary-table-hoverable">
