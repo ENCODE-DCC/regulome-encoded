@@ -94,7 +94,7 @@ const RegulomeSummary = (props) => {
                         <span className="notification">{note[1]}</span>
                     </div>
                 )}
-                <div className="btn">
+                <div>
                     <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-tsv">Download BED</a>
                     <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
                 </div>
