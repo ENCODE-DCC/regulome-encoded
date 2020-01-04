@@ -1131,6 +1131,20 @@ button {
             }
         }
     }
+    tr {
+        border-bottom: 1px solid #ACACAC;
+    }
+    &.mobile-display {
+        display: none;
+        @media screen and (max-width: 600px) {
+            display: block;
+        }
+    }
+    &.desktop-display {
+        @media screen and (max-width: 600px) {
+            display: none;
+        }
+    }
 }
 
 .table-list {

@@ -591,10 +591,7 @@ export class ChartList extends React.Component {
                                 </div>
                             </div>
                             <div
-                                className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
-                                style={{
-                                    marginLeft: `${leftMargin}px`,
-                                }}
+                                className={`mobile-display barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
@@ -620,6 +617,36 @@ export class ChartList extends React.Component {
                                     </div>
                                 )}
                             </div>
+                            <table
+                                className={`desktop-display barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
+                                id={`barchart-table-${dKey}`}
+                                aria-labelledby={`barchart-button-${dKey}`}
+                            >
+                                <tbody>
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Dataset</th>
+                                        <th>Organ</th>
+                                        <th>Method</th>
+                                        <th>Biosample</th>
+                                        {(this.props.dataFilter === 'chromatin') ?
+                                            <th>Chromatin state window</th>
+                                        : null}
+                                    </tr>
+                                    {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
+                                        <tr key={d2.file}>
+                                            <td><a href={`../files/${d2.file}`}>{d2.file}</a></td>
+                                            <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
+                                            <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
+                                            <td>{d2.method}</td>
+                                            <td>{d2.biosample_ontology.term_name}</td>
+                                            {(this.props.dataFilter === 'chromatin') ?
+                                                <td>{d2.chrom}:{d2.start}..{d2.end}</td>
+                                            : null}
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     );
                 })}
