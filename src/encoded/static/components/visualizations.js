@@ -608,7 +608,6 @@ export class ChartList extends React.Component {
                                         {(this.props.dataFilter === 'chromatin') ?
                                             <th>Chromatin state window</th>
                                         : null}
-                                        <th>Description</th>
                                     </tr>
                                     {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
                                         <tr key={d2.file}>
@@ -620,7 +619,6 @@ export class ChartList extends React.Component {
                                             {(this.props.dataFilter === 'chromatin') ?
                                                 <td>{d2.chrom}:{d2.start}..{d2.end}</td>
                                             : null}
-                                            <td>{d2.description}</td>
                                         </tr>
                                     )}
                                 </tbody>
