@@ -590,7 +590,7 @@ export class ChartList extends React.Component {
                                     </div>
                                 </div>
                             </div>
-                            <div
+                            <table
                                 className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
                                 style={{
                                     marginLeft: `${leftMargin}px`,
@@ -598,28 +598,33 @@ export class ChartList extends React.Component {
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
-                                {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                    <div className="table-entry" key={`table-entry-${d2.file}`}>
-                                        <p>
-                                            <span className="table-label">File</span><a href={`../files/${d2.file}`}>{d2.file}</a>,
-                                            <span className="table-label dataset-label">Dataset</span><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a>
-                                        </p>
-                                        {(d2.biosample_ontology.organ_slims.length > 0) ?
-                                            <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
+                                <tbody>
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Dataset</th>
+                                        <th>Organ</th>
+                                        <th>Method</th>
+                                        <th>Biosample</th>
+                                        {(this.props.dataFilter === 'chromatin') ?
+                                            <th>Chromatin state window</th>
                                         : null}
-                                        <p><span className="table-label">Method</span>{d2.method}</p>
-                                        {d2.biosample_ontology ?
-                                            <p><span className="table-label">Biosample</span>{d2.biosample_ontology.term_name}</p>
-                                        : null}
-                                        {(d2.chrom && this.props.dataFilter === 'chromatin') ?
-                                            <p><span className="table-label">Chromatin state window</span>{d2.chrom}:{d2.start}..{d2.end}</p>
-                                        : null}
-                                        {d2.description ?
-                                            <p><span className="table-label">Description</span>{d2.description}</p>
-                                        : null}
-                                    </div>
-                                )}
-                            </div>
+                                        <th>Description</th>
+                                    </tr>
+                                    {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
+                                        <tr key={d2.file}>
+                                            <td><a href={`../files/${d2.file}`}>{d2.file}</a></td>
+                                            <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
+                                            <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
+                                            <td>{d2.method}</td>
+                                            <td>{d2.biosample_ontology.term_name}</td>
+                                            {(this.props.dataFilter === 'chromatin') ?
+                                                <td>{d2.chrom}:{d2.start}..{d2.end}</td>
+                                            : null}
+                                            <td>{d2.description}</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     );
                 })}
