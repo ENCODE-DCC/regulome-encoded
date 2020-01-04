@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import _ from 'underscore';
 import * as globals from './globals';
 import { ResultsTable } from './regulome_search';
 import { isLight } from './datacolors';
@@ -504,7 +505,6 @@ export class ChartList extends React.Component {
             fillColor = lookupColorChromatinState;
         }
         const chartWidth = this.props.chartWidth;
-
         return (
             <div className="bar-chart-container">
                 <div className="bar-chart-header">
@@ -546,6 +546,14 @@ export class ChartList extends React.Component {
                         leftMargin = '100%';
                         barWidth = (chartWidth / this.state.chartMax) * this.state.chartData[d];
                         remainderWidth = chartWidth - barWidth;
+                    }
+                    const firstDataset = this.state.data.find(element => filterForKey(element, d, this.props.dataFilter));
+                    const allDatasets = this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter));
+                    const groupedDatasets = _(allDatasets).groupBy(g => g.method);
+                    console.log(groupedDatasets);
+                    console.log(Object.keys(groupedDatasets).length);
+                    if (Object.keys(groupedDatasets).length > 1) {
+                        console.log('NEED TO WRITE BETTER CODE HERE');
                     }
                     return (
                         <div
@@ -590,7 +598,7 @@ export class ChartList extends React.Component {
                                     </div>
                                 </div>
                             </div>
-                            <table
+                            <div
                                 className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
                                 style={{
                                     marginLeft: `${leftMargin}px`,
@@ -598,31 +606,20 @@ export class ChartList extends React.Component {
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
-                                <tbody>
-                                    <tr>
-                                        <th>File</th>
-                                        <th>Dataset</th>
-                                        <th>Organ</th>
-                                        <th>Method</th>
-                                        <th>Biosample</th>
-                                        {(this.props.dataFilter === 'chromatin') ?
-                                            <th>Chromatin state window</th>
-                                        : null}
-                                    </tr>
+                                <div>Organ: {firstDataset.biosample_ontology.organ_slims.join(', ')}</div>
+                                <div>Method: {firstDataset.method}</div>
+                                <div>Biosample: {firstDataset.biosample_ontology.term_name}</div>
+                                <div>Files:
                                     {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                        <tr key={d2.file}>
-                                            <td><a href={`../files/${d2.file}`}>{d2.file}</a></td>
-                                            <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
-                                            <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
-                                            <td>{d2.method}</td>
-                                            <td>{d2.biosample_ontology.term_name}</td>
-                                            {(this.props.dataFilter === 'chromatin') ?
-                                                <td>{d2.chrom}:{d2.start}..{d2.end}</td>
-                                            : null}
-                                        </tr>
+                                        <a key={d2.files} href={`../files/${d2.file}`}> {d2.file},</a>
                                     )}
-                                </tbody>
-                            </table>
+                                </div>
+                                <div>Datasets:
+                                    {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
+                                        <a href={d2.dataset}> {d2.dataset.split('/')[2]},</a>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     );
                 })}
