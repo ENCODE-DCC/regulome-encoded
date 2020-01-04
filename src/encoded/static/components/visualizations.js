@@ -606,7 +606,7 @@ export class ChartList extends React.Component {
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
-                                {Object.keys(groupedDatasets).map((groupKey) => {
+                                {Object.keys(groupedDatasets).map((groupKey, groupKeyIndex) => {
                                     const group = groupedDatasets[groupKey];
                                     return (
                                         <div>
@@ -623,6 +623,9 @@ export class ChartList extends React.Component {
                                                     <a key={d2.dataset} href={d2.dataset}> {d2.dataset.split('/')[2]},</a>
                                                 )}
                                             </div>
+                                            {(Object.keys(groupedDatasets).length > 1 && groupKeyIndex !== (Object.keys(groupedDatasets).length - 1)) ?
+                                                <br />
+                                            : null}
                                         </div>
                                     );
                                 })}
