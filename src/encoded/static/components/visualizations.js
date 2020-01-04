@@ -606,19 +606,26 @@ export class ChartList extends React.Component {
                                 id={`barchart-table-${dKey}`}
                                 aria-labelledby={`barchart-button-${dKey}`}
                             >
-                                <div>Organ: {firstDataset.biosample_ontology.organ_slims.join(', ')}</div>
-                                <div>Method: {firstDataset.method}</div>
-                                <div>Biosample: {firstDataset.biosample_ontology.term_name}</div>
-                                <div>Files:
-                                    {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                        <a key={d2.files} href={`../files/${d2.file}`}> {d2.file},</a>
-                                    )}
-                                </div>
-                                <div>Datasets:
-                                    {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                        <a href={d2.dataset}> {d2.dataset.split('/')[2]},</a>
-                                    )}
-                                </div>
+                                {Object.keys(groupedDatasets).map((groupKey) => {
+                                    const group = groupedDatasets[groupKey];
+                                    return (
+                                        <div>
+                                            <div>Organ: {group[0].biosample_ontology.organ_slims.join(', ')}</div>
+                                            <div>Method: {groupKey}</div>
+                                            <div>Biosample: {group[0].biosample_ontology.term_name}</div>
+                                            <div>Files:
+                                                {group.map(d2 =>
+                                                    <a key={d2.files} href={`../files/${d2.file}`}> {d2.file},</a>
+                                                )}
+                                            </div>
+                                            <div>Datasets:
+                                                {group.map(d2 =>
+                                                    <a key={d2.dataset} href={d2.dataset}> {d2.dataset.split('/')[2]},</a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     );
