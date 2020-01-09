@@ -587,6 +587,7 @@ const Facet = (props) => {
                         buttonLabel={d}
                         facetLabel={facetName}
                         addGenomeFilter={addGenomeFilter}
+                        key={d}
                     />;
                 })}
             </div>
