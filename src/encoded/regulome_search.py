@@ -294,6 +294,7 @@ def parse_region_query(request):
         regions = request.params.getall('regions')
         from_ = request.params.get('from', 0)
         size = request.params.get('limit', 200)
+        format = request.params.get('format', 'json')
     else:  # request.method == 'POST'
         assembly = request.json_body.get('genome', 'GRCh37')
         regions = request.json_body.get('regions', [])
@@ -301,6 +302,7 @@ def parse_region_query(request):
             regions = [regions]
         from_ = request.json_body.get('from', 0)
         size = request.json_body.get('limit', 200)
+        format = request.json_body.get('format', 'json')
 
     # Parse parameters
     if assembly not in _GENOME_TO_ALIAS.keys():
@@ -369,6 +371,7 @@ def parse_region_query(request):
         '@id': request.path_qs,
         'assembly': assembly,
         'query_coordinates': query_coordinates,
+        'format': format,
         'from': from_,
         'total': total,
         'variants': {k: list(v) for k, v in sorted(variants.items())[from_:to_]},
@@ -405,6 +408,7 @@ def regulome_summary(context, request):
     """
     begin = time.time()  # DEBUG: timing
     result = parse_region_query(request)
+    result['format'] = result['format'].lower()
     result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
 
     # Redirect to regulome report for single unique region query
@@ -445,10 +449,39 @@ def regulome_summary(context, request):
         except Exception:
             features = {}
             regulome_score = {}
-        summaries.append({'chrom': chrom, 'start': start, 'end': end,
-                          'rsids': rsids, 'features': features,
-                          'regulome_score': regulome_score})
+        if result['format'] in ['tsv', 'bed']:
+            if not summaries:
+                columns = ['chrom', 'start', 'end', 'rsids']
+                columns.extend(sorted(regulome_score.keys()))
+                columns.extend(sorted(features.keys()))
+                if result['format'] == 'tsv':
+                    summaries.append('\t'.join(columns).encode())
+            row = [chrom, start, end, ', '.join(rsids)]
+            row.extend([
+                str(features.get(col, '')) or str(regulome_score.get(col, ''))
+                for col in columns
+                if col in regulome_score or col in features
+            ])
+            summaries.append('\t'.join(row).encode())
+        else:
+            summaries.append({
+                'chrom': chrom,
+                'start': start,
+                'end': end,
+                'rsids': rsids,
+                'features': features,
+                'regulome_score': regulome_score
+            })
         result['timing'].append({coord: (time.time() - begin)})  # DEBUG timing
+    if result['format'] in ['tsv', 'bed']:
+        request.response.content_type = 'text/tsv'
+        request.response.content_disposition = (
+            'attachment;filename="regulome_{}.{}"'.format(
+                time.strftime('%Y%m%d-%Hh%Mm%Ss'), result['format']
+            )
+        )
+        request.response.app_iter = (row + b'\n' for row in summaries)
+        return request.response
     result['summaries'] = summaries
     return result
 
