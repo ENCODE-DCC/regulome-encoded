@@ -17,7 +17,13 @@ from snovault.elasticsearch.interfaces import SNP_SEARCH_ES
 log = logging.getLogger(__name__)
 
 
-def run(app, region_queries, assembly='GRCh37', return_peaks=False):
+def run(
+    app,
+    region_queries,
+    assembly='GRCh37',
+    return_peaks=False,
+    matched_pwm_peak_bed_only=False
+):
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,
@@ -26,33 +32,86 @@ def run(app, region_queries, assembly='GRCh37', return_peaks=False):
 
     atlas = RegulomeAtlas(app.registry[SNP_SEARCH_ES])
     results = []
+    motif_columns = (
+        '{chrom}\t'
+        '{start}\t'
+        '{end}\t'
+        '{motif_name}\t'
+        '{strand}\t'
+        '{hit_motif_start}\t'
+        '{hit_motif_end}\t'
+        '{query}\t'
+        '{query_start}\t'
+        '{query_end}'
+    )
     for region_query in region_queries:
         # Get coordinate for queried region
+        region_query = region_query.strip()
         try:
             chrom, start, end = get_coordinate(region_query, assembly, atlas)
         except ValueError:
             logging.error('Invalid input: {}'.format(region_query))
             continue
+        result = {
+            'chrom': chrom,
+            'start': start,
+            'end': end,
+        }
         try:
             all_hits = region_get_hits(
-                atlas, assembly, chrom, start, end, peaks_too=return_peaks
+                atlas,
+                assembly,
+                chrom,
+                start,
+                end,
+                peaks_too=return_peaks or matched_pwm_peak_bed_only
             )
-            evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
-            regulome_score = atlas.regulome_score(all_hits['datasets'],
-                                                  evidence)
-            features = evidence_to_features(evidence)
+            evidence = atlas.regulome_evidence(
+                all_hits['datasets'], chrom, int(start), int(end)
+            )
+            if not matched_pwm_peak_bed_only:
+                result['score'] = atlas.regulome_score(
+                    all_hits['datasets'], evidence
+                )
+                result['features'] = evidence_to_features(evidence)
         except Exception:
             logging.error(
                 'Regulome search failed on {}:{}-{}'.format(chrom, start, end)
             )
             continue
-        result = {
-            'chrom': chrom,
-            'start': start,
-            'end': end,
-            'score': regulome_score,
-            'features': features,
-        }
+        if matched_pwm_peak_bed_only:
+            if not evidence.get('PWM_matched', []):
+                continue
+            matched_pwm_dict = {}
+            for motif in evidence.get('PWM', []):
+                if set(evidence['PWM_matched']) & set(motif.get('target', [])):
+                    matched_pwm_dict[motif['@id']] = [
+                        alias.split(sep=':', maxsplit=1)[1]
+                        for doc in motif['documents']
+                        for alias in doc['aliases']
+                    ]
+            for peak in all_hits.get('peaks', []):
+                dataset = peak['resident_detail']['dataset']
+                if dataset['@id'] not in matched_pwm_dict:
+                    continue
+                motif_peak = {
+                    'chrom': peak['_index'],
+                    'start': peak['_source']['coordinates']['gte'],
+                    'end': peak['_source']['coordinates']['lt'],
+                    'motif_name': ','.join(matched_pwm_dict[dataset['@id']]),
+                    'strand': peak['_source'].get('strand', '.'),
+                    'query': region_query,
+                    'query_start': start,
+                    'query_end': end,
+                }
+                if motif_peak['strand'] == '-':
+                    motif_peak['hit_motif_start'] = motif_peak['end'] - end
+                    motif_peak['hit_motif_end'] = motif_peak['end'] - start
+                else:
+                    motif_peak['hit_motif_start'] = start - motif_peak['start']
+                    motif_peak['hit_motif_end'] = end - motif_peak['start']
+                print(motif_columns.format(**motif_peak))
+            continue
         if return_peaks:
             result['peaks'] = [
                 {
@@ -70,7 +129,8 @@ def run(app, region_queries, assembly='GRCh37', return_peaks=False):
                 for peak in all_hits.get('peaks', [])
             ]
         results.append(result)
-    logging.info('Results:\n%s', json.dumps(results, indent=4, sort_keys=True))
+    if not matched_pwm_peak_bed_only:
+        print(json.dumps(results, indent=4, sort_keys=True))
 
 
 def main():
@@ -98,6 +158,11 @@ def main():
         help="Return peaks. By default, only scores will be return.",
         action='store_true',
     )
+    parser.add_argument(
+        '--matched-pwm-peak-only',
+        help="Return motif peak details in BED format.",
+        action='store_true',
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         '-s', '--variants',
@@ -123,7 +188,8 @@ def main():
         get_app(args.config_file, args.app_name),
         variants,
         args.assembly,
-        args.peaks
+        args.peaks,
+        args.matched_pwm_peak_only,
     )
 
 
