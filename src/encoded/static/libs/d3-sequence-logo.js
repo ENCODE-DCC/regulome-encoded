@@ -84,6 +84,7 @@ function offsets(counts, maxCount) {
     let H = 0;
     const sumCounts = counts.reduce((a, b) => +a + +b, 0);
     counts.forEach((d) => {
+        // we are adding an epsilon of 0.25 because that is consistent with the University of Michigan's implementation
         const relativeFrequency = (d + 0.25) / sumCounts;
         H -= relativeFrequency * Math.log2(relativeFrequency);
     });
@@ -94,6 +95,7 @@ function offsets(counts, maxCount) {
     let offsetFromTop = 0;
     counts.forEach((d, j) => {
         // relative frequency for base at position i
+        // we are adding an epsilon of 0.25 because that is consistent with the University of Michigan's implementation
         const relativeFrequency = (d + 0.25) / sumCounts;
         // height of letter
         const height = relativeFrequency * R;
@@ -101,7 +103,7 @@ function offsets(counts, maxCount) {
         // calculate offset from the top
         // (maxCount / 2) is for the purposes of 'entryPoint'
         // 'entryPoint' scales each letter by the max PWM value
-        // therefore we need to here we translate our values in the range [0,2] to be in the range [0, maxCount]
+        // therefore we need to translate our values in the range [0,2] to be in the range [0, maxCount]
         const dnew = height * (maxCount / 2);
         offsetFromTop += dnew;
 
