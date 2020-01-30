@@ -605,9 +605,6 @@ export class ChartList extends React.Component {
                                             <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
                                         : null}
                                         <p><span className="table-label">Method</span>{d2.method}</p>
-                                        {d2.biosample_ontology ?
-                                            <p><span className="table-label">Biosample</span>{d2.biosample_ontology.term_name}</p>
-                                        : null}
                                         {(d2.chrom && this.props.dataFilter === 'chromatin') ?
                                             <p><span className="table-label">Chromatin state window</span>{d2.chrom}:{d2.start}..{d2.end}</p>
                                         : null}
@@ -628,7 +625,6 @@ export class ChartList extends React.Component {
                                         <th>Dataset</th>
                                         <th>Organ</th>
                                         <th>Method</th>
-                                        <th>Biosample</th>
                                         {(this.props.dataFilter === 'chromatin') ?
                                             <th>Chromatin state window</th>
                                         : null}
@@ -639,7 +635,6 @@ export class ChartList extends React.Component {
                                             <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
                                             <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
                                             <td>{d2.method}</td>
-                                            <td>{d2.biosample_ontology.term_name}</td>
                                             {(this.props.dataFilter === 'chromatin') ?
                                                 <td>{d2.chrom}:{d2.start}..{d2.end}</td>
                                             : null}
