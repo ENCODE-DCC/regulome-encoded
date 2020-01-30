@@ -76,30 +76,35 @@ function getLetterPath(i, strand) {
  * @param {number} i - letter index. Range: [0,4)
  * @returns {number[][]} counts of each letter.
  */
-function offsets(cnts, maxCount) {
+function offsets(counts, maxCount) {
     const offs = [];
-
     let ctr = 0;
-    let en = 0; // 1 / 0.69314718056 * (4 - 1) / (2 * maxCount);
 
+    // compute H, the uncertainty of a position
     let H = 0;
-
-    cnts.forEach((d) => {
-        const relativeFrequency = d / maxCount;
-        if (relativeFrequency > 0) {
-            H -= relativeFrequency * Math.log2(relativeFrequency);
-        }
+    const sumCounts = counts.reduce((a, b) => +a + +b, 0);
+    counts.forEach((d) => {
+        // we are adding an epsilon of 0.25 because that is consistent with the University of Michigan's implementation
+        const relativeFrequency = (d + 0.25) / sumCounts;
+        H -= relativeFrequency * Math.log2(relativeFrequency);
     });
+    // compute information content of position
+    const R = 2 - H;
 
-    // add on the index so we can use it.
-    // determine heights of rects
+    // determine heights of rectangles
     let offsetFromTop = 0;
-    cnts.forEach((d, j) => {
-        let dnew = 0;
-        if (d > 0) {
-            const relativeFrequency = d / maxCount;
-            dnew = (2 - H) * relativeFrequency * (maxCount / 2); // maxCount/2 is scaling factor
-        }
+    counts.forEach((d, j) => {
+        // relative frequency for base at position i
+        // we are adding an epsilon of 0.25 because that is consistent with the University of Michigan's implementation
+        const relativeFrequency = (d + 0.25) / sumCounts;
+        // height of letter
+        const height = relativeFrequency * R;
+
+        // calculate offset from the top
+        // (maxCount / 2) is for the purposes of 'entryPoint'
+        // 'entryPoint' scales each letter by the max PWM value
+        // therefore we need to translate our values in the range [0,2] to be in the range [0, maxCount]
+        const dnew = height * (maxCount / 2);
         offsetFromTop += dnew;
 
         const nextCtr = ctr + dnew;
