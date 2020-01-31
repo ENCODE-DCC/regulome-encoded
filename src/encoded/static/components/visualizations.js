@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from './globals';
+import _ from 'underscore';
 import { ResultsTable } from './regulome_search';
 import { isLight } from './datacolors';
 
@@ -392,6 +393,7 @@ export class ChartList extends React.Component {
             currentTarget: [],
             data: [],
             unsanitizedSearchTerm: '',
+            windowWidth: 0,
         };
 
         // Bind `this` to non-React methods.
@@ -401,10 +403,20 @@ export class ChartList extends React.Component {
         this.clearSearch = this.clearSearch.bind(this);
         this.expandTerms = this.expandTerms.bind(this);
         this.collapseTerms = this.collapseTerms.bind(this);
+        this.updateWidth = this.updateWidth.bind(this);
     }
 
     componentDidMount() {
         this.drawCharts();
+        window.addEventListener('resize', _.debounce(() => this.updateWidth(), 10));
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.updateWidth);
+    }
+
+    updateWidth() {
+        this.setState({ windowWidth: window.innerWidth });
     }
 
     handleClick(clickID) {
@@ -504,6 +516,7 @@ export class ChartList extends React.Component {
             fillColor = lookupColorChromatinState;
         }
         const chartWidth = this.props.chartWidth;
+        const isMobile = this.state.windowWidth <= 600;
 
         return (
             <div className="bar-chart-container">
@@ -590,58 +603,61 @@ export class ChartList extends React.Component {
                                     </div>
                                 </div>
                             </div>
-                            <div
-                                className={`mobile-display barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
-                                id={`barchart-table-${dKey}`}
-                                aria-labelledby={`barchart-button-${dKey}`}
-                            >
-                                {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                    <div className="table-entry" key={`table-entry-${d2.file}`}>
-                                        <p>
-                                            <span className="table-label">File</span><a href={`../files/${d2.file}`}>{d2.file}</a>,
-                                            <span className="table-label dataset-label">Dataset</span><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a>
-                                        </p>
-                                        {(d2.biosample_ontology.organ_slims.length > 0) ?
-                                            <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
-                                        : null}
-                                        <p><span className="table-label">Method</span>{d2.method}</p>
-                                        {(d2.chrom && this.props.dataFilter === 'chromatin') ?
-                                            <p><span className="table-label">Chromatin state window</span>{d2.chrom}:{d2.start}..{d2.end}</p>
-                                        : null}
-                                        {d2.description ?
-                                            <p><span className="table-label">Description</span>{d2.description}</p>
-                                        : null}
-                                    </div>
-                                )}
-                            </div>
-                            <table
-                                className={`desktop-display barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
-                                id={`barchart-table-${dKey}`}
-                                aria-labelledby={`barchart-button-${dKey}`}
-                            >
-                                <tbody>
-                                    <tr>
-                                        <th>File</th>
-                                        <th>Dataset</th>
-                                        <th>Organ</th>
-                                        <th>Method</th>
-                                        {(this.props.dataFilter === 'chromatin') ?
-                                            <th>Chromatin state window</th>
-                                        : null}
-                                    </tr>
+                            {isMobile ?
+                                <div
+                                    className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
+                                    id={`barchart-table-${dKey}`}
+                                    aria-labelledby={`barchart-button-${dKey}`}
+                                >
                                     {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
-                                        <tr key={d2.file}>
-                                            <td><a href={`../files/${d2.file}`}>{d2.file}</a></td>
-                                            <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
-                                            <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
-                                            <td>{d2.method}</td>
+                                        <div className="table-entry" key={`table-entry-${d2.file}`}>
+                                            <p>
+                                                <span className="table-label">File</span><a href={`../files/${d2.file}`}>{d2.file}</a>,
+                                                <span className="table-label dataset-label">Dataset</span><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a>
+                                            </p>
+                                            {(d2.biosample_ontology.organ_slims.length > 0) ?
+                                                <p><span className="table-label">Organ</span>{d2.biosample_ontology.organ_slims.join(', ')}</p>
+                                            : null}
+                                            <p><span className="table-label">Method</span>{d2.method}</p>
+                                            {(d2.chrom && this.props.dataFilter === 'chromatin') ?
+                                                <p><span className="table-label">Chromatin state window</span>{d2.chrom}:{d2.start}..{d2.end}</p>
+                                            : null}
+                                            {d2.description ?
+                                                <p><span className="table-label">Description</span>{d2.description}</p>
+                                            : null}
+                                        </div>
+                                    )}
+                                </div>
+                            :
+                                <table
+                                    className={`barchart-table ${this.state.currentTarget.includes(`table${dKey}`) ? 'active' : ''}`}
+                                    id={`barchart-table-${dKey}`}
+                                    aria-labelledby={`barchart-button-${dKey}`}
+                                >
+                                    <tbody>
+                                        <tr>
+                                            <th>File</th>
+                                            <th>Dataset</th>
+                                            <th>Organ</th>
+                                            <th>Method</th>
                                             {(this.props.dataFilter === 'chromatin') ?
-                                                <td>{d2.chrom}:{d2.start}..{d2.end}</td>
+                                                <th>Chromatin state window</th>
                                             : null}
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                        {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
+                                            <tr key={d2.file}>
+                                                <td><a href={`../files/${d2.file}`}>{d2.file}</a></td>
+                                                <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
+                                                <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
+                                                <td>{d2.method}</td>
+                                                {(this.props.dataFilter === 'chromatin') ?
+                                                    <td>{d2.chrom}:{d2.start}..{d2.end}</td>
+                                                : null}
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            }
                         </div>
                     );
                 })}
