@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import * as globals from './globals';
 import _ from 'underscore';
+import * as globals from './globals';
 import { ResultsTable } from './regulome_search';
 import { isLight } from './datacolors';
 
