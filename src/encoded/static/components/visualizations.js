@@ -412,7 +412,7 @@ export class ChartList extends React.Component {
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.updateWidth);
+        window.removeEventListener('resize', _.debounce(() => this.updateWidth(), 10));
     }
 
     updateWidth() {
@@ -420,6 +420,7 @@ export class ChartList extends React.Component {
     }
 
     handleClick(clickID) {
+        this.updateWidth();
         if (!(this.state.currentTarget.includes(`table${clickID}`))) {
             this.setState(prevState => ({
                 currentTarget: [...prevState.currentTarget, `table${clickID}`],
@@ -443,6 +444,7 @@ export class ChartList extends React.Component {
     }
 
     expandTerms() {
+        this.updateWidth();
         const allTargets = Object.keys(this.state.chartData).map((key) => {
             const dKey = key.replace(/[^\w\s]/gi, '').toLowerCase();
             return `table${dKey}`;
