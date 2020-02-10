@@ -73,14 +73,15 @@
         "date_released": "2016-01-01"
     },
     {
-        "_test": "RegulomeDB dbSNP 141 reference",
+        "_test": "RegulomeDB dbSNP reference",
         "uuid": "0f90fad8-239b-4f1c-aa4d-2982d4fb3a56",
         "organism": "human",
         "aliases": [
-            "j-michael-cherry:regulomeDB-dbSNP141"
+            "j-michael-cherry:regulomeDB-dbSNP"
         ],
-        "status": "archived",
-        "description": "dbSNP 141 reference dataset",
+        "status": "released",
+        "date_released": "2016-01-01",
+        "description": "dbSNP reference dataset",
         "reference_type": "index",
         "award": "U41HG009293",
         "lab": "j-michael-cherry",
