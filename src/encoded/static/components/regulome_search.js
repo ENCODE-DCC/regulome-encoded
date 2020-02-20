@@ -1505,6 +1505,7 @@ class RegulomeSearch extends React.Component {
                                 )}
                             </div>
                         </div>
+                        <div className="link-to-legacy-regulome">Looking for the old version? Click <a href="http://legacy.regulomedb.org">here.</a></div>
                     </React.Fragment>
                 }
 
