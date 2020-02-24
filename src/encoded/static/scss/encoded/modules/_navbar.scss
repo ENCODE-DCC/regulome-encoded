@@ -179,19 +179,3 @@
     border-top: 1px solid #c0c0c0;
     border-bottom: 1px solid #fff;
 }
-
-.corner-ribbon{
-    width: 200px;
-    text-align: center;
-    position: fixed;
-    line-height: 35px;
-    letter-spacing: 1px;
-    top: 25px;
-    right: -50px;
-    left: auto;
-    transform: rotate(45deg);
-    background: #C13B42;
-    z-index: 9999;
-    font-weight: 700;
-    color: white;
-}
