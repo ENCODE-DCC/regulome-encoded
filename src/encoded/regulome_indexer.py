@@ -825,19 +825,25 @@ class RegionIndexer(Indexer):
 
         if not (set(REGULOME_DATASET_TYPES) & set(dataset['@type'])):
             return False
-        if 'Reference' in dataset['@type']:
-            if (
-                'RegulomeDB' in dataset.get('internal_tags', [])
-                and dataset['status'] == 'released'
-            ):
-                return True
-            else:
-                return False
         if len(dataset.get('files', [])) == 0:
             return False
-        return regulome_collection_type(dataset) in list(
-            REGULOME_REGION_REQUIREMENTS.keys()
-        )
+        collection_type = regulome_collection_type(dataset)
+        if collection_type not in REGULOME_REGION_REQUIREMENTS:
+            return False
+        # REG-14 special case for indexing dbSNP v153 only
+        if collection_type == 'index' and (
+            'RegulomeDB' not in dataset.get('internal_tags', [])
+            or dataset['status'] != 'released'
+        ):
+            return False
+        # REG-186 special case for chromatin state data since new data is not
+        # compatible with current regulome model.
+        if (
+            collection_type == 'chromatin state'
+            and 'RegulomeDB' not in dataset.get('internal_tags', [])
+        ):
+            return False
+        return True
 
     @staticmethod
     def metadata_doc(afile, dataset):
