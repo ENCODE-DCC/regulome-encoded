@@ -31,7 +31,6 @@ def run(
     )
 
     atlas = RegulomeAtlas(app.registry[SNP_SEARCH_ES])
-    results = []
     motif_columns = (
         '{chrom}\t'
         '{start}\t'
@@ -128,9 +127,8 @@ def run(
                 }
                 for peak in all_hits.get('peaks', [])
             ]
-        results.append(result)
-    if not matched_pwm_peak_bed_only:
-        print(json.dumps(results, indent=4, sort_keys=True))
+        if not matched_pwm_peak_bed_only:
+            print(json.dumps(result, indent=4, sort_keys=True))
 
 
 def main():
