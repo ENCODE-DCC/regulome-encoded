@@ -3,6 +3,57 @@ body {
     background: #fff;
 }
 
+.lead-logo {
+    a {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+    .version-tag {
+        position: absolute;
+        top: 0;
+        right: -10px;
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: #c13b42;
+        // ultra bold
+        // background: #c13b42;
+        // padding: 10px 10px 0 5px;
+        // color: white;
+        // letter-spacing: -5px;
+        // border-radius: 10px;
+        // line-height: 1;
+
+        // big
+        font-size: 3.8rem;
+        font-weight: 200;
+        top: 11px;
+        right: -57px;
+        letter-spacing: -5px;
+        font-family: 'Open Sans', sans-serif;
+
+        // circle styles
+        // background: #c13b42;
+        // color: white;
+        // padding: 6px 5px 1px;
+        // border-radius: 3px
+        // line-height: 1;
+        // right: -17px;
+        // font-size: 1.4rem;
+
+        // rectangular styles
+        // background: #c13b42;
+        // color: white;
+        // padding: 6px 5px 1px;
+        // border-radius: 20px;
+        // right: -17px;
+        // // regular
+        // font-size: 1.5rem;
+        // font-weight: 700;
+    }
+}
+
 .navbar-nav, .navbar-search {
     font-size: 16px;
 }
