@@ -7,7 +7,7 @@ cookie.set('X-Stats', '', {path: '/', expires: new Date(0)});
 
 // Use a separate tracker for dev / test
 var ga = require('google-analytics');
-var trackers = {'www.encodeproject.org': 'UA-47809317-1'};
+var trackers = {'www.regulomedb.org': 'UA-36226516-1'};
 var tracker = trackers[document.location.hostname] || 'UA-47809317-2';
 ga('create', tracker, {'cookieDomain': 'none', 'siteSpeedSampleRate': 100});
 ga('send', 'pageview');
