@@ -3,6 +3,27 @@ body {
     background: #fff;
 }
 
+.lead-logo {
+    a {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+    .version-tag {
+        position: absolute;
+        top: 2px;
+        right: -10px;
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: #c13b42;
+        @media screen and (max-width: $screen-sm-min) {
+            font-size: 1.2rem;
+            top: -5px;
+        }
+    }
+}
+
 .navbar-nav, .navbar-search {
     font-size: 16px;
 }

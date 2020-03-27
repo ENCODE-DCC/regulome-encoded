@@ -1276,6 +1276,7 @@ class RegulomeSearch extends React.Component {
                         <div className="lead-logo">
                             <a href="/">
                                 <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
+                                <div className="version-tag">2.0</div>
                             </a>
                         </div>
                         <React.Fragment>
@@ -1495,7 +1496,12 @@ class RegulomeSearch extends React.Component {
                     </React.Fragment>
                 :
                     <React.Fragment>
-                        <div className="lead-logo"><a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a></div>
+                        <div className="lead-logo">
+                            <a href="/">
+                                <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
+                                <div className="version-tag">2.0</div>
+                            </a>
+                        </div>
                         <AdvSearch {...this.props} />
                         <div className="data-types">
                             <div className="data-types-instructions"><h4>Use RegulomeDB to identify DNA features and regulatory elements in non-coding regions of the human genome by entering ...</h4></div>

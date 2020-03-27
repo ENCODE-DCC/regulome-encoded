@@ -80,7 +80,10 @@ const RegulomeSummary = (props) => {
     return (
         <React.Fragment>
             <div className="lead-logo">
-                <a href="/"><img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" /></a>
+                <a href="/">
+                    <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
+                    <div className="version-tag">2.0</div>
+                </a>
             </div>
 
             <div className="notification-label-centered">
