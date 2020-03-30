@@ -2,7 +2,7 @@
 -Xmx2g
 
 ## GC configuration
--XX:+UseConcMarkSweepGC
+-XX:+UseG1GC
 -XX:CMSInitiatingOccupancyFraction=75
 -XX:+UseCMSInitiatingOccupancyOnly
 

@@ -282,7 +282,7 @@ write_files:
     fi
 - path: /etc/elasticsearch/jvm.options
   content: |
-    -XX:+UseConcMarkSweepGC
+    -XX:+UseG1GC
     -XX:CMSInitiatingOccupancyFraction=75
     -XX:+UseCMSInitiatingOccupancyOnly
     -XX:+DisableExplicitGC

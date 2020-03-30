@@ -273,7 +273,7 @@ write_files:
     indices.query.bool.max_clause_count: 8192
 - path: /etc/elasticsearch/jvm.options
   content: |
-    -XX:+UseConcMarkSweepGC
+    -XX:+UseG1GC
     -XX:CMSInitiatingOccupancyFraction=75
     -XX:+UseCMSInitiatingOccupancyOnly
     -XX:+DisableExplicitGC
