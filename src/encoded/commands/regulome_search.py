@@ -112,23 +112,39 @@ def run(
                 print(motif_columns.format(**motif_peak))
             continue
         if return_peaks:
-            result['peaks'] = [
-                {
-                    'chrom': peak['_index'],
-                    'start': peak['_source']['coordinates']['gte'],
-                    'end': peak['_source']['coordinates']['lt'],
-                    'strand': peak['_source'].get('strand'),
-                    'value': peak['_source'].get('value'),
-                    'file': peak['resident_detail']['file']['@id'].split('/')[2],
-                    'dataset': peak['resident_detail']['dataset']['@id'],
-                    'biosample_ontology': peak['resident_detail']['dataset']['biosample_ontology'],
-                    'method': peak['resident_detail']['dataset']['collection_type'],
-                    'targets': peak['resident_detail']['dataset'].get('target', []),
+            result['peaks'] = []
+            for peak in all_hits.get('peaks', []):
+                method = peak['resident_detail']['dataset']['collection_type']
+                if method == 'chromatin state':
+                    continue
+                peak_info = {
+                    'method': method,
                 }
-                for peak in all_hits.get('peaks', [])
-            ]
+                if method in ['ChIP-seq', 'Footprints', 'PWMs']:
+                    peak_info['targets'] = peak[
+                        'resident_detail'
+                    ]['dataset'].get('target', [])
+                if method == 'PWMs':
+                    peak_info.update({
+                        'chrom': peak['_index'],
+                        'start': peak['_source']['coordinates']['gte'],
+                        'end': peak['_source']['coordinates']['lt'],
+                        'strand': peak['_source'].get('strand'),
+                        'document_aliases': [
+                            alias
+                            for doc in peak['resident_detail']['dataset'][
+                                'documents'
+                            ]
+                            for alias in doc['aliases']
+                        ],
+                    })
+                else:
+                    peak_info['biosample_term_name'] = peak[
+                        'resident_detail'
+                    ]['dataset']['biosample_ontology']['term_name']
+                result['peaks'].append(peak_info)
         if not matched_pwm_peak_bed_only:
-            print(json.dumps(result, indent=4, sort_keys=True))
+            print(json.dumps(result))
 
 
 def main():
