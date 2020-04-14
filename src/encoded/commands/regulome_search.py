@@ -115,7 +115,12 @@ def run(
             result['peaks'] = []
             for peak in all_hits.get('peaks', []):
                 method = peak['resident_detail']['dataset']['collection_type']
-                if method == 'chromatin state':
+                if method in [
+                    'FAIRE-seq',
+                    'chromatin state',
+                    'binding sites',
+                    'curated SNVs'
+                ]:
                     continue
                 peak_info = {
                     'method': method,
