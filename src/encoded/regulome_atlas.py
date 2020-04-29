@@ -54,8 +54,13 @@ LOCAL_BIGWIGS = {
 class RegulomeAtlas(object):
     '''Methods for getting stuff out of the region_index.'''
 
-    def __init__(self, region_es):
+    def __init__(
+        self,
+        region_es,
+        bw_signal_map=LOCAL_BIGWIGS,
+    ):
         self.region_es = region_es
+        self.bw_signal_map = bw_signal_map
 
     def type(self):
         return 'regulome'
@@ -296,7 +301,7 @@ class RegulomeAtlas(object):
                 evidence['Footprint_matched'].append(target)
 
         # Get values/signals from bigWig
-        for k, bw in LOCAL_BIGWIGS.items():
+        for k, bw in self.bw_signal_map.items():
             values = bw.values(chrom, start, end)
             average = sum(values) / max(len(values), 1)
             evidence[k] = 0.0 if math.isnan(average) else average
