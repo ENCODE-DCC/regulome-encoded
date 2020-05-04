@@ -1,9 +1,11 @@
 import argparse
+import io
 import json
-import logging
+from multiprocessing import Pool
 from pkg_resources import resource_filename
 import sys
 
+import pyBigWig
 from pyramid.paster import get_app
 
 from ..regulome_search import (
@@ -14,43 +16,71 @@ from ..regulome_search import (
 from ..regulome_atlas import RegulomeAtlas
 from snovault.elasticsearch.interfaces import SNP_SEARCH_ES
 
-log = logging.getLogger(__name__)
 
+class RegulomeSearch:
+    """Start an independent app to do regulome search.
+    """
 
-def run(
-    app,
-    region_queries,
-    assembly='GRCh37',
-    return_peaks=False,
-    matched_pwm_peak_bed_only=False
-):
-    logging.basicConfig(
-        stream=sys.stdout,
-        level=logging.INFO,
-        format='[%(asctime)s] %(name)s:%(levelname)s: %(message)s',
-    )
+    def __init__(
+        self,
+        config_file,
+        app_name,
+        assembly,
+        return_peaks,
+        matched_pwm_peak_bed_only
+    ):
+        self.config_file = config_file
+        self.app_name = app_name
+        self.assembly = assembly
+        self.return_peaks = return_peaks
+        self.matched_pwm_peak_bed_only = matched_pwm_peak_bed_only
 
-    atlas = RegulomeAtlas(app.registry[SNP_SEARCH_ES])
-    motif_columns = (
-        '{chrom}\t'
-        '{start}\t'
-        '{end}\t'
-        '{motif_name}\t'
-        '{strand}\t'
-        '{hit_motif_start}\t'
-        '{hit_motif_end}\t'
-        '{query}\t'
-        '{query_start}\t'
-        '{query_end}'
-    )
-    for region_query in region_queries:
+    @property
+    def atlas(self):
+        try:
+            return self._atlas
+        except AttributeError:
+            app = get_app(self.config_file, self.app_name)
+            # So that different process won't compete for one bigWig handle
+            instance_specific_bws = {
+                'IC_matched_max': pyBigWig.open(
+                    resource_filename(
+                        'encoded', '../../bigwig_files/IC_matched_max.bw'
+                    )
+                ),
+                'IC_max': pyBigWig.open(
+                    resource_filename(
+                        'encoded', '../../bigwig_files/IC_max.bw'
+                    )
+                ),
+            }
+            self._atlas = RegulomeAtlas(
+                app.registry[SNP_SEARCH_ES],
+                bw_signal_map=instance_specific_bws,
+            )
+            return self._atlas
+
+    def __call__(self, region_query):
+        motif_columns = (
+            '{chrom}\t'
+            '{start}\t'
+            '{end}\t'
+            '{motif_name}\t'
+            '{strand}\t'
+            '{hit_motif_start}\t'
+            '{hit_motif_end}\t'
+            '{query}\t'
+            '{query_start}\t'
+            '{query_end}'
+        )
         # Get coordinate for queried region
         region_query = region_query.strip()
         try:
-            chrom, start, end = get_coordinate(region_query, assembly, atlas)
+            chrom, start, end = get_coordinate(
+                region_query, self.assembly, self.atlas
+            )
         except ValueError:
-            logging.error('Invalid input: {}'.format(region_query))
-            continue
+            return 1, 'Invalid input: {}'.format(region_query)
         result = {
             'chrom': chrom,
             'start': start,
@@ -58,29 +88,28 @@ def run(
         }
         try:
             all_hits = region_get_hits(
-                atlas,
-                assembly,
+                self.atlas,
+                self.assembly,
                 chrom,
                 start,
                 end,
-                peaks_too=return_peaks or matched_pwm_peak_bed_only
+                peaks_too=self.return_peaks or self.matched_pwm_peak_bed_only
             )
-            evidence = atlas.regulome_evidence(
+            evidence = self.atlas.regulome_evidence(
                 all_hits['datasets'], chrom, int(start), int(end)
             )
-            if not matched_pwm_peak_bed_only:
-                result['score'] = atlas.regulome_score(
+            if not self.matched_pwm_peak_bed_only:
+                result['score'] = self.atlas.regulome_score(
                     all_hits['datasets'], evidence
                 )
                 result['features'] = evidence_to_features(evidence)
         except Exception:
-            logging.error(
-                'Regulome search failed on {}:{}-{}'.format(chrom, start, end)
+            return 1, 'Regulome search failed on {}:{}-{}'.format(
+                chrom, start, end
             )
-            continue
-        if matched_pwm_peak_bed_only:
+        if self.matched_pwm_peak_bed_only:
             if not evidence.get('PWM_matched', []):
-                continue
+                return 0, ''
             matched_pwm_dict = {}
             for motif in evidence.get('PWM', []):
                 if set(evidence['PWM_matched']) & set(motif.get('target', [])):
@@ -109,9 +138,8 @@ def run(
                 else:
                     motif_peak['hit_motif_start'] = start - motif_peak['start']
                     motif_peak['hit_motif_end'] = end - motif_peak['start']
-                print(motif_columns.format(**motif_peak))
-            continue
-        if return_peaks:
+            return 0, motif_columns.format(**motif_peak)
+        if self.return_peaks:
             result['peaks'] = []
             for peak in all_hits.get('peaks', []):
                 method = peak['resident_detail']['dataset']['collection_type']
@@ -148,8 +176,7 @@ def run(
                         'resident_detail'
                     ]['dataset']['biosample_ontology']['term_name']
                 result['peaks'].append(peak_info)
-        if not matched_pwm_peak_bed_only:
-            print(json.dumps(result))
+        return 0, json.dumps(result)
 
 
 def main():
@@ -182,6 +209,12 @@ def main():
         help="Return motif peak details in BED format.",
         action='store_true',
     )
+    parser.add_argument(
+        '-p', '--processes',
+        type=int,
+        default=1,
+        help='Number of process run in parallel.'
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         '-s', '--variants',
@@ -197,18 +230,44 @@ def main():
         'or a region like chr1:39492462-39492463.'
     )
     args = parser.parse_args()
-    variants = []
+
     if args.file_input:
         with open(args.file_input) as f:
-            variants = f.readlines()
+            count = 0
+            for count, _ in enumerate(f, 1):
+                pass
+        chunksize = count // args.processes + (count % args.processes > 0)
+        variants_stream = open(args.file_input)
     elif args.variants:
-        variants = args.variants
-    return run(
-        get_app(args.config_file, args.app_name),
-        variants,
-        args.assembly,
-        args.peaks,
-        args.matched_pwm_peak_only,
+        chunksize = len(args.variants) // args.processes + (
+            len(args.variants) % args.processes > 0
+        )
+        variants_stream = io.StringIO('\n'.join(args.variants))
+
+    success_count = 0
+    failure_count = 0
+    with variants_stream as variants:
+        with Pool(args.processes) as p:
+            for status, res in p.imap(
+                RegulomeSearch(
+                    args.config_file,
+                    args.app_name,
+                    args.assembly,
+                    args.peaks,
+                    args.matched_pwm_peak_only
+                ),
+                variants,
+                chunksize
+            ):
+                if status == 0:
+                    print(res)
+                    success_count += 1
+                else:
+                    print(res, file=sys.stderr)
+                    failure_count += 1
+    print(
+        'Succeeded {}; Failed: {}'.format(success_count, failure_count),
+        file=sys.stderr
     )
 
 
