@@ -419,7 +419,7 @@ def regulome_summary(context, request):
         raise HTTPSeeOther(location=location)
 
     result['@type'] = ['regulome-summary']
-    result['title'] = 'Regulome summary'
+    result['title'] = 'RegulomeDB summary'
 
     # No regions to search
     if not result['variants']:
@@ -499,12 +499,12 @@ def regulome_search(context, request):
             'notifications': {
                 'Failed': 'Invalid parameters: "from" and "size" are not accepted.'
             },
-            'title': 'Regulome search',
+            'title': 'RegulomeDB search',
         }
     begin = time.time()  # DEBUG: timing
     result = parse_region_query(request)
     result['@type'] = ['regulome-search']
-    result['title'] = 'Regulome search'
+    result['title'] = 'RegulomeDB search'
     result['timing'] = [{'parse_region_query': (time.time() - begin)}]  # DEBUG: timing
 
     if len(result['query_coordinates']) != 1:
