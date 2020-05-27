@@ -1,6 +1,5 @@
 import argparse
 import io
-import json
 from multiprocessing import Pool
 from pkg_resources import resource_filename
 import sys
@@ -61,20 +60,8 @@ class RegulomeSearch:
             return self._atlas
 
     def __call__(self, region_query):
-        motif_columns = (
-            '{chrom}\t'
-            '{start}\t'
-            '{end}\t'
-            '{motif_name}\t'
-            '{strand}\t'
-            '{hit_motif_start}\t'
-            '{hit_motif_end}\t'
-            '{query}\t'
-            '{query_start}\t'
-            '{query_end}'
-        )
         # Get coordinate for queried region
-        region_query = region_query.strip()
+        region_query = region_query.strip().split('\t')[3]
         try:
             chrom, start, end = get_coordinate(
                 region_query, self.assembly, self.atlas
@@ -107,76 +94,26 @@ class RegulomeSearch:
             return 1, 'Regulome search failed on {}:{}-{}'.format(
                 chrom, start, end
             )
-        if self.matched_pwm_peak_bed_only:
-            if not evidence.get('PWM_matched', []):
-                return 0, ''
-            matched_pwm_dict = {}
-            for motif in evidence.get('PWM', []):
-                if set(evidence['PWM_matched']) & set(motif.get('target', [])):
-                    matched_pwm_dict[motif['@id']] = [
-                        alias.split(sep=':', maxsplit=1)[1]
-                        for doc in motif['documents']
-                        for alias in doc['aliases']
-                    ]
-            for peak in all_hits.get('peaks', []):
-                dataset = peak['resident_detail']['dataset']
-                if dataset['@id'] not in matched_pwm_dict:
-                    continue
-                motif_peak = {
-                    'chrom': peak['_index'],
-                    'start': peak['_source']['coordinates']['gte'],
-                    'end': peak['_source']['coordinates']['lt'],
-                    'motif_name': ','.join(matched_pwm_dict[dataset['@id']]),
-                    'strand': peak['_source'].get('strand', '.'),
-                    'query': region_query,
-                    'query_start': start,
-                    'query_end': end,
-                }
-                if motif_peak['strand'] == '-':
-                    motif_peak['hit_motif_start'] = motif_peak['end'] - end
-                    motif_peak['hit_motif_end'] = motif_peak['end'] - start
-                else:
-                    motif_peak['hit_motif_start'] = start - motif_peak['start']
-                    motif_peak['hit_motif_end'] = end - motif_peak['start']
-            return 0, motif_columns.format(**motif_peak)
-        if self.return_peaks:
-            result['peaks'] = []
-            for peak in all_hits.get('peaks', []):
-                method = peak['resident_detail']['dataset']['collection_type']
-                if method in [
-                    'FAIRE-seq',
-                    'chromatin state',
-                    'binding sites',
-                    'curated SNVs'
-                ]:
-                    continue
-                peak_info = {
-                    'method': method,
-                }
-                if method in ['ChIP-seq', 'Footprints', 'PWMs']:
-                    peak_info['targets'] = peak[
-                        'resident_detail'
-                    ]['dataset'].get('target', [])
-                if method == 'PWMs':
-                    peak_info.update({
-                        'chrom': peak['_index'],
-                        'start': peak['_source']['coordinates']['gte'],
-                        'end': peak['_source']['coordinates']['lt'],
-                        'strand': peak['_source'].get('strand'),
-                        'document_aliases': [
-                            alias
-                            for doc in peak['resident_detail']['dataset'][
-                                'documents'
-                            ]
-                            for alias in doc['aliases']
-                        ],
-                    })
-                else:
-                    peak_info['biosample_term_name'] = peak[
-                        'resident_detail'
-                    ]['dataset']['biosample_ontology']['term_name']
-                result['peaks'].append(peak_info)
-        return 0, json.dumps(result)
+        output_template = (
+            '{chrom}\t'
+            '{start}\t'
+            '{end}\t'
+            '{rsid}\t'
+            '{ChIP}\t'
+            '{DNase}\t'
+            '{PWM}\t'
+            '{Footprint}\t'
+            '{QTL}\t'
+            '{IC_max}\t'
+            '{PWM_matched}\t'
+            '{Footprint_matched}\t'
+            '{IC_matched_max}\t'
+            '{ranking}\t'
+            '{probability}'
+        )
+        result.update(result['features'])
+        result.update(result['score'])
+        return 0, output_template.format(rsid=region_query, **result)
 
 
 def main():
