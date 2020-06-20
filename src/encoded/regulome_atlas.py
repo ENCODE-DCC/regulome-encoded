@@ -96,11 +96,21 @@ class RegulomeAtlas(object):
         # use start not end for 0-base open ended
         start = int(start)
         end = int(end)
+        # We don't need match score here so filter context in the bool query is
+        # preferred over query context
+        # https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html
+        # Filter clause is an array for potential multiple filters
         if abs(end - start) == 1:
             query = {
                 'query': {
-                    'term': {
-                        'coordinates': start
+                    'bool': {
+                        'filter': [
+                            {
+                                'term': {
+                                    'coordinates': start
+                                }
+                            }
+                        ]
                     }
                 },
                 'size': max_results,
@@ -108,12 +118,18 @@ class RegulomeAtlas(object):
         else:
             query = {
                 'query': {
-                    'range': {
-                        'coordinates': {
-                            'gte': start,
-                            'lt': end,
-                            'relation': 'intersects',
-                        }
+                    'bool': {
+                        'filter': [
+                            {
+                                'range': {
+                                    'coordinates': {
+                                        'gte': start,
+                                        'lt': end,
+                                        'relation': 'intersects',
+                                    }
+                                }
+                            }
+                        ]
                     }
                 },
                 'size': max_results,
@@ -121,9 +137,15 @@ class RegulomeAtlas(object):
 
         return query
 
-    def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX):
+    def find_snps(
+        self, assembly, chrom, start, end, max_results=SEARCH_MAX, maf=None
+    ):
         '''Return all SNPs in a region.'''
         range_query = self._range_query(start, end, snps=True)
+        if maf is not None:
+            range_query['query']['bool']['filter'].append(
+                {'range': {'maf': {'gte': maf}}}
+            )
 
         try:
             results = self.region_es.search(index=snp_index_key(assembly), doc_type=chrom,

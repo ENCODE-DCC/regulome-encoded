@@ -254,6 +254,15 @@ def get_snp_index_mapping(chrom='chr1'):
                 'coordinates': {
                     'type': 'integer_range'
                 },
+                'maf': {
+                    'type': 'float',
+                },
+                'ref_allele_freq': {
+                    'enabled': False,
+                },
+                'alt_allele_freq': {
+                    'enabled': False,
+                },
             }
         }
     }
@@ -400,14 +409,48 @@ class RemoteReader(object):
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]
         if start == end:
             end = end + 1
-        return (chrom, {
-              'rsid': rsid, 
-              'chrom': chrom, 
-              'coordinates': { 
-                  'gte': start,
-                  'lt': end
-                },
-        })
+        snp_doc = {
+            'rsid': rsid,
+            'chrom': chrom,
+            'coordinates': {
+                'gte': start,
+                'lt': end
+            },
+        }
+        info_tags = row[8].split(';')
+        try:
+            freq_tag = [
+                tag for tag in info_tags if tag.startswith('FREQ=')
+            ][0][5:]
+        except IndexError:
+            freq_tag = None
+        if freq_tag:
+            ref_allele_freq_map = {row[5]: {}}
+            alt_alleles = row[6].split(',')
+            alt_allele_freq_map = dict(zip(alt_alleles, [{}]*len(alt_alleles)))
+            alt_allele_freqs = set()
+            for population_freq in freq_tag.split('|'):
+                population, freqs = population_freq.split(':')
+                ref_freq, *alt_freqs = freqs.split(',')
+                try:
+                    ref_allele_freq_map[row[5]][population] = float(ref_freq)
+                except ValueError:
+                    pass
+                for allele, freq in zip(alt_alleles, alt_freqs):
+                    if not freq:
+                        continue
+                    try:
+                        alt_allele_freq_map[allele].update(
+                            {population: float(freq)}
+                        )
+                        alt_allele_freqs.add(float(freq))
+                    except ValueError:
+                        pass
+            snp_doc['ref_allele_freq'] = ref_allele_freq_map
+            snp_doc['alt_allele_freq'] = alt_allele_freq_map
+            if alt_allele_freqs:
+                snp_doc['maf'] = max(alt_allele_freqs)
+        return (chrom, snp_doc)
 
     # TODO: support bigBeds
     # def bb_region(self, row):
@@ -1139,7 +1182,7 @@ class RegionIndexer(Indexer):
                         continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
                     if chrom not in SUPPORTED_CHROMOSOMES:
                         continue   # TEMPORARY: limit both SNPs and regions to major chroms
-                    if chrom not in file_data:
+                    if (chrom not in file_data) or (len(file_data[chrom]) > 3e6):
                         # we are done with current chromosome and move on
                         # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
                         if big_file and file_data and len(chroms) > 0:
@@ -1151,7 +1194,8 @@ class RegionIndexer(Indexer):
                                                    list(file_data.keys()))
                             file_data = {}  # Don't hold onto data already indexed
                         file_data[chrom] = []
-                        chroms.append(chrom)
+                        if len(chroms) == 0 or chroms[-1] != chrom:
+                            chroms.append(chrom)
                     file_data[chrom].append(doc)
         # TODO: Handle bigBeds...
         # elif afile['file_format'] == 'bedBed':  # Use pyBigWig?

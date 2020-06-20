@@ -54,7 +54,7 @@ const snpsColumns = {
 };
 
 const SNPSummary = (props) => {
-    const snps = props.context.summaries;
+    const snps = props.context.variants;
     return (
         <SortTablePanel title="Summary of SNP analysis">
             <SortTable list={snps} columns={snpsColumns} />
@@ -64,16 +64,11 @@ const SNPSummary = (props) => {
 
 SNPSummary.propTypes = {
     context: PropTypes.object.isRequired,
-    summaries: PropTypes.array,
-};
-
-SNPSummary.defaultProps = {
-    summaries: [],
 };
 
 const RegulomeSummary = (props) => {
     const context = props.context;
-    const summaries = context.summaries || [];
+    const variants = context.variants || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
 
@@ -87,7 +82,7 @@ const RegulomeSummary = (props) => {
             </div>
 
             <div className="notification-label-centered">
-                <div className="notification-summary">This search has found <b>{context.total}</b> variant(s).{context.total > summaries.length ? <span> Only <b>{summaries.length}</b> are shown.</span> : null}</div>
+                <div className="notification-summary">This search has found <b>{context.total}</b> variant(s).{context.total > variants.length ? <span> Only <b>{variants.length}</b> are shown.</span> : null}</div>
                 {notifications && notifications.length > 0 ?
                     <div className="notification-line notification-title">Unsuccessful searches:</div>
                 : null}
@@ -102,7 +97,7 @@ const RegulomeSummary = (props) => {
                     <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
                 </div>
             </div>
-            {summaries.length > 0 ?
+            {variants.length > 0 ?
                 <div className="summary-table-hoverable">
                     <SNPSummary {...props} />
                 </div>

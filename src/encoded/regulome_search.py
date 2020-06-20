@@ -295,6 +295,7 @@ def parse_region_query(request):
         from_ = request.params.get('from', 0)
         size = request.params.get('limit', 200)
         format = request.params.get('format', 'json')
+        maf = request.params.get('maf', None)
     else:  # request.method == 'POST'
         assembly = request.json_body.get('genome', 'GRCh37')
         regions = request.json_body.get('regions', [])
@@ -303,6 +304,7 @@ def parse_region_query(request):
         from_ = request.json_body.get('from', 0)
         size = request.json_body.get('limit', 200)
         format = request.json_body.get('format', 'json')
+        maf = request.json_body.get('maf', None)
 
     # Parse parameters
     if assembly not in _GENOME_TO_ALIAS.keys():
@@ -330,20 +332,33 @@ def parse_region_query(request):
             notifications[region_query] = 'Failed: invalid region input'
             continue
         query_coordinates.append('{}:{}-{}'.format(chrom, int(start), int(end)))
+        # If query is a rsid, it should be put in snps regardless of its MAF.
+        # However, find_snps is still called in case there are overlapping
+        # variants passing the MAF cutoff
         snps = atlas.find_snps(
-            _GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end
+            _GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end, maf=maf
         )
+        if re.match(r'^rs\d+', region_query.lower()):
+            snps.append(
+                {
+                    'rsid': region_query.lower(),
+                    'chrom': chrom,
+                    'coordinates': {
+                        'gte': start,
+                        'lt': end,
+                    }
+                }
+            )
         if not snps:
             if (int(end) - int(start)) > 1:
                 notifications[region_query] = (
-                    'Failed: no known variants found in this multi-nucleotide '
-                    'region.'
+                    'Failed: no known variants matching query conditions found.'
                 )
                 continue
             else:
-                variants['{}:{}-{}'.format(chrom, int(start), int(end))] = set()
+                variants[(chrom, int(start), int(end))] = set()
         for snp in snps:
-            coord = '{}:{}-{}'.format(
+            coord = (
                 snp['chrom'],
                 snp['coordinates']['gte'],
                 snp['coordinates']['lt']
@@ -374,7 +389,15 @@ def parse_region_query(request):
         'format': format,
         'from': from_,
         'total': total,
-        'variants': {k: list(v) for k, v in sorted(variants.items())[from_:to_]},
+        'variants': [
+            {
+                'chrom': chrom,
+                'start': start,
+                'end': end,
+                'rsids': sorted(variants[(chrom, start, end)])
+            }
+            for chrom, start, end in sorted(variants)[from_:to_]
+        ],
         'notifications': notifications,
     }
     return result
@@ -432,13 +455,13 @@ def regulome_summary(context, request):
     regulome_es = request.registry[SNP_SEARCH_ES]
     atlas = RegulomeAtlas(regulome_es)
     assembly = result['assembly']
-    summaries = []
-    for coord in result['variants']:
+    if result['format'] in ['tsv', 'bed']:
+        table = []
+    for variant in result['variants']:
         begin = time.time()  # DEBUG: timing
-        chrom, start_end = coord.split(':')
-        start, end = start_end.split('-')
-        # Get rsid for the coordinate
-        rsids = result['variants'][coord]
+        chrom = variant['chrom']
+        start = variant['start']
+        end = variant['end']
         # parse_region_query makes sure variants returned are all scorable
         try:
             all_hits = region_get_hits(atlas, assembly, chrom, start, end)
@@ -450,29 +473,26 @@ def regulome_summary(context, request):
             features = {}
             regulome_score = {}
         if result['format'] in ['tsv', 'bed']:
-            if not summaries:
+            if not table:
                 columns = ['chrom', 'start', 'end', 'rsids']
                 columns.extend(sorted(regulome_score.keys()))
                 columns.extend(sorted(features.keys()))
                 if result['format'] == 'tsv':
-                    summaries.append('\t'.join(columns).encode())
-            row = [chrom, start, end, ', '.join(rsids)]
+                    table.append('\t'.join(columns).encode())
+            row = [chrom, start, end, ', '.join(variant['rsids'])]
             row.extend([
                 str(features.get(col, '')) or str(regulome_score.get(col, ''))
                 for col in columns
                 if col in regulome_score or col in features
             ])
-            summaries.append('\t'.join(row).encode())
+            table.append('\t'.join(row).encode())
+            continue
         else:
-            summaries.append({
-                'chrom': chrom,
-                'start': start,
-                'end': end,
-                'rsids': rsids,
-                'features': features,
-                'regulome_score': regulome_score
-            })
-        result['timing'].append({coord: (time.time() - begin)})  # DEBUG timing
+            variant['features'] = features
+            variant['regulome_score'] = regulome_score
+        result['timing'].append(
+            {'{}:{}-{}'.format(chrom, start, end): (time.time() - begin)}
+        )  # DEBUG timing
     if result['format'] in ['tsv', 'bed']:
         request.response.content_type = 'text/tsv'
         request.response.content_disposition = (
@@ -480,9 +500,8 @@ def regulome_summary(context, request):
                 time.strftime('%Y%m%d-%Hh%Mm%Ss'), result['format']
             )
         )
-        request.response.app_iter = (row + b'\n' for row in summaries)
+        request.response.app_iter = (row + b'\n' for row in table)
         return request.response
-    result['summaries'] = summaries
     return result
 
 
@@ -524,13 +543,15 @@ def regulome_search(context, request):
     coord = result['query_coordinates'][0]
     chrom, start_end = coord.split(':')
     start, end = start_end.split('-')
+    start = int(start)
+    end = int(end)
 
     try:
         all_hits = region_get_hits(
             atlas, assembly, chrom, start, end, peaks_too=True
         )
         evidence = atlas.regulome_evidence(
-            all_hits['datasets'], chrom, int(start), int(end)
+            all_hits['datasets'], chrom, start, end
         )
         result['regulome_score'] = atlas.regulome_score(
             all_hits['datasets'], evidence
@@ -562,10 +583,12 @@ def regulome_search(context, request):
     result['nearby_snps'] = atlas.nearby_snps(
         _GENOME_TO_ALIAS.get(assembly, 'hg19'),
         chrom,
-        int(start),
+        int((start + end) / 2),
         # No guarentee the query coordinate corresponds to one RefSNP.
-        max_snps=len(result['variants'].get(coord, []))+10
+        max_snps=len(result['variants'])+10
     )
+    # Use nearby_snps instead
+    result.pop('variants', None)
     result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
     return result
 

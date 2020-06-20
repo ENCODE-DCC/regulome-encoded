@@ -228,6 +228,7 @@ class AdvSearch extends React.Component {
             coordinates: '',
             genome: 'GRCh37',
             searchInput: '',
+            maf: 0.01,
         };
         /* eslint-enable react/no-unused-state */
 
@@ -282,6 +283,7 @@ class AdvSearch extends React.Component {
 
                             <input type="submit" value="Search" className="btn btn-sm btn-info" />
                             <input type="hidden" name="genome" value={this.state.genome} />
+                            <input type="hidden" name="maf" value={this.state.maf} />
                         </div>
                     </div>
 
@@ -290,8 +292,8 @@ class AdvSearch extends React.Component {
                 {(context.notification && context.notification !== 'No annotations found') ?
                     <div className="notification">{context.notification}</div>
                 : null}
-                {(context.variants && context.variants.length > 0) ?
-                    <p>Searched coordinates: {Object.keys(context.variants)[0]}</p>
+                {(context.query_coordinates && context.query_coordinates.length > 0) ?
+                    <p>Searched coordinates: {context.query_coordinates[0]}</p>
                 : null}
                 {(context.regulome_score && context.regulome_score.probability && context.regulome_score.ranking) ?
                     <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking) </p>
@@ -341,7 +343,11 @@ const NearbySNPsDrawing = (props) => {
     if (context.nearby_snps && context.nearby_snps[0] && context.nearby_snps[0].coordinates) {
         startNearbySnps = +context.nearby_snps[0].coordinates.lt;
         endNearbySnps = +context.nearby_snps[context.nearby_snps.length - 1].coordinates.lt;
-        coordinate = +Object.keys(context.variants)[0].split('-')[1];
+        coordinate = Math.floor(
+            context.query_coordinates[0].split(':')[1].split('-').reduce(
+                (start, end) => +start + +end
+            ) / 2
+        );
         coordinateX = (920 * ((coordinate - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
 
         context.nearby_snps.forEach((snp, snpIndex) => {
@@ -1252,7 +1258,7 @@ class RegulomeSearch extends React.Component {
     render() {
         const context = this.props.context;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
-        const coordinates = Object.keys(context.variants)[0];
+        const coordinates = context.query_coordinates[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
@@ -1424,7 +1430,7 @@ class RegulomeSearch extends React.Component {
                                         </React.Fragment>
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
-                                            <h4>Visualize files for SNP {context.variants[coordinates]}</h4>
+                                            <h4>Visualize files for {coordinates}</h4>
                                             <h4>There {this.state.filteredFiles.length === 1 ? 'is' : 'are'} {this.state.filteredFiles.length} result{this.state.filteredFiles.length === 1 ? '' : 's'}.</h4>
                                             <GenomeFacets
                                                 files={this.state.allFiles}

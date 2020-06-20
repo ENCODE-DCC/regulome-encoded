@@ -14,7 +14,7 @@ def test_one_regulome(testapp, workbook, region_index):
     assert res.json['@type'] == ['regulome-search']
     assert len(res.json['@graph']) == 8
     assert res.json['regulome_score'] == {'probability': '0.99267', 'ranking': '1a'}
-    assert 'chr1:39492461-39492462' in res.json['variants']
+    assert 'chr1:39492461-39492462' in res.json['query_coordinates']
     assert {e['dataset'] for e in res.json['@graph']} == {
         '/annotations/ENCSR228TST/', '/annotations/ENCSR061TST/',
         '/experiments/ENCSR000DCE/', '/annotations/ENCSR333TST/',
@@ -28,7 +28,7 @@ def test_dataset_size(testapp, workbook, region_index):
     res = testapp.get('/regulome-search/?regions=rs10905307&genome=GRCh37')
     assert len(res.json['@graph']) == 3
     assert res.json['regulome_score'] == {'probability': '0.54789', 'ranking': '1f'}
-    assert 'chr10:5894499-5894500' in res.json['variants']
+    assert 'chr10:5894499-5894500' in res.json['query_coordinates']
     assert {e['dataset'] for e in res.json['@graph']} == {
         '/annotations/ENCSR061TST/',
         '/experiments/ENCSR000DZQ/',
