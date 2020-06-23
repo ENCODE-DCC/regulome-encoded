@@ -343,11 +343,7 @@ const NearbySNPsDrawing = (props) => {
     if (context.nearby_snps && context.nearby_snps[0] && context.nearby_snps[0].coordinates) {
         startNearbySnps = +context.nearby_snps[0].coordinates.lt;
         endNearbySnps = +context.nearby_snps[context.nearby_snps.length - 1].coordinates.lt;
-        coordinate = Math.floor(
-            context.query_coordinates[0].split(':')[1].split('-').reduce(
-                (start, end) => +start + +end
-            ) / 2
-        );
+        coordinate = +context.query_coordinates[0].split('-')[1];
         coordinateX = (920 * ((coordinate - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
 
         context.nearby_snps.forEach((snp, snpIndex) => {
@@ -977,6 +973,7 @@ class RegulomeSearch extends React.Component {
             browserTotalPages: 1,
             selectedFilters: [],
             facetDisplay: false,
+            showMoreFreqs: false,
         };
 
         // Bind this to non-React methods.
@@ -1008,7 +1005,8 @@ class RegulomeSearch extends React.Component {
         const filtersUpdate = this.state.selectedFilters !== nextState.selectedFilters;
         const facetDisplayUpdate = this.state.facetDisplay !== nextState.facetDisplay;
         const paginationChange = this.state.multipleBrowserPages !== nextState.multipleBrowserPages;
-        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange);
+        const showFreqsToggled = this.state.showMoreFreqs !== nextState.showMoreFreqs;
+        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange || showFreqsToggled);
     }
 
     onFilter(e) {
@@ -1266,6 +1264,41 @@ class RegulomeSearch extends React.Component {
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
         const thumbnail = this.context.location_href.split('/thumbnail=')[1] || null;
 
+        const toggleFreqsShow = () => this.setState(
+            state => ({ showMoreFreqs: !state.showMoreFreqs })
+        );
+        const hitSnps = {};
+        if (coordinates) {
+            const [chrom, startEnd] = coordinates.split(':');
+            const [start, end] = startEnd.split('-');
+            context.nearby_snps.forEach((snp) => {
+                if (snp.chrom === chrom && snp.coordinates.gte === +start && snp.coordinates.lt === +end) {
+                    hitSnps[snp.rsid] = [];
+                    if (snp.ref_allele_freq) {
+                        Object.keys(snp.ref_allele_freq).forEach((allele) => {
+                            Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
+                                hitSnps[snp.rsid].push([
+                                    `${allele}=${snp.ref_allele_freq[allele][population]} (${population})`,
+                                    snp.ref_allele_freq[allele][population],
+                                ]);
+                            });
+                        });
+                    }
+                    if (snp.alt_allele_freq) {
+                        Object.keys(snp.alt_allele_freq).forEach((allele) => {
+                            Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
+                                hitSnps[snp.rsid].push([
+                                    `${allele}=${snp.alt_allele_freq[allele][population]} (${population})`,
+                                    snp.alt_allele_freq[allele][population],
+                                ]);
+                            });
+                        });
+                    }
+                    hitSnps[snp.rsid].sort((freqA, freqB) => freqB[1] - freqA[1]);
+                }
+            });
+        }
+
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
                 { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total !== 0) ?
@@ -1311,6 +1344,22 @@ class RegulomeSearch extends React.Component {
                                         </div>
                                     </React.Fragment>
                                 : null}
+                                {Object.keys(hitSnps).map(rsid =>
+                                    <div className="notification-line" key={rsid}>
+                                        <div className="notification-label">{rsid}</div>
+                                        <div className="notification">
+                                            <div>
+                                                {hitSnps[rsid].slice(0, 3).map(freq => <div>{freq[0]}</div>)}
+                                            </div>
+                                            {this.state.showMoreFreqs ?
+                                                <div>
+                                                    {hitSnps[rsid].slice(3, -1).map(freq => <div>{freq[0]}</div>)}
+                                                </div>
+                                            : null}
+                                            <button onClick={toggleFreqsShow}>{hitSnps[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
