@@ -436,8 +436,13 @@ def regulome_summary(context, request):
 
     # Redirect to regulome report for single unique region query
     if len(result['variants']) == 1:
-        query = {'regions': [v for v in result['variants']][0],
-                 'genome': result['assembly']}
+        query = {
+            'regions': [
+                '{}:{}-{}'.format(v['chrom'], v['start'], v['end'])
+                for v in result['variants']
+            ][0],
+            'genome': result['assembly']
+        }
         location = request.route_url('regulome-search', slash='', _query=query)
         raise HTTPSeeOther(location=location)
 

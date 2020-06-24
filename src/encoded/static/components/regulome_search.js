@@ -1353,7 +1353,7 @@ class RegulomeSearch extends React.Component {
                                             </div>
                                             {this.state.showMoreFreqs ?
                                                 <div>
-                                                    {hitSnps[rsid].slice(3, -1).map(freq => <div>{freq[0]}</div>)}
+                                                    {hitSnps[rsid].slice(3, hitSnps[rsid].length).map(freq => <div>{freq[0]}</div>)}
                                                 </div>
                                             : null}
                                             <button onClick={toggleFreqsShow}>{hitSnps[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button>

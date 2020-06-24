@@ -427,7 +427,7 @@ class RemoteReader(object):
         if freq_tag:
             ref_allele_freq_map = {row[5]: {}}
             alt_alleles = row[6].split(',')
-            alt_allele_freq_map = dict(zip(alt_alleles, [{}]*len(alt_alleles)))
+            alt_allele_freq_map = {}
             alt_allele_freqs = set()
             for population_freq in freq_tag.split('|'):
                 population, freqs = population_freq.split(':')
@@ -436,16 +436,15 @@ class RemoteReader(object):
                     ref_allele_freq_map[row[5]][population] = float(ref_freq)
                 except ValueError:
                     pass
-                for allele, freq in zip(alt_alleles, alt_freqs):
-                    if not freq:
-                        continue
+                for allele, freq_str in zip(alt_alleles, alt_freqs):
                     try:
-                        alt_allele_freq_map[allele].update(
-                            {population: float(freq)}
-                        )
-                        alt_allele_freqs.add(float(freq))
-                    except ValueError:
-                        pass
+                        freq = float(freq_str)
+                    except (TypeError, ValueError):
+                        continue
+                    if allele not in alt_allele_freq_map:
+                        alt_allele_freq_map[allele] = {population: freq}
+                    else:
+                        alt_allele_freq_map[allele][population] = freq
             snp_doc['ref_allele_freq'] = ref_allele_freq_map
             snp_doc['alt_allele_freq'] = alt_allele_freq_map
             if alt_allele_freqs:
