@@ -1273,28 +1273,25 @@ class RegulomeSearch extends React.Component {
             const [start, end] = startEnd.split('-');
             context.nearby_snps.forEach((snp) => {
                 if (snp.chrom === chrom && snp.coordinates.gte === +start && snp.coordinates.lt === +end) {
-                    hitSnps[snp.rsid] = [];
+                    hitSnps[snp.rsid] = {};
                     if (snp.ref_allele_freq) {
                         Object.keys(snp.ref_allele_freq).forEach((allele) => {
                             Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
-                                hitSnps[snp.rsid].push([
-                                    `${allele}=${snp.ref_allele_freq[allele][population]} (${population})`,
-                                    snp.ref_allele_freq[allele][population],
-                                ]);
+                                hitSnps[snp.rsid][population] = `${allele}=${snp.ref_allele_freq[allele][population]}`;
                             });
                         });
                     }
                     if (snp.alt_allele_freq) {
                         Object.keys(snp.alt_allele_freq).forEach((allele) => {
                             Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
-                                hitSnps[snp.rsid].push([
-                                    `${allele}=${snp.alt_allele_freq[allele][population]} (${population})`,
-                                    snp.alt_allele_freq[allele][population],
-                                ]);
+                                if (!hitSnps[snp.rsid][population]) {
+                                    hitSnps[snp.rsid][population] = `${allele}=${snp.alt_allele_freq[allele][population]}`;
+                                } else {
+                                    hitSnps[snp.rsid][population] += `, ${allele}=${snp.alt_allele_freq[allele][population]}`;
+                                }
                             });
                         });
                     }
-                    hitSnps[snp.rsid].sort((freqA, freqB) => freqB[1] - freqA[1]);
                 }
             });
         }
@@ -1349,14 +1346,18 @@ class RegulomeSearch extends React.Component {
                                         <div className="notification-label">{rsid}</div>
                                         <div className="notification">
                                             <div>
-                                                {hitSnps[rsid].slice(0, 3).map(freq => <div>{freq[0]}</div>)}
+                                                {Object.keys(hitSnps[rsid]).slice(0, 3).map(
+                                                    population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                )}
                                             </div>
-                                            {this.state.showMoreFreqs ?
+                                            {Object.keys(hitSnps[rsid]).length > 3 && this.state.showMoreFreqs ?
                                                 <div>
-                                                    {hitSnps[rsid].slice(3, hitSnps[rsid].length).map(freq => <div>{freq[0]}</div>)}
+                                                    {Object.keys(hitSnps[rsid]).slice(3, hitSnps[rsid].length).map(
+                                                        population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                    )}
                                                 </div>
                                             : null}
-                                            <button onClick={toggleFreqsShow}>{hitSnps[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button>
+                                            {Object.keys(hitSnps[rsid]).length > 3 ? <button onClick={toggleFreqsShow}>{Object.keys(hitSnps[rsid]).length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
                                         </div>
                                     </div>
                                 )}

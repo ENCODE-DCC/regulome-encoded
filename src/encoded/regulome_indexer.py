@@ -437,14 +437,13 @@ class RemoteReader(object):
                 except ValueError:
                     pass
                 for allele, freq_str in zip(alt_alleles, alt_freqs):
+                    alt_allele_freq_map.setdefault(allele, {})
                     try:
                         freq = float(freq_str)
                     except (TypeError, ValueError):
                         continue
-                    if allele not in alt_allele_freq_map:
-                        alt_allele_freq_map[allele] = {population: freq}
-                    else:
-                        alt_allele_freq_map[allele][population] = freq
+                    alt_allele_freqs.add(freq)
+                    alt_allele_freq_map[allele][population] = freq
             snp_doc['ref_allele_freq'] = ref_allele_freq_map
             snp_doc['alt_allele_freq'] = alt_allele_freq_map
             if alt_allele_freqs:
