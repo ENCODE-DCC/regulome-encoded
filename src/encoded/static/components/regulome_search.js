@@ -956,6 +956,22 @@ const appendDatasetsToQuery = (query, chunkDatasets) => {
 const chunkSize = 10;
 // number of files to display on genome browser
 const displaySize = 20;
+// reversed order of population for SNP allele frequency;
+// last one (GnomAD) should be shown first
+const reversedPopulationOrder = [
+    'PAGE_STUDY',
+    'Estonian',
+    'GoESP',
+    'Vietnamese',
+    'TWINSUK',
+    'ALSPAC',
+    'NorthernSweden',
+    'ExAC',
+    'GnomAD_exomes',
+    'TOPMED',
+    '1000Genomes',
+    'GnomAD',
+];
 
 class RegulomeSearch extends React.Component {
     constructor() {
@@ -1268,6 +1284,7 @@ class RegulomeSearch extends React.Component {
             state => ({ showMoreFreqs: !state.showMoreFreqs })
         );
         const hitSnps = {};
+        const sortedPopulations = {};
         if (coordinates) {
             const [chrom, startEnd] = coordinates.split(':');
             const [start, end] = startEnd.split('-');
@@ -1292,6 +1309,9 @@ class RegulomeSearch extends React.Component {
                             });
                         });
                     }
+                    sortedPopulations[snp.rsid] = Object.keys(hitSnps[snp.rsid]).sort(
+                        (a, b) => reversedPopulationOrder.indexOf(b) - reversedPopulationOrder.indexOf(a)
+                    );
                 }
             });
         }
@@ -1346,18 +1366,18 @@ class RegulomeSearch extends React.Component {
                                         <div className="notification-label">{rsid}</div>
                                         <div className="notification">
                                             <div>
-                                                {Object.keys(hitSnps[rsid]).slice(0, 3).map(
+                                                {sortedPopulations[rsid].slice(0, 3).map(
                                                     population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
                                                 )}
                                             </div>
-                                            {Object.keys(hitSnps[rsid]).length > 3 && this.state.showMoreFreqs ?
+                                            {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
                                                 <div>
-                                                    {Object.keys(hitSnps[rsid]).slice(3, hitSnps[rsid].length).map(
+                                                    {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
                                                         population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
                                                     )}
                                                 </div>
                                             : null}
-                                            {Object.keys(hitSnps[rsid]).length > 3 ? <button onClick={toggleFreqsShow}>{Object.keys(hitSnps[rsid]).length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
+                                            {sortedPopulations[rsid].length > 3 ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
                                         </div>
                                     </div>
                                 )}
