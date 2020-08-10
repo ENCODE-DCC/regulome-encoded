@@ -151,6 +151,9 @@ SNP_INDEX_PREFIX = 'snp_'
 MAX_IN_MEMORY_FILE_SIZE = (700 * 1024 * 1024)  # most files will be below this and index faster
 TEMPORARY_REGIONS_FILE = '/tmp/region_temp.bed.gz'
 
+# Max number of SNP docs hold in memory before putting into the index
+MAX_SNP_BULK = 3e6
+
 
 def includeme(config):
     config.add_route('index_region', '/index_region')
@@ -1180,7 +1183,7 @@ class RegionIndexer(Indexer):
                         continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
                     if chrom not in SUPPORTED_CHROMOSOMES:
                         continue   # TEMPORARY: limit both SNPs and regions to major chroms
-                    if (chrom not in file_data) or (len(file_data[chrom]) > 3e6):
+                    if (chrom not in file_data) or (len(file_data[chrom]) > MAX_SNP_BULK):
                         # we are done with current chromosome and move on
                         # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
                         if big_file and file_data and len(chroms) > 0:
