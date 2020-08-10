@@ -956,21 +956,21 @@ const appendDatasetsToQuery = (query, chunkDatasets) => {
 const chunkSize = 10;
 // number of files to display on genome browser
 const displaySize = 20;
-// reversed order of population for SNP allele frequency;
-// last one (GnomAD) should be shown first
-const reversedPopulationOrder = [
-    'PAGE_STUDY',
-    'Estonian',
-    'GoESP',
-    'Vietnamese',
-    'TWINSUK',
-    'ALSPAC',
-    'NorthernSweden',
-    'ExAC',
-    'GnomAD_exomes',
-    'TOPMED',
-    '1000Genomes',
+// Default number of populations to display for allele frequencies.
+const defaultDisplayCount = 3;
+const populationOrder = [
     'GnomAD',
+    '1000Genomes',
+    'TOPMED',
+    'GnomAD_exomes',
+    'ExAC',
+    'NorthernSweden',
+    'ALSPAC',
+    'TWINSUK',
+    'Vietnamese',
+    'GoESP',
+    'Estonian',
+    'PAGE_STUDY',
 ];
 
 class RegulomeSearch extends React.Component {
@@ -1291,27 +1291,32 @@ class RegulomeSearch extends React.Component {
             context.nearby_snps.forEach((snp) => {
                 if (snp.chrom === chrom && snp.coordinates.gte === +start && snp.coordinates.lt === +end) {
                     hitSnps[snp.rsid] = {};
+                    const populationAlleles = {};
                     if (snp.ref_allele_freq) {
                         Object.keys(snp.ref_allele_freq).forEach((allele) => {
                             Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
-                                hitSnps[snp.rsid][population] = `${allele}=${snp.ref_allele_freq[allele][population]}`;
+                                populationAlleles[population] = [`${allele}=${snp.ref_allele_freq[allele][population]}`];
                             });
                         });
                     }
                     if (snp.alt_allele_freq) {
                         Object.keys(snp.alt_allele_freq).forEach((allele) => {
                             Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
-                                if (!hitSnps[snp.rsid][population]) {
-                                    hitSnps[snp.rsid][population] = `${allele}=${snp.alt_allele_freq[allele][population]}`;
+                                if (!populationAlleles[population]) {
+                                    populationAlleles[population] = [`${allele}=${snp.alt_allele_freq[allele][population]}`];
                                 } else {
-                                    hitSnps[snp.rsid][population] += `, ${allele}=${snp.alt_allele_freq[allele][population]}`;
+                                    populationAlleles[population].push(`${allele}=${snp.alt_allele_freq[allele][population]}`);
                                 }
                             });
                         });
                     }
-                    sortedPopulations[snp.rsid] = Object.keys(hitSnps[snp.rsid]).sort(
-                        (a, b) => reversedPopulationOrder.indexOf(b) - reversedPopulationOrder.indexOf(a)
-                    );
+                    sortedPopulations[snp.rsid] = [];
+                    populationOrder.forEach((population) => {
+                        if (populationAlleles[population]) {
+                            hitSnps[snp.rsid][population] = populationAlleles[population].join(', ');
+                            sortedPopulations[snp.rsid].push(population);
+                        }
+                    });
                 }
             });
         }
@@ -1377,7 +1382,7 @@ class RegulomeSearch extends React.Component {
                                                     )}
                                                 </div>
                                             : null}
-                                            {sortedPopulations[rsid].length > 3 ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
+                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
                                         </div>
                                     </div>
                                 )}
