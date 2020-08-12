@@ -312,3 +312,10 @@ write_files:
     standby_mode = on
 - path: /etc/postgresql/9.3/main/wale_s3_prefix
   content: "%(WALE_S3_PREFIX)s"
+- path: /etc/cron.daily/es-logrotate
+  content: |
+    #!/bin/bash
+
+    /usr/bin/find /var/log/elasticsearch -name elasticsearch-2*.log -mtime +1 -exec /bin/gzip --best {} \;
+  owner: root:root
+  permissions: '0755'
