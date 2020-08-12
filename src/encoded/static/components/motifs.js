@@ -269,7 +269,7 @@ export const Motifs = (props) => {
                                     element={d}
                                     urlBase={urlBase}
                                     shortened={limit > 0}
-                                    coordinates={Object.keys(props.context.variants)[0]}
+                                    coordinates={props.context.query_coordinates[0]}
                                     alignedStartCoordinate={alignedStartCoordinate}
                                     alignedEndCoordinate={alignedEndCoordinate}
                                 />)}

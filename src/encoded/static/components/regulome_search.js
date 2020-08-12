@@ -228,6 +228,7 @@ class AdvSearch extends React.Component {
             coordinates: '',
             genome: 'GRCh37',
             searchInput: '',
+            maf: 0.01,
         };
         /* eslint-enable react/no-unused-state */
 
@@ -282,6 +283,7 @@ class AdvSearch extends React.Component {
 
                             <input type="submit" value="Search" className="btn btn-sm btn-info" />
                             <input type="hidden" name="genome" value={this.state.genome} />
+                            <input type="hidden" name="maf" value={this.state.maf} />
                         </div>
                     </div>
 
@@ -290,8 +292,8 @@ class AdvSearch extends React.Component {
                 {(context.notification && context.notification !== 'No annotations found') ?
                     <div className="notification">{context.notification}</div>
                 : null}
-                {(context.variants && context.variants.length > 0) ?
-                    <p>Searched coordinates: {Object.keys(context.variants)[0]}</p>
+                {(context.query_coordinates && context.query_coordinates.length > 0) ?
+                    <p>Searched coordinates: {context.query_coordinates[0]}</p>
                 : null}
                 {(context.regulome_score && context.regulome_score.probability && context.regulome_score.ranking) ?
                     <p className="regulomescore">RegulomeDB score: {context.regulome_score.probability} (probability); {context.regulome_score.ranking} (ranking) </p>
@@ -341,7 +343,7 @@ const NearbySNPsDrawing = (props) => {
     if (context.nearby_snps && context.nearby_snps[0] && context.nearby_snps[0].coordinates) {
         startNearbySnps = +context.nearby_snps[0].coordinates.lt;
         endNearbySnps = +context.nearby_snps[context.nearby_snps.length - 1].coordinates.lt;
-        coordinate = +Object.keys(context.variants)[0].split('-')[1];
+        coordinate = +context.query_coordinates[0].split('-')[1];
         coordinateX = (920 * ((coordinate - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
 
         context.nearby_snps.forEach((snp, snpIndex) => {
@@ -954,6 +956,22 @@ const appendDatasetsToQuery = (query, chunkDatasets) => {
 const chunkSize = 10;
 // number of files to display on genome browser
 const displaySize = 20;
+// Default number of populations to display for allele frequencies.
+const defaultDisplayCount = 3;
+const populationOrder = [
+    'GnomAD',
+    '1000Genomes',
+    'TOPMED',
+    'GnomAD_exomes',
+    'ExAC',
+    'NorthernSweden',
+    'ALSPAC',
+    'TWINSUK',
+    'Vietnamese',
+    'GoESP',
+    'Estonian',
+    'PAGE_STUDY',
+];
 
 class RegulomeSearch extends React.Component {
     constructor() {
@@ -971,6 +989,7 @@ class RegulomeSearch extends React.Component {
             browserTotalPages: 1,
             selectedFilters: [],
             facetDisplay: false,
+            showMoreFreqs: false,
         };
 
         // Bind this to non-React methods.
@@ -1002,7 +1021,8 @@ class RegulomeSearch extends React.Component {
         const filtersUpdate = this.state.selectedFilters !== nextState.selectedFilters;
         const facetDisplayUpdate = this.state.facetDisplay !== nextState.facetDisplay;
         const paginationChange = this.state.multipleBrowserPages !== nextState.multipleBrowserPages;
-        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange);
+        const showFreqsToggled = this.state.showMoreFreqs !== nextState.showMoreFreqs;
+        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange || showFreqsToggled);
     }
 
     onFilter(e) {
@@ -1252,13 +1272,54 @@ class RegulomeSearch extends React.Component {
     render() {
         const context = this.props.context;
         const urlBase = this.context.location_href.split('/regulome-search')[0];
-        const coordinates = Object.keys(context.variants)[0];
+        const coordinates = context.query_coordinates[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
         const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
         const thumbnail = this.context.location_href.split('/thumbnail=')[1] || null;
+
+        const toggleFreqsShow = () => this.setState(
+            state => ({ showMoreFreqs: !state.showMoreFreqs })
+        );
+        const hitSnps = {};
+        const sortedPopulations = {};
+        if (coordinates) {
+            const [chrom, startEnd] = coordinates.split(':');
+            const [start, end] = startEnd.split('-');
+            context.nearby_snps.forEach((snp) => {
+                if (snp.chrom === chrom && snp.coordinates.gte === +start && snp.coordinates.lt === +end) {
+                    hitSnps[snp.rsid] = {};
+                    const populationAlleles = {};
+                    if (snp.ref_allele_freq) {
+                        Object.keys(snp.ref_allele_freq).forEach((allele) => {
+                            Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
+                                populationAlleles[population] = [`${allele}=${snp.ref_allele_freq[allele][population]}`];
+                            });
+                        });
+                    }
+                    if (snp.alt_allele_freq) {
+                        Object.keys(snp.alt_allele_freq).forEach((allele) => {
+                            Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
+                                if (!populationAlleles[population]) {
+                                    populationAlleles[population] = [`${allele}=${snp.alt_allele_freq[allele][population]}`];
+                                } else {
+                                    populationAlleles[population].push(`${allele}=${snp.alt_allele_freq[allele][population]}`);
+                                }
+                            });
+                        });
+                    }
+                    sortedPopulations[snp.rsid] = [];
+                    populationOrder.forEach((population) => {
+                        if (populationAlleles[population]) {
+                            hitSnps[snp.rsid][population] = populationAlleles[population].join(', ');
+                            sortedPopulations[snp.rsid].push(population);
+                        }
+                    });
+                }
+            });
+        }
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
@@ -1305,6 +1366,26 @@ class RegulomeSearch extends React.Component {
                                         </div>
                                     </React.Fragment>
                                 : null}
+                                {Object.keys(hitSnps).map(rsid =>
+                                    <div className="notification-line" key={rsid}>
+                                        <div className="notification-label">{rsid}</div>
+                                        <div className="notification">
+                                            <div>
+                                                {sortedPopulations[rsid].slice(0, 3).map(
+                                                    population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                )}
+                                            </div>
+                                            {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
+                                                <div>
+                                                    {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
+                                                        population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                    )}
+                                                </div>
+                                            : null}
+                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
@@ -1424,7 +1505,7 @@ class RegulomeSearch extends React.Component {
                                         </React.Fragment>
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
-                                            <h4>Visualize files for SNP {context.variants[coordinates]}</h4>
+                                            <h4>Visualize files for {coordinates}</h4>
                                             <h4>There {this.state.filteredFiles.length === 1 ? 'is' : 'are'} {this.state.filteredFiles.length} result{this.state.filteredFiles.length === 1 ? '' : 's'}.</h4>
                                             <GenomeFacets
                                                 files={this.state.allFiles}

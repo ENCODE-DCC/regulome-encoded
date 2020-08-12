@@ -425,8 +425,34 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                 'IC_matched_max': 2.0,
                 'IC_max': 2.0,
             },
+            'ref_allele_freq': {
+                'C': {
+                    'ALSPAC': 0.6938,
+                    'TWINSUK': 0.6982,
+                    'PAGE_STUDY': 0.7644,
+                    'NorthernSweden': 0.7433,
+                    'Vietnamese': 0.715,
+                    'TOPMED': 0.742,
+                    'Estonian': 0.6978,
+                    '1000Genomes': 0.759,
+                    'GnomAD': 0.7411
+                }
+            },
+            'alt_allele_freq': {
+                'T': {
+                    'ALSPAC': 0.3062,
+                    'TWINSUK': 0.3018,
+                    'PAGE_STUDY': 0.2356,
+                    'NorthernSweden': 0.2567,
+                    'Vietnamese': 0.285,
+                    'TOPMED': 0.258,
+                    'Estonian': 0.3022,
+                    '1000Genomes': 0.241,
+                    'GnomAD': 0.2589
+                }
+            },
+            'maf': 0.3062,
             'coordinates': {'lt': 39492462, 'gte': 39492461},
-            'strand': '-',
             'score': {'probability': '0.99267', 'ranking': '1a'},
             'rsid': 'rs3768324',
             'assembly': 'hg19',
@@ -439,8 +465,34 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                     'IC_matched_max': 0.44999998807907104,
                     'IC_max': 0.44999998807907104,
                 },
+                'ref_allele_freq': {
+                    'A': {
+                        'ALSPAC': 0.767,
+                        'TWINSUK': 0.7621,
+                        'PAGE_STUDY': 0.7646,
+                        'NorthernSweden': 0.8433,
+                        'Vietnamese': 0.743,
+                        'TOPMED': 0.7585,
+                        'Estonian': 0.8507,
+                        '1000Genomes': 0.7482,
+                        'GnomAD': 0.7862
+                    }
+                },
+                'alt_allele_freq': {
+                    'G': {
+                        'ALSPAC': 0.233,
+                        'TWINSUK': 0.2379,
+                        'PAGE_STUDY': 0.2354,
+                        'NorthernSweden': 0.1567,
+                        'Vietnamese': 0.257,
+                        'TOPMED': 0.2415,
+                        'Estonian': 0.1493,
+                        '1000Genomes': 0.2518,
+                        'GnomAD': 0.2138
+                    }
+                },
+                'maf': 0.257,
                 'coordinates': {'lt': 104529668, 'gte': 104529667},
-                'strand': '+',
                 'score': {'probability': '0.44299', 'ranking': '7'},
                 'rsid': 'rs7092340',
                 'assembly': 'hg19',
@@ -451,8 +503,52 @@ def test_snp_window(assembly, location, region_index, regulome_atlas):
                     'IC_matched_max': 0.1599999964237213,
                     'IC_max': 0.3700000047683716,
                 },
+                'ref_allele_freq': {
+                    'G': {
+                        'ALSPAC': 0.4118,
+                        'TWINSUK': 0.3997,
+                        'NorthernSweden': 0.3283,
+                        'Vietnamese': 0.649,
+                        'TOPMED': 0.442,
+                        'Estonian': 0.479,
+                        '1000Genomes': 0.4571,
+                        'GnomAD': 0.4478
+                    }
+                },
+                'alt_allele_freq': {
+                    'C': {
+                        'ALSPAC': 0.5882,
+                        'TWINSUK': 0.6003,
+                        'NorthernSweden': 0.6717,
+                        'Vietnamese': 0.351,
+                        'TOPMED': 0.558,
+                        'Estonian': 0.521,
+                        '1000Genomes': 0.5429,
+                        'GnomAD': 0.5522
+                    },
+                    'T': {
+                        'ALSPAC': 0.5882,
+                        'TWINSUK': 0.6003,
+                        'NorthernSweden': 0.6717,
+                        'Vietnamese': 0.351,
+                        'TOPMED': 0.558,
+                        'Estonian': 0.521,
+                        '1000Genomes': 0.5429,
+                        'GnomAD': 0.5522
+                    },
+                    'A': {
+                        'ALSPAC': 0.5882,
+                        'TWINSUK': 0.6003,
+                        'NorthernSweden': 0.6717,
+                        'Vietnamese': 0.351,
+                        'TOPMED': 0.558,
+                        'Estonian': 0.521,
+                        '1000Genomes': 0.5429,
+                        'GnomAD': 0.5522
+                    }
+                },
+                'maf': 0.6717,
                 'coordinates': {'lt': 104574063, 'gte': 104574062},
-                'strand': '-',
                 'score': {'probability': '0.47065', 'ranking': '7'},
                 'rsid': 'rs284857',
                 'assembly': 'hg19',
@@ -684,8 +780,34 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                 'IC_matched_max': 2.0,
                 'IC_max': 2.0,
             },
+            'ref_allele_freq': {
+                'C': {
+                    'ALSPAC': 0.6938,
+                    'TWINSUK': 0.6982,
+                    'PAGE_STUDY': 0.7644,
+                    'NorthernSweden': 0.7433,
+                    'Vietnamese': 0.715,
+                    'TOPMED': 0.742,
+                    'Estonian': 0.6978,
+                    '1000Genomes': 0.759,
+                    'GnomAD': 0.7411
+                }
+            },
+            'alt_allele_freq': {
+                'T': {
+                    'ALSPAC': 0.3062,
+                    'TWINSUK': 0.3018,
+                    'PAGE_STUDY': 0.2356,
+                    'NorthernSweden': 0.2567,
+                    'Vietnamese': 0.285,
+                    'TOPMED': 0.258,
+                    'Estonian': 0.3022,
+                    '1000Genomes': 0.241,
+                    'GnomAD': 0.2589
+                }
+            },
+            'maf': 0.3062,
             'coordinates': {'lt': 39492462, 'gte': 39492461},
-            'strand': '-',
             'score': {'probability': '0.99267', 'ranking': '1a'},
             'rsid': 'rs3768324',
             'assembly': 'hg19',
@@ -698,8 +820,34 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                     'IC_matched_max': 0.44999998807907104,
                     'IC_max': 0.44999998807907104,
                 },
+                'ref_allele_freq': {
+                    'A': {
+                        'ALSPAC': 0.767,
+                        'TWINSUK': 0.7621,
+                        'PAGE_STUDY': 0.7646,
+                        'NorthernSweden': 0.8433,
+                        'Vietnamese': 0.743,
+                        'TOPMED': 0.7585,
+                        'Estonian': 0.8507,
+                        '1000Genomes': 0.7482,
+                        'GnomAD': 0.7862
+                    }
+                },
+                'alt_allele_freq': {
+                    'G': {
+                        'ALSPAC': 0.233,
+                        'TWINSUK': 0.2379,
+                        'PAGE_STUDY': 0.2354,
+                        'NorthernSweden': 0.1567,
+                        'Vietnamese': 0.257,
+                        'TOPMED': 0.2415,
+                        'Estonian': 0.1493,
+                        '1000Genomes': 0.2518,
+                        'GnomAD': 0.2138
+                    }
+                },
+                'maf': 0.257,
                 'coordinates': {'lt': 104529668, 'gte': 104529667},
-                'strand': '+',
                 'score': {'probability': '0.44299', 'ranking': '7'},
                 'rsid': 'rs7092340',
                 'assembly': 'hg19',
@@ -710,8 +858,52 @@ def test_scored_snps(assembly, chrom, pos, window, result, region_index, regulom
                     'IC_matched_max': 0.1599999964237213,
                     'IC_max': 0.3700000047683716,
                 },
+                'ref_allele_freq': {
+                    'G': {
+                        'ALSPAC': 0.4118,
+                        'TWINSUK': 0.3997,
+                        'NorthernSweden': 0.3283,
+                        'Vietnamese': 0.649,
+                        'TOPMED': 0.442,
+                        'Estonian': 0.479,
+                        '1000Genomes': 0.4571,
+                        'GnomAD': 0.4478
+                    }
+                },
+                'alt_allele_freq': {
+                    'C': {
+                        'ALSPAC': 0.5882,
+                        'TWINSUK': 0.6003,
+                        'NorthernSweden': 0.6717,
+                        'Vietnamese': 0.351,
+                        'TOPMED': 0.558,
+                        'Estonian': 0.521,
+                        '1000Genomes': 0.5429,
+                        'GnomAD': 0.5522
+                    },
+                    'T': {
+                        'ALSPAC': 0.5882,
+                        'TWINSUK': 0.6003,
+                        'NorthernSweden': 0.6717,
+                        'Vietnamese': 0.351,
+                        'TOPMED': 0.558,
+                        'Estonian': 0.521,
+                        '1000Genomes': 0.5429,
+                        'GnomAD': 0.5522
+                    },
+                    'A': {
+                        'ALSPAC': 0.5882,
+                        'TWINSUK': 0.6003,
+                        'NorthernSweden': 0.6717,
+                        'Vietnamese': 0.351,
+                        'TOPMED': 0.558,
+                        'Estonian': 0.521,
+                        '1000Genomes': 0.5429,
+                        'GnomAD': 0.5522
+                    }
+                },
+                'maf': 0.6717,
                 'coordinates': {'lt': 104574063, 'gte': 104574062},
-                'strand': '-',
                 'score': {'probability': '0.47065', 'ranking': '7'},
                 'rsid': 'rs284857',
                 'assembly': 'hg19',
