@@ -18,7 +18,7 @@ import newsHead from './page';
 
 
 const portal = {
-    portal_title: 'Regulome',
+    portal_title: 'RegulomeDB',
     global_sections: [
         {
             id: 'data',
