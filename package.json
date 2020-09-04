@@ -49,7 +49,7 @@
     "jest-enzyme": "^2.1.2",
     "jsdom": "^8.4.0",
     "json-loader": "^0.5.4",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "redux-mock-store": "^1.5.1",
     "sass-loader": "^4.1.1",
     "string-replace-loader": "^1.0.5",
