@@ -240,7 +240,7 @@ def get_user_data(commit, config_file, data_insert, main_args):
         )
     data_insert['LOCAL_SSH_KEY'] = ssh_pub_key
     # aws s3 authorized_keys folder
-    auth_base = 's3://encoded-conf-prod/ssh-keys'
+    auth_base = 's3://regulome-conf-prod/ssh-keys'
     auth_type = 'prod'
     if main_args.profile_name != 'production':
         auth_type = 'demo'
@@ -305,7 +305,7 @@ def _get_run_args(main_args, instances_tag_data):
     master_user_data = None
     if not main_args.elasticsearch == 'yes':
         security_groups = ['ssh-http-https']
-        iam_role = 'encoded-instance'
+        iam_role = 'regulome-instance'
         count = 1
         data_insert = {
             'WALE_S3_PREFIX': main_args.wale_s3_prefix,
@@ -478,7 +478,7 @@ def main():
                     BlockDeviceMappings=bdm,
                     InstanceInitiatedShutdownBehavior='terminate',
                     IamInstanceProfile={
-                        "Name": 'encoded-instance',
+                        "Name": 'regulome-instance',
                     },
                     Placement={
                         'AvailabilityZone': main_args.availability_zone,
@@ -524,7 +524,7 @@ def parse_args():
         return value
 
     parser = argparse.ArgumentParser(
-        description="Deploy ENCODE on AWS",
+        description="Deploy Regulome on AWS",
     )
     parser.add_argument('-b', '--branch', default=None, help="Git branch or tag")
     parser.add_argument('-n', '--name', type=hostname, help="Instance name")
@@ -556,7 +556,7 @@ def parse_args():
                         help="Takes down all the cluster launched from the branch")
     parser.add_argument('--volume-size', default=200, type=check_volume_size,
                         help="Size of disk. Allowed values 120, 200, and 500")
-    parser.add_argument('--wale-s3-prefix', default='s3://encoded-backups-prod/production')
+    parser.add_argument('--wale-s3-prefix', default='s3://regulome-backups-prod/production')
     parser.add_argument('--candidate', action='store_true', help="Deploy candidate instance")
     parser.add_argument('--release-candidate', action='store_true', help="Deploy release-candidate instance")
     parser.add_argument(
