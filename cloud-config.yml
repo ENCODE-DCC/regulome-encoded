@@ -139,7 +139,9 @@ runcmd:
 - sudo -u ubuntu mv /home/ubuntu/.ssh/authorized_keys /home/ubuntu/.ssh/authorized_keys2
 - sudo -u ubuntu aws s3 cp --region=us-west-2 %(S3_AUTH_KEYS)s /home/ubuntu/.ssh/authorized_keys
   # Manually install java
-- sudo -u ubuntu aws s3 cp --region=us-west-2 --recursive s3://encoded-conf-prod/.aws-regulome ~ubuntu/.aws
+- sudo -u ubuntu mkdir /home/ubuntu/.aws
+- sudo -u ubuntu aws s3 cp --region=us-west-2 s3://regulome-conf-prod/.aws-regulome/credentials ~ubuntu/.aws
+- sudo -u ubuntu aws s3 cp --region=us-west-2 s3://regulome-conf-prod/.aws-regulome/jdk-8u211-linux-x64.tar.gz  ~ubuntu/.aws
 - sudo mkdir -p /usr/lib/jvm
 - sudo chmod 777 /usr/lib/jvm
 - sudo tar -xzvf /home/ubuntu/.aws/jdk-8u211-linux-x64.tar.gz --directory /usr/lib/jvm/
@@ -198,7 +200,7 @@ runcmd:
 - sudo pip3 install -U zc.buildout setuptools==43 redis pyBigWig
 - sudo -u encoded buildout bootstrap
 - sudo -u encoded LANG=en_US.UTF-8 bin/buildout -c %(ROLE)s.cfg buildout:es-ip=%(ES_IP)s buildout:es-port=%(ES_PORT)s
-- sudo -u encoded bin/aws s3 cp --recursive s3://encoded-conf-prod/.aws .aws
+- sudo -u encoded bin/aws s3 cp --recursive s3://regulome-conf-prod/.aws .aws
 - until sudo -u postgres psql postgres -c ""; do sleep 10; done
 - sudo -u encoded sh -c 'cat /dev/urandom | head -c 256 | base64 > session-secret.b64'
 - sudo -u encoded bin/create-mapping production.ini --app-name app
