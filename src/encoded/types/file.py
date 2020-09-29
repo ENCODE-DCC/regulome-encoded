@@ -173,10 +173,6 @@ class File(Item):
         "type": "string",
     })
     def href(self, request, file_format, accession=None, external_accession=None):
-        s3_uri = self.s3_uri()
-        if s3_uri:
-            return s3_uri
-
         accession = accession or external_accession
         file_extension = self.schema['file_format_file_extension'][file_format]
         filename = '{}{}'.format(accession, file_extension)
