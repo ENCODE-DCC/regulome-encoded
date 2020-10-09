@@ -314,7 +314,7 @@ def main():
         default=0.01,
         help='Minor allele frequency cut off. Only RefSNPs more frequent than'
         ' this cut off will be returned. It can be a float number or None if'
-        ' all RefSNPs should be returned.'
+        ' all RefSNPs should be returned. Default is 0.01 (1%%).'
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -350,7 +350,8 @@ def main():
         'Found {} queries and converting them to potential {}...'.format(
             query_count,
             'variants' if args.search_snps_in_region else 'regions',
-        )
+        ),
+        file=sys.stderr
     )
     variant_stream = TemporaryFile(mode='w+')
     variant_count = 0
@@ -383,7 +384,8 @@ def main():
             'variants' if args.search_snps_in_region else 'regions',
             args.processes,
             variant_chunksize,
-        )
+        ),
+        file=sys.stderr
     )
     success_count = 0
     failure_count = 0
