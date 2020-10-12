@@ -43,7 +43,6 @@ class RegulomeApp:
         return_peaks,
         matched_pwm_peak_bed_only,
         search_snps_in_region,
-        maf,
     ):
         self.config_file = config_file
         self.app_name = app_name
@@ -51,7 +50,6 @@ class RegulomeApp:
         self.return_peaks = return_peaks
         self.matched_pwm_peak_bed_only = matched_pwm_peak_bed_only
         self.search_snps_in_region = search_snps_in_region
-        self.maf = maf
 
     @property
     def atlas(self):
@@ -212,7 +210,6 @@ class RegulomeApp:
                 chrom,
                 start,
                 end,
-                maf=self.maf,
             )
         except Exception:
             snps = []
@@ -297,25 +294,6 @@ def main():
         help='Treat each query region as one single region instead of looking'
         ' at RefSNPs in it.'
     )
-
-    def maf_type(s):
-        if s.lower() == 'none':
-            return None
-        try:
-            return float(s)
-        except ValueError:
-            raise argparse.ArgumentTypeError(
-                '{} is not a float number or "None".'.format(s)
-            )
-
-    parser.add_argument(
-        '--maf',
-        type=maf_type,
-        default=0.01,
-        help='Minor allele frequency cut off. Only RefSNPs more frequent than'
-        ' this cut off will be returned. It can be a float number or None if'
-        ' all RefSNPs should be returned. Default is 0.01 (1%%).'
-    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         '-s', '--variants',
@@ -365,7 +343,6 @@ def main():
                     args.peaks,
                     args.matched_pwm_peak_only,
                     args.search_snps_in_region,
-                    args.maf,
                 ).normalize_query,
                 queries,
                 chunksize
@@ -399,7 +376,6 @@ def main():
                     args.peaks,
                     args.matched_pwm_peak_only,
                     args.search_snps_in_region,
-                    args.maf,
                 ).search,
                 variants,
                 variant_chunksize
