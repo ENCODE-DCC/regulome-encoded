@@ -469,10 +469,10 @@ def main():
             # ES MASTER instance when deploying elasticsearch data clusters
             if run_args['master_user_data'] and run_args['count'] > 1 and main_args.elasticsearch == 'yes':
                 instances = ec2_client.create_instances(
-                    ImageId='ami-2133bc59',
+                    ImageId='ami-06e54d05255faf8f6',
                     MinCount=1,
                     MaxCount=1,
-                    InstanceType='c5.9xlarge',
+                    InstanceType='r5.xlarge',
                     SecurityGroups=['ssh-http-https'],
                     UserData=run_args['master_user_data'],
                     BlockDeviceMappings=bdm,
@@ -537,13 +537,13 @@ def parse_args():
     parser.add_argument('--elasticsearch', default=None, help="Launch an Elasticsearch instance")
     parser.add_argument('--es-ip', default='localhost', help="ES Master ip address")
     parser.add_argument('--es-port', default='9201', help="ES Master ip port")
-    parser.add_argument('--image-id', default='ami-2133bc59',
+    parser.add_argument('--image-id', default='ami-06e54d05255faf8f6',
                         help=(
                             "https://us-west-2.console.aws.amazon.com/ec2/home"
-                            "?region=us-west-2#LaunchInstanceWizard:ami=ami-2133bc59"
+                            "?region=us-west-2#LaunchInstanceWizard:ami=ami-06e54d05255faf8f6"
                         ))
-    parser.add_argument('--instance-type', default='c5.9xlarge',
-                        help="c5.9xlarge for indexing. Switch to a smaller instance (m5.xlarge or c5.xlarge).")
+    parser.add_argument('--instance-type', default='r5.xlarge',
+                        help="5.xlarge for indexing. Switch to a smaller instance (m5.xlarge or c5.xlarge).")
     parser.add_argument('--profile-name', default=None, help="AWS creds profile")
     parser.add_argument('--no-es', action='store_true', help="Use non ES cloud condfig")
     parser.add_argument('--redis-ip', default='localhost', help="Redis IP.")
