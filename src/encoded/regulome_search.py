@@ -490,7 +490,7 @@ def regulome_summary(context, request):
                 for col in columns
                 if col in regulome_score or col in features
             ])
-            table.append('\t'.join(row).encode())
+            table.append('\t'.join(str(e) for e in row).encode())
             continue
         else:
             variant['features'] = features
