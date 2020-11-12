@@ -1,14 +1,15 @@
 import argparse
-import io
 import json
 from multiprocessing import Pool
 from pkg_resources import resource_filename
 import sys
+from tempfile import TemporaryFile
 
 import pyBigWig
 from pyramid.paster import get_app
 
 from ..regulome_search import (
+    _GENOME_TO_ALIAS,
     get_coordinate,
     region_get_hits,
     evidence_to_features
@@ -17,9 +18,22 @@ from ..regulome_atlas import RegulomeAtlas
 from snovault.elasticsearch.interfaces import SNP_SEARCH_ES
 
 
-class RegulomeSearch:
+class RegulomeApp:
     """Start an independent app to do regulome search.
     """
+
+    motif_columns = (
+        '{chrom}\t'
+        '{start}\t'
+        '{end}\t'
+        '{motif_name}\t'
+        '{strand}\t'
+        '{hit_motif_start}\t'
+        '{hit_motif_end}\t'
+        '{query}\t'
+        '{query_start}\t'
+        '{query_end}'
+    )
 
     def __init__(
         self,
@@ -27,13 +41,17 @@ class RegulomeSearch:
         app_name,
         assembly,
         return_peaks,
-        matched_pwm_peak_bed_only
+        matched_pwm_peak_bed_only,
+        search_snps_in_region,
+        maf,
     ):
         self.config_file = config_file
         self.app_name = app_name
         self.assembly = assembly
         self.return_peaks = return_peaks
         self.matched_pwm_peak_bed_only = matched_pwm_peak_bed_only
+        self.search_snps_in_region = search_snps_in_region
+        self.maf = maf
 
     @property
     def atlas(self):
@@ -60,32 +78,16 @@ class RegulomeSearch:
             )
             return self._atlas
 
-    def __call__(self, region_query):
-        motif_columns = (
-            '{chrom}\t'
-            '{start}\t'
-            '{end}\t'
-            '{motif_name}\t'
-            '{strand}\t'
-            '{hit_motif_start}\t'
-            '{hit_motif_end}\t'
-            '{query}\t'
-            '{query_start}\t'
-            '{query_end}'
-        )
-        # Get coordinate for queried region
-        region_query = region_query.strip()
-        try:
-            chrom, start, end = get_coordinate(
-                region_query, self.assembly, self.atlas
+    def search(self, normalized_query):
+        result = json.loads(normalized_query)
+        if 'chrom' not in result:
+            return 1, result.get(
+                'notes',
+                'Invalid input: {}'.format(result.get('query', 'None'))
             )
-        except ValueError:
-            return 1, 'Invalid input: {}'.format(region_query)
-        result = {
-            'chrom': chrom,
-            'start': start,
-            'end': end,
-        }
+        chrom = result['chrom']
+        start = result['start']
+        end = result['end']
         try:
             all_hits = region_get_hits(
                 self.atlas,
@@ -128,7 +130,7 @@ class RegulomeSearch:
                     'end': peak['_source']['coordinates']['lt'],
                     'motif_name': ','.join(matched_pwm_dict[dataset['@id']]),
                     'strand': peak['_source'].get('strand', '.'),
-                    'query': region_query,
+                    'query': result['query'],
                     'query_start': start,
                     'query_end': end,
                 }
@@ -138,7 +140,7 @@ class RegulomeSearch:
                 else:
                     motif_peak['hit_motif_start'] = start - motif_peak['start']
                     motif_peak['hit_motif_end'] = end - motif_peak['start']
-            return 0, motif_columns.format(**motif_peak)
+            return 0, self.motif_columns.format(**motif_peak)
         if self.return_peaks:
             result['peaks'] = []
             for peak in all_hits.get('peaks', []):
@@ -178,6 +180,80 @@ class RegulomeSearch:
                 result['peaks'].append(peak_info)
         return 0, json.dumps(result)
 
+    def normalize_query(self, region_query):
+        region_query = region_query.strip()
+        try:
+            chrom, start, end = get_coordinate(
+                region_query, self.assembly, self.atlas
+            )
+        except ValueError:
+            return [
+                json.dumps(
+                    {
+                        'query': region_query,
+                        'notes': 'Failed to parse query into valid region(s).'
+                    }
+                )
+            ]
+        if not self.search_snps_in_region:
+            return [
+                json.dumps(
+                    {
+                        'query': region_query,
+                        'chrom': chrom,
+                        'start': start,
+                        'end': end,
+                    }
+                )
+            ]
+        try:
+            snps = self.atlas.find_snps(
+                _GENOME_TO_ALIAS.get(self.assembly, self.assembly),
+                chrom,
+                start,
+                end,
+                maf=self.maf,
+            )
+        except Exception:
+            snps = []
+        if not snps:
+            if end - start > 1:
+                return [
+                    json.dumps(
+                        {
+                            'query': region_query,
+                            'notes': 'Query region is not single nt (SNP) and no RefSNPs is found within the query region.'
+                        }
+                    )
+                ]
+            return [
+                json.dumps(
+                    {
+                        'query': region_query,
+                        'chrom': chrom,
+                        'start': start,
+                        'end': end,
+                        'ref_snp': {},
+                    }
+                )
+            ]
+        return [
+            json.dumps(
+                {
+                    'query': region_query,
+                    'chrom': snp['chrom'],
+                    'start': snp['coordinates']['gte'],
+                    'end': snp['coordinates']['lt'],
+                    'ref_snp': {
+                        'rsid': snp['rsid'],
+                        'ref_alleles': sorted(snp.get('ref_allele_freq', [])),
+                        'alt_alleles': sorted(snp.get('alt_allele_freq', [])),
+                    },
+                }
+            )
+            for snp in snps
+        ]
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -215,6 +291,31 @@ def main():
         default=1,
         help='Number of process run in parallel.'
     )
+    parser.add_argument(
+        '--search-snps-in-region',
+        action='store_true',
+        help='Treat each query region as one single region instead of looking'
+        ' at RefSNPs in it.'
+    )
+
+    def maf_type(s):
+        if s.lower() == 'none':
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            raise argparse.ArgumentTypeError(
+                '{} is not a float number or "None".'.format(s)
+            )
+
+    parser.add_argument(
+        '--maf',
+        type=maf_type,
+        default=0.01,
+        help='Minor allele frequency cut off. Only RefSNPs more frequent than'
+        ' this cut off will be returned. It can be a float number or None if'
+        ' all RefSNPs should be returned. Default is 0.01 (1%%).'
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         '-s', '--variants',
@@ -232,32 +333,76 @@ def main():
     args = parser.parse_args()
 
     if args.file_input:
+        query_count = 0
         with open(args.file_input) as f:
-            count = 0
-            for count, _ in enumerate(f, 1):
+            for query_count, _ in enumerate(f, 1):
                 pass
-        chunksize = count // args.processes + (count % args.processes > 0)
-        variants_stream = open(args.file_input)
+        query_stream = open(args.file_input)
     elif args.variants:
-        chunksize = len(args.variants) // args.processes + (
-            len(args.variants) % args.processes > 0
-        )
-        variants_stream = io.StringIO('\n'.join(args.variants))
+        query_count = len(args.variants)
+        query_stream = TemporaryFile(mode='w+')
+        for query_region in args.variants:
+            query_stream.write('{}\n'.format(query_region))
+        query_stream.seek(0)
+    chunksize = query_count // args.processes + (query_count % args.processes > 0)
 
-    success_count = 0
-    failure_count = 0
-    with variants_stream as variants:
+    print(
+        'Found {} queries and converting them to potential {}...'.format(
+            query_count,
+            'variants' if args.search_snps_in_region else 'regions',
+        ),
+        file=sys.stderr
+    )
+    variant_stream = TemporaryFile(mode='w+')
+    variant_count = 0
+    with query_stream as queries:
         with Pool(args.processes) as p:
-            for status, res in p.imap(
-                RegulomeSearch(
+            for variants in p.imap(
+                RegulomeApp(
                     args.config_file,
                     args.app_name,
                     args.assembly,
                     args.peaks,
-                    args.matched_pwm_peak_only
-                ),
-                variants,
+                    args.matched_pwm_peak_only,
+                    args.search_snps_in_region,
+                    args.maf,
+                ).normalize_query,
+                queries,
                 chunksize
+            ):
+                for variant in variants:
+                    variant_count += 1
+                    variant_stream.write('{}\n'.format(variant))
+    variant_stream.seek(0)
+    variant_chunksize = variant_count // args.processes + (
+        variant_count % args.processes > 0
+    )
+
+    print(
+        'Querying {} {} using {} processes with chunksize {}...'.format(
+            variant_count,
+            'variants' if args.search_snps_in_region else 'regions',
+            args.processes,
+            variant_chunksize,
+        ),
+        file=sys.stderr
+    )
+    success_count = 0
+    failure_count = 0
+    with variant_stream as variants:
+        with Pool(args.processes) as p:
+            for status, res in p.imap(
+                RegulomeApp(
+                    args.config_file,
+                    args.app_name,
+                    args.assembly,
+                    args.peaks,
+                    args.matched_pwm_peak_only,
+                    args.search_snps_in_region,
+                    args.maf,
+                ).search,
+                variants,
+                variant_chunksize
             ):
                 if status == 0:
                     print(res)
