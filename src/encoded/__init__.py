@@ -226,8 +226,6 @@ def main(global_config, **local_config):
     config.include('.batch_download')
     config.include('.visualization')
 
-    config.include('.regulome_search')
-
     if 'elasticsearch.server' in config.registry.settings:
         config.include('snovault.elasticsearch')
         config.include('encoded.viewconfigs.views')
@@ -244,7 +242,8 @@ def main(global_config, **local_config):
             timeout=60,
             maxsize=50
         )
-
+        config.include('.regulome_search')
+        config.include('.regulome_indexer')
     config.include(static_resources)
     config.include(changelogs)
     config.registry['ontology'] = json_from_path(settings.get('ontology_path'), {})
