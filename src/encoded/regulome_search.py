@@ -1,10 +1,11 @@
 from pyramid.httpexceptions import HTTPSeeOther
-from pyramid.httpexceptions import HTTPTemporaryRedirect
+from pyramid.httpexceptions import HTTPTemporaryRedirect, HTTPFound
 from pyramid.view import view_config
 import requests
 
 import logging
 import requests
+from urllib.parse import parse_qs
 
 log = logging.getLogger(__name__)
 
@@ -19,10 +20,11 @@ def includeme(config):
 def genomic_data_service_fetch(endpoint, query_string, page_title):
     url = "https://data-service.demo.regulomedb.org/" + endpoint + "/?" + query_string
 
-    try:
-        response = requests.get(url).json()
-    except:
-        pass #todo: add handling for exceptions    
+    response_format = parse_qs(query_string).get('format', [None])
+    if response_format[0] in ['bed', 'tsv']:
+        raise HTTPFound(location=url)
+
+    response = requests.get(url).json()
 
     response['@id'] = response['@id'].replace(endpoint, "regulome-" + endpoint).replace("&format=json", "")
     response['@type'][0] = response['@type'][0].replace(endpoint, "regulome-" + endpoint)
