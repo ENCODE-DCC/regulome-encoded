@@ -128,17 +128,6 @@ def configure_dbsession(config):
     config.registry[DBSESSION] = DBSession
 
 
-def load_workbook(app, workbook_filename, docsdir, test=False):
-    from .loadxl import load_all
-    from webtest import TestApp
-    environ = {
-        'HTTP_ACCEPT': 'application/json',
-        'REMOTE_USER': 'IMPORT',
-    }
-    testapp = TestApp(app, environ)
-    load_all(testapp, workbook_filename, docsdir, test=test)
-
-
 def json_from_path(path, default=None):
     if path is None:
         return default
@@ -256,13 +245,5 @@ def main(global_config, **local_config):
     config.include('.audit')
 
     app = config.make_wsgi_app()
-
-    workbook_filename = settings.get('load_workbook', '')
-    load_test_only = asbool(settings.get('load_test_only', False))
-    docsdir = settings.get('load_docsdir', None)
-    if docsdir is not None:
-        docsdir = [path.strip() for path in docsdir.strip().split('\n')]
-    if workbook_filename:
-        load_workbook(app, workbook_filename, docsdir, test=load_test_only)
 
     return app
