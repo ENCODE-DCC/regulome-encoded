@@ -226,11 +226,11 @@ def main(global_config, **local_config):
     config.include('.batch_download')
     config.include('.visualization')
 
+    config.include('.regulome_search')
+    config.include('encoded.viewconfigs.views')
+
     if 'elasticsearch.server' in config.registry.settings:
         config.include('snovault.elasticsearch')
-        config.include('encoded.viewconfigs.views')
-        config.include('.vis_indexer')
-        config.include('.cart_view')
 
     if 'snp_search.server' in config.registry.settings:
         addresses = aslist(config.registry.settings['snp_search.server'])
@@ -242,14 +242,10 @@ def main(global_config, **local_config):
             timeout=60,
             maxsize=50
         )
-        config.include('.regulome_search')
-        config.include('.regulome_indexer')
     config.include(static_resources)
     config.include(changelogs)
     config.registry['ontology'] = json_from_path(settings.get('ontology_path'), {})
     aws_ip_ranges = json_from_path(settings.get('aws_ip_ranges_path'), {'prefixes': []})
-    config.registry['aws_ipset'] = netaddr.IPSet(
-        record['ip_prefix'] for record in aws_ip_ranges['prefixes'] if record['service'] == 'AMAZON')
 
     if asbool(settings.get('testing', False)):
         config.include('.tests.testing_views')
