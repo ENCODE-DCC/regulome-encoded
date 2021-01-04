@@ -21,13 +21,13 @@ from pyramid.settings import (
     asbool,
 )
 from sqlalchemy import engine_from_config
+from sqlalchemy.ext.declarative import declarative_base
 from webob.cookies import JSONSerializer
 from snovault.elasticsearch import (
     PyramidJSONSerializer,
     TimedUrllib3HttpConnection,
 )
 from snovault.json_renderer import json_renderer
-from elasticsearch import Elasticsearch
 STATIC_MAX_AGE = 0
 
 
@@ -59,21 +59,11 @@ def static_resources(config):
     config.add_view(favicon, route_name='favicon.ico')
 
 
-def changelogs(config):
-    config.add_static_view(
-        'profiles/changelogs', 'schemas/changelogs', cache_max_age=STATIC_MAX_AGE)
-
-
 def configure_engine(settings):
     engine_url = settings['sqlalchemy.url']
     engine_opts = {}
     if engine_url.startswith('postgresql'):
-        if settings.get('indexer_worker'):
-            application_name = 'indexer_worker'
-        elif settings.get('indexer'):
-            application_name = 'indexer'
-        else:
-            application_name = 'app'
+        application_name = 'app'
         engine_opts = dict(
             isolation_level='REPEATABLE READ',
             json_serializer=json_renderer.dumps,
@@ -107,31 +97,22 @@ def set_postgresql_statement_timeout(engine, timeout=20 * 1000):
 
 
 def configure_dbsession(config):
-    from snovault import DBSESSION
     settings = config.registry.settings
-    DBSession = settings.pop(DBSESSION, None)
+    DBSession = settings.pop("dbsession", None)
     if DBSession is None:
         engine = configure_engine(settings)
 
         if asbool(settings.get('create_tables', False)):
-            from snovault.storage import Base
+            Base = declarative_base()
             Base.metadata.create_all(engine)
 
-        import snovault.storage
         import zope.sqlalchemy
         from sqlalchemy import orm
 
         DBSession = orm.scoped_session(orm.sessionmaker(bind=engine))
         zope.sqlalchemy.register(DBSession)
-        snovault.storage.register(DBSession)
 
-    config.registry[DBSESSION] = DBSession
-
-
-def json_from_path(path, default=None):
-    if path is None:
-        return default
-    return json.load(open(path))
+    config.registry["dbsession"] = DBSession
 
 
 def session(config):
@@ -191,8 +172,6 @@ def main(global_config, **local_config):
     settings['snovault.elasticsearch.index'] = 'snovault'
 
     config = Configurator(settings=settings)
-    from snovault.elasticsearch import APP_FACTORY
-    config.registry[APP_FACTORY] = main  # used by mp_indexer
     config.include(app_version)
 
     config.include('pyramid_multiauth')  # must be before calling set_authorization_policy
@@ -216,33 +195,10 @@ def main(global_config, **local_config):
     config.include('.visualization')
 
     config.include('.regulome_search')
+    config.include('.regulome_help')
     config.include('encoded.viewconfigs.views')
 
-    if 'elasticsearch.server' in config.registry.settings:
-        config.include('snovault.elasticsearch')
-
-    if 'snp_search.server' in config.registry.settings:
-        addresses = aslist(config.registry.settings['snp_search.server'])
-        config.registry['snp_search'] = Elasticsearch(
-            addresses,
-            serializer=PyramidJSONSerializer(json_renderer),
-            connection_class=TimedUrllib3HttpConnection,
-            retry_on_timeout=True,
-            timeout=60,
-            maxsize=50
-        )
     config.include(static_resources)
-    config.include(changelogs)
-    config.registry['ontology'] = json_from_path(settings.get('ontology_path'), {})
-    aws_ip_ranges = json_from_path(settings.get('aws_ip_ranges_path'), {'prefixes': []})
-
-    if asbool(settings.get('testing', False)):
-        config.include('.tests.testing_views')
-
-    # Load upgrades last so that all views (including testing views) are
-    # registered.
-    config.include('.upgrade')
-    config.include('.audit')
 
     app = config.make_wsgi_app()
 
