@@ -8,6 +8,7 @@ from pyramid.httpexceptions import (
     HTTPPreconditionFailed,
     HTTPUnauthorized,
     HTTPUnsupportedMediaType,
+    HTTPBadRequest
 )
 from pyramid.security import forget
 from pyramid.settings import asbool
@@ -19,7 +20,6 @@ from pyramid.traversal import (
     _join_path_tuple,
 )
 
-from snovault.validation import CSRFTokenError
 from subprocess_middleware.tween import SubprocessTween
 from urllib.parse import parse_qs
 import logging
@@ -28,14 +28,12 @@ import psutil
 import time
 
 
-
 log = logging.getLogger(__name__)
 
 
 def includeme(config):
     config.add_tween(
-        '.renderers.fix_request_method_tween_factory',
-        under='snovault.stats.stats_tween_factory')
+        '.renderers.fix_request_method_tween_factory')
     config.add_tween(
         '.renderers.normalize_cookie_tween_factory',
         under='.renderers.fix_request_method_tween_factory')
@@ -55,8 +53,12 @@ def includeme(config):
         under=renderer_tween,
     )
 
-    config.add_tween('.renderers.security_tween_factory', under='pyramid_tm.tm_tween_factory')
+#    config.add_tween('.renderers.security_tween_factory', under='pyramid_tm.tm_tween_factory')
     config.scan(__name__)
+
+
+class CSRFTokenError(HTTPBadRequest):
+    pass
 
 
 def fix_request_method_tween_factory(handler, registry):
@@ -166,49 +168,6 @@ def set_x_request_url_tween_factory(handler, registry):
     return set_x_request_url_tween
 
 
-@subscriber(BeforeRender)
-def canonical_redirect(event):
-    request = event['request']
-
-    # Ignore subrequests
-    if len(manager.stack) > 1:
-        return
-
-    if request.method not in ('GET', 'HEAD'):
-        return
-    if request.response.status_int != 200:
-        return
-    if not request.environ.get('encoded.canonical_redirect', True):
-        return
-    if request.path_info == '/':
-        return
-
-    if not isinstance(event.rendering_val, dict):
-        return
-
-    canonical = event.rendering_val.get('@id', None)
-    if canonical is None:
-        return
-    canonical_path, _, canonical_qs = canonical.partition('?')
-
-    request_path = _join_path_tuple(('',) + split_path_info(request.path_info))   
-    if (request_path == canonical_path.rstrip('/') and
-            request.path_info.endswith('/') == canonical_path.endswith('/') and
-            (canonical_qs in ('', request.query_string))):
-        return
-
-    if '/@@' in request.path_info:
-        return
-
-    if (parse_qs(canonical_qs) == parse_qs(request.query_string) and
-            '/suggest' in request_path):
-        return
-
-    qs = canonical_qs or request.query_string
-    location = canonical_path + ('?' if qs else '') + qs
-    raise HTTPMovedPermanently(location=location)
-
-
 def should_transform(request, response):
     if request.method not in ('GET', 'HEAD'):
         return False
@@ -248,10 +207,10 @@ def should_transform(request, response):
 def after_transform(request, response):
     end = time.time()
     duration = int((end - request._transform_start) * 1e6)
-    stats = request._stats
-    stats['render_count'] = stats.get('render_count', 0) + 1
-    stats['render_time'] = stats.get('render_time', 0) + duration
-    request._stats_html_attribute = True
+#    stats = request._stats
+#    stats['render_count'] = stats.get('render_count', 0) + 1
+#    stats['render_time'] = stats.get('render_time', 0) + duration
+#    request._stats_html_attribute = True
 
 
 # Rendering huge pages can make the node process memory usage explode.

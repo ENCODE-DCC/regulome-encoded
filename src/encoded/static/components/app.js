@@ -159,18 +159,13 @@ class App extends React.Component {
         this.cartStore = initializeCart();
 
         this.triggers = {
-            login: 'triggerLogin',
-            profile: 'triggerProfile',
-            logout: 'triggerLogout',
+            profile: 'triggerProfile'
         };
 
         // Bind this to non-React methods.
         this.fetch = this.fetch.bind(this);
         this.fetchSessionProperties = this.fetchSessionProperties.bind(this);
         this.fetchProfilesTitles = this.fetchProfilesTitles.bind(this);
-        this.handleAuth0Login = this.handleAuth0Login.bind(this);
-        this.triggerLogin = this.triggerLogin.bind(this);
-        this.triggerLogout = this.triggerLogout.bind(this);
         this.adviseUnsavedChanges = this.adviseUnsavedChanges.bind(this);
         this.releaseUnsavedChanges = this.releaseUnsavedChanges.bind(this);
         this.trigger = this.trigger.bind(this);
@@ -210,9 +205,6 @@ class App extends React.Component {
         // Login / logout actions must be deferred until Auth0 is ready.
         const sessionCookie = extractSessionCookie();
         const session = parseSessionCookie(sessionCookie);
-        if (session['auth.userid']) {
-            this.fetchSessionProperties();
-        }
         this.fetchProfilesTitles();
         this.setState({
             href: window.location.href,
@@ -232,39 +224,6 @@ class App extends React.Component {
             pathname: '/static/img/RegulomeLogoFinal.gif',
         };
         const logoUrl = url.format(logoHrefInfo);
-
-        this.lock = new Auth0Lock('WIOr638GdDdEGPJmABPhVzMn6SYUIdIH', 'encode.auth0.com', {
-            auth: {
-                responseType: 'token',
-                redirect: false,
-                redirectUrl: `${hrefInfo.protocol}//${hrefInfo.host}/callback`,
-            },
-            theme: {
-                logo: logoUrl,
-            },
-            socialButtonStyle: 'big',
-            languageDictionary: {
-                title: 'Log in to Regulome',
-            },
-            allowedConnections: ['github', 'google-oauth2', 'facebook', 'linkedin'],
-        });
-        this.lock.on('authenticated', this.handleAuth0Login);
-
-        // Add privacy link to auth0 login modal.
-        this.lock.on('signin ready', () => {
-            const lockElements = document.getElementsByClassName('auth0-lock-form');
-            if (lockElements && lockElements.length > 0) {
-                const privacyDiv = document.createElement('div');
-                const privacyLink = document.createElement('a');
-                const privacyLinkText = document.createTextNode('Privacy policy');
-                privacyLink.appendChild(privacyLinkText);
-                privacyDiv.className = 'auth0__privacy-notice';
-                privacyLink.href = 'https://www.stanford.edu/site/privacy/';
-                privacyLink.title = 'View Stanford University privacy policy';
-                privacyDiv.appendChild(privacyLink);
-                lockElements[0].appendChild(privacyDiv);
-            }
-        });
 
         // Initialize browesr history mechanism
         if (this.constructor.historyEnabled()) {
@@ -319,11 +278,6 @@ class App extends React.Component {
         if (!this.state.session || (this.state.session_cookie !== prevState.session_cookie)) {
             const updateState = {};
             updateState.session = parseSessionCookie(this.state.session_cookie);
-            if (!updateState.session['auth.userid']) {
-                updateState.session_properties = {};
-            } else if (updateState.session['auth.userid'] !== (this.state.session && this.state.session['auth.userid'])) {
-                this.fetchSessionProperties();
-            }
             this.setState(updateState);
         }
 
@@ -430,82 +384,6 @@ class App extends React.Component {
             throw response;
         }).then((profilesTitles) => {
             this.setState({ profilesTitles });
-        });
-    }
-
-    handleAuth0Login(authResult, retrying) {
-        const accessToken = authResult.accessToken;
-        if (!accessToken) {
-            return;
-        }
-        this.sessionPropertiesRequest = true;
-        this.fetch('/login', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ accessToken }),
-        }).then((response) => {
-            this.lock.hide();
-            if (!response.ok) {
-                throw response;
-            }
-            return response.json();
-        }).then((sessionProperties) => {
-            this.setState({ session_properties: sessionProperties });
-            this.sessionPropertiesRequest = null;
-            return this.initializeCartFromSessionProperties(sessionProperties);
-        }).then(() => {
-            let nextUrl = window.location.href;
-            if (window.location.hash === '#logged-out') {
-                nextUrl = window.location.pathname + window.location.search;
-            }
-            this.navigate(nextUrl, { replace: true });
-        }, (err) => {
-            this.sessionPropertiesRequest = null;
-            globals.parseError(err).then((data) => {
-                // Server session creds might have changed.
-                if (data.code === 400 && data.detail.indexOf('CSRF') !== -1) {
-                    if (!retrying) {
-                        window.setTimeout(this.handleAuth0Login.bind(this, accessToken, true));
-                        return;
-                    }
-                }
-                // If there is an error, show the error messages
-                this.setState({ context: data });
-            });
-        });
-    }
-
-    triggerLogin() {
-        if (this.state.session && !this.state.session._csrft_) {
-            this.fetch('/session');
-        }
-        this.lock.show();
-    }
-
-    triggerLogout() {
-        const session = this.state.session;
-        if (!(session && session['auth.userid'])) return;
-        this.fetch('/logout?redirect=false', {
-            headers: { Accept: 'application/json' },
-        }).then((response) => {
-            if (!response.ok) throw response;
-            return response.json();
-        }).then(() => {
-            this.DISABLE_POPSTATE = true;
-            const oldPath = window.location.pathname + window.location.search;
-            window.location.assign('/regulome-search/#logged-out');
-            if (oldPath === '/') {
-                window.location.reload();
-            }
-        }, (err) => {
-            globals.parseError(err).then((data) => {
-                const newContext = Object.assign({}, data);
-                newContext.title = `Logout failure: ${data.title}`;
-                this.setState({ context: newContext });
-            });
         });
     }
 

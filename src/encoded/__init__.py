@@ -23,11 +23,7 @@ from pyramid.settings import (
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import declarative_base
 from webob.cookies import JSONSerializer
-from snovault.elasticsearch import (
-    PyramidJSONSerializer,
-    TimedUrllib3HttpConnection,
-)
-from snovault.json_renderer import json_renderer
+from .json_renderer import json_renderer
 STATIC_MAX_AGE = 0
 
 
@@ -166,37 +162,20 @@ def main(global_config, **local_config):
     settings = global_config
     settings.update(local_config)
 
-    settings['snovault.jsonld.namespaces'] = json_asset('encoded:schemas/namespaces.json')
-    settings['snovault.jsonld.terms_namespace'] = 'https://www.encodeproject.org/terms/'
-    settings['snovault.jsonld.terms_prefix'] = 'encode'
-    settings['snovault.elasticsearch.index'] = 'snovault'
-
     config = Configurator(settings=settings)
     config.include(app_version)
 
-    config.include('pyramid_multiauth')  # must be before calling set_authorization_policy
-    from pyramid_localroles import LocalRolesAuthorizationPolicy
-    # Override default authz policy set by pyramid_multiauth
-    config.set_authorization_policy(LocalRolesAuthorizationPolicy())
     config.include(session)
-    config.include('.auth0')
 
     config.include(configure_dbsession)
-    config.include('snovault')
-    config.commit()  # commit so search can override listing
+    config.add_renderer(None, json_renderer)
 
     # Render an HTML page to browsers and a JSON document for API clients
     config.include('.renderers')
     config.include('.authentication')
-    config.include('.server_defaults')
-    config.include('.types')
-    config.include('.root')
-    config.include('.batch_download')
-    config.include('.visualization')
 
     config.include('.regulome_search')
     config.include('.regulome_help')
-    config.include('encoded.viewconfigs.views')
 
     config.include(static_resources)
 

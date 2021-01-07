@@ -27,7 +27,6 @@ const Footer = ({ version }, reactContext) => {
                             <ul className="footer-links">
                                 <li><a href="https://www.stanford.edu/site/privacy/">Privacy</a></li>
                                 <li><a href="mailto:regulomedb@mailman.stanford.edu">Contact</a></li>
-                                <li id="user-actions-footer">{userActionRender}</li>
                             </ul>
                         </div>
 

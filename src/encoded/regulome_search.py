@@ -1,5 +1,5 @@
-from pyramid.httpexceptions import HTTPSeeOther
-from pyramid.httpexceptions import HTTPTemporaryRedirect, HTTPFound
+from pyramid.httpexceptions import HTTPSeeOther, HTTPFound
+from pyramid.httpexceptions import HTTPTemporaryRedirect
 from pyramid.view import view_config
 import requests
 
@@ -18,7 +18,7 @@ def includeme(config):
 
 
 def genomic_data_service_fetch(endpoint, query_string, page_title):
-    url = "https://data-service.demo.regulomedb.org/" + endpoint + "/?" + query_string
+    url = "http://data-service.demo.regulomedb.org/" + endpoint + "/?" + query_string
 
     response_format = parse_qs(query_string).get('format', [None])
     if response_format[0] in ['bed', 'tsv']:
@@ -38,15 +38,14 @@ def regulome_home(context, request):
     raise HTTPTemporaryRedirect(location='/regulome-search/')
 
 
-@view_config(route_name='regulome-summary', request_method=('GET', 'POST'), permission='search')
+@view_config(route_name='regulome-summary', request_method=('GET', 'POST'))
 def regulome_summary(context, request):
     return genomic_data_service_fetch("summary", request.query_string, "RegulomeDB Summary")
 
 
-@view_config(route_name='regulome-search', request_method='GET', permission='search')
+@view_config(route_name='regulome-search', request_method='GET')
 def regulome_search(context, request):
     if len(request.params) == 0:
-        # temp response for empty params until removal of snovault
         return {
             '@context': '/terms/',
             '@id': '/regulome-search',
@@ -62,3 +61,4 @@ def regulome_search(context, request):
         }
 
     return genomic_data_service_fetch("search", request.query_string, "RegulomeDB Search")
+

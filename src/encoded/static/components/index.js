@@ -38,6 +38,7 @@ require('./schema');
 require('./summary');
 require('./regulome_search');
 require('./regulome_summary');
+require('./regulome_help');
 require('./auditmatrix');
 require('./gene');
 require('./biosample_type');

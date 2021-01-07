@@ -5,7 +5,7 @@ def includeme(config):
     config.scan(__name__)
 
 
-@view_config(route_name='regulome-help', request_method='GET', permission='search')
+@view_config(route_name='regulome-help', request_method='GET')
 def regulome_help(context, request):
     static_help_page_path = './src/encoded/static/help.html'
 
