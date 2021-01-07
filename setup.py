@@ -61,8 +61,12 @@ setup(
         'test': tests_require,
     },
     entry_points='''
+        [console_scripts]
+        deploy = encoded.commands.deploy:main
+
         [paste.app_factory]
         main = encoded:main
+
 
         [paste.filter_app_factory]
         memlimit = encoded.memlimit:filter_app
