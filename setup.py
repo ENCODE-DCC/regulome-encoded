@@ -7,23 +7,12 @@ README = open(os.path.join(here, 'README.md')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 
 requires = [
-    'alembic',
-    'botocore',
-    'boto3',
-    'moto',
-    'snovault',
-    'Pillow',
     'PyBrowserID',
-    'SQLAlchemy>=1.0.0b1',
     'WSGIProxy2',
     'WebTest',
     'jmespath',
-    'elasticsearch',
-    'lucenequery',
     'future',
     'humanfriendly',
-    'jsonschema_serialize_fork',
-    'loremipsum',
     'netaddr',
     'passlib',
     'psutil',
@@ -33,16 +22,10 @@ requires = [
     'pyramid_tm',
     'python-magic',
     'pytz',
-    'rdflib',
-    'rdflib-jsonld',
-    'rfc3987',
-    'scikit-learn==0.20.3',
     'setuptools',
     'simplejson',
-    'strict_rfc3339',
     'subprocess_middleware',
-    'xlrd',
-    'zope.sqlalchemy',
+    'xlrd'
 ]
 
 if sys.version_info.major == 2:
@@ -78,38 +61,8 @@ setup(
         'test': tests_require,
     },
     entry_points='''
-        [console_scripts]
-        batchupgrade = snovault.batchupgrade:main
-        create-mapping = snovault.elasticsearch.create_mapping:main
-        dev-servers = snovault.dev_servers:main
-        es-index-listener = snovault.elasticsearch.es_index_listener:main
-
-        add-date-created = encoded.commands.add_date_created:main
-        check-rendering = encoded.commands.check_rendering:main
-        deploy = encoded.commands.deploy:main
-        extract_test_data = encoded.commands.extract_test_data:main
-        es-index-data = encoded.commands.es_index_data:main
-        generate-ontology = encoded.commands.generate_ontology:main
-        import-data = encoded.commands.import_data:main
-        jsonld-rdf = encoded.commands.jsonld_rdf:main
-        migrate-files-aws = encoded.commands.migrate_files_aws:main
-        profile = encoded.commands.profile:main
-        spreadsheet-to-json = encoded.commands.spreadsheet_to_json:main
-        generate-annotations = encoded.commands.generate_annotations:main
-        index-annotations = encoded.commands.index_annotations:main
-        migrate-attachments-aws = encoded.commands.migrate_attachments_aws:main
-        migrate-dataset-type = encoded.commands.migrate_dataset_type:main
-        localhost-es-region-test = encoded.commands.localhost_es_region_tests:main
-        alembic = encoded.commands.alembic:main
-        regulome-search = encoded.commands.regulome_search:main
-
         [paste.app_factory]
         main = encoded:main
-
-        [paste.composite_factory]
-        indexer = snovault.elasticsearch.es_index_listener:composite
-        visindexer = snovault.elasticsearch.es_index_listener:composite
-        regionindexer = snovault.elasticsearch.es_index_listener:composite
 
         [paste.filter_app_factory]
         memlimit = encoded.memlimit:filter_app
