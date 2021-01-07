@@ -165,7 +165,6 @@ class App extends React.Component {
         // Bind this to non-React methods.
         this.fetch = this.fetch.bind(this);
         this.fetchSessionProperties = this.fetchSessionProperties.bind(this);
-        this.fetchProfilesTitles = this.fetchProfilesTitles.bind(this);
         this.adviseUnsavedChanges = this.adviseUnsavedChanges.bind(this);
         this.releaseUnsavedChanges = this.releaseUnsavedChanges.bind(this);
         this.trigger = this.trigger.bind(this);
@@ -205,7 +204,6 @@ class App extends React.Component {
         // Login / logout actions must be deferred until Auth0 is ready.
         const sessionCookie = extractSessionCookie();
         const session = parseSessionCookie(sessionCookie);
-        this.fetchProfilesTitles();
         this.setState({
             href: window.location.href,
             session_cookie: sessionCookie,
@@ -367,23 +365,6 @@ class App extends React.Component {
         }).then((sessionProperties) => {
             this.setState({ session_properties: sessionProperties });
             return this.initializeCartFromSessionProperties(sessionProperties);
-        });
-    }
-
-    /**
-     * Perform a GET request on the titles of schemas corresponding to an @type, to be placed into
-     * <App> context and usable by any component.
-     */
-    fetchProfilesTitles() {
-        this.fetch('/profiles-titles/', {
-            headers: { Accept: 'application/json' },
-        }).then((response) => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw response;
-        }).then((profilesTitles) => {
-            this.setState({ profilesTitles });
         });
     }
 
