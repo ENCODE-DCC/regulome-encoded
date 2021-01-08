@@ -9,6 +9,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 requires = [
     'PyBrowserID',
     'WSGIProxy2',
+    'boto3',
     'WebTest',
     'jmespath',
     'future',

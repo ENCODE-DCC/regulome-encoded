@@ -117,17 +117,13 @@ class SpotClient(object):
             time.sleep(0.1)
             return code_status
 
-    def tag_spot_instance(self, tag_data, elasticsearch, cluster_name):
+    def tag_spot_instance(self, tag_data):
         tags = [
             {'Key': 'Name', 'Value': tag_data['name']},
             {'Key': 'branch', 'Value': tag_data['branch']},
             {'Key': 'commit', 'Value': tag_data['commit']},
             {'Key': 'started_by', 'Value': tag_data['username']},
         ]
-        if elasticsearch == 'yes':
-            tags.append({'Key': 'elasticsearch', 'Value': elasticsearch})
-        if cluster_name is not None:
-            tags.append({'Key': 'ec_cluster_name', 'Value': cluster_name})
         instance_id = self.client.create_tags(
             Resources=[self.get_instance_id()],
             Tags=tags
@@ -179,17 +175,13 @@ def nameify(in_str):
     return re.subn(r'\-+', '-', name)[0]
 
 
-def tag_ec2_instance(instance, tag_data, elasticsearch, cluster_name):
+def tag_ec2_instance(instance, tag_data):
     tags = [
         {'Key': 'Name', 'Value': tag_data['name']},
         {'Key': 'branch', 'Value': tag_data['branch']},
         {'Key': 'commit', 'Value': tag_data['commit']},
         {'Key': 'started_by', 'Value': tag_data['username']},
     ]
-    if elasticsearch == 'yes':
-        tags.append({'Key': 'elasticsearch', 'Value': elasticsearch})
-    if cluster_name is not None:
-        tags.append({'Key': 'ec_cluster_name', 'Value': cluster_name})
     instance.create_tags(Tags=tags)
     return instance
 
@@ -282,8 +274,6 @@ def _get_instances_tag_data(main_args):
                 instances_tag_data['username'],
             )
         )
-        if main_args.elasticsearch == 'yes':
-            instances_tag_data['name'] = 'elasticsearch-' + instances_tag_data['name']
     return instances_tag_data
 
 
@@ -303,65 +293,18 @@ def _get_ec2_client(main_args, instances_tag_data):
 
 def _get_run_args(main_args, instances_tag_data):
     master_user_data = None
-    if not main_args.elasticsearch == 'yes':
-        security_groups = ['ssh-http-https']
-        iam_role = 'regulome-instance'
-        count = 1
-        data_insert = {
-            'WALE_S3_PREFIX': main_args.wale_s3_prefix,
-            'COMMIT': instances_tag_data['commit'],
-            'ROLE': main_args.role,
-            'REGION_INDEX': 'False',
-            'ES_IP': main_args.es_ip,
-            'ES_PORT': main_args.es_port,
-            'GIT_REPO': main_args.git_repo,
-            'REDIS_IP': main_args.redis_ip,
-            'REDIS_PORT': main_args.redis_port,
-        }
-        if main_args.no_es:
-            config_file = ':cloud-config-no-es.yml'
-        elif main_args.cluster_name:
-            config_file = ':cloud-config-cluster.yml'
-            data_insert['CLUSTER_NAME'] = main_args.cluster_name
-            data_insert['REGION_INDEX'] = 'True'
-        else:
-            config_file = ':cloud-config.yml'
-        if main_args.set_region_index_to:
-            data_insert['REGION_INDEX'] = main_args.set_region_index_to
-        user_data = get_user_data(instances_tag_data['commit'], config_file, data_insert, main_args)
-    else:
-        if not main_args.cluster_name:
-            print("Cluster must have a name")
-            sys.exit(1)
-        count = int(main_args.cluster_size)
-        security_groups = ['elasticsearch-https']
-        iam_role = 'elasticsearch-instance'
-        config_file = ':cloud-config-elasticsearch.yml'
-        data_insert = {
-            'CLUSTER_NAME': main_args.cluster_name,
-            'ES_DATA': 'true',
-            'ES_MASTER': 'true',
-            'MIN_MASTER_NODES': int(count/2 + 1),
-            'GIT_REPO': main_args.git_repo,
-        }
-        if main_args.single_data_master:
-            data_insert['ES_MASTER'] = 'false'
-            data_insert['MIN_MASTER_NODES'] = 1
-        user_data = get_user_data(instances_tag_data['commit'], config_file, data_insert, main_args)
-        if main_args.single_data_master:
-            master_data_insert = {
-                'CLUSTER_NAME': main_args.cluster_name,
-                'ES_DATA': 'false',
-                'ES_MASTER': 'true',
-                'MIN_MASTER_NODES': 1,
-                'GIT_REPO': main_args.git_repo,
-            }
-            master_user_data = get_user_data(
-                instances_tag_data['commit'],
-                config_file,
-                master_data_insert,
-                main_args,
-            )
+    security_groups = ['ssh-http-https']
+    iam_role = 'regulome-instance'
+    count = 1
+    data_insert = {
+        'COMMIT': instances_tag_data['commit'],
+        'ROLE': main_args.role,
+        'GIT_REPO': main_args.git_repo,
+        'REDIS_IP': main_args.redis_ip,
+        'REDIS_PORT': main_args.redis_port,
+    }
+    config_file = ':cloud-config.yml'
+    user_data = get_user_data(instances_tag_data['commit'], config_file, data_insert, main_args)
     run_args = {
         'count': count,
         'iam_role': iam_role,
@@ -377,20 +320,11 @@ def _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, 
     tmp_name = instances_tag_data['name']
     domain = 'production' if main_args.profile_name == 'production' else 'instance'
     for i, instance in enumerate(instances):
-        if main_args.elasticsearch == 'yes' and run_args['count'] > 1:
-            if cluster_master and run_args['master_user_data']:
-                print('Creating Elasticsearch Master Node for cluster')
-                # Hack: current tmp_name was the last data cluster, so remove '4'
-                instances_tag_data['name'] = "{}{}".format(tmp_name[0:-1], 'master')
-            else:
-                print('Creating Elasticsearch cluster')
-                instances_tag_data['name'] = "{}{}".format(tmp_name, i)
-        else:
-            instances_tag_data['name'] = tmp_name
+        instances_tag_data['name'] = tmp_name
         if not main_args.spot_instance:
             print('%s.%s.encodedcc.org' % (instance.id, domain))  # Instance:i-34edd56f
             instance.wait_until_exists()
-            tag_ec2_instance(instance, instances_tag_data, main_args.elasticsearch, main_args.cluster_name)
+            tag_ec2_instance(instance, instances_tag_data)
             print('ssh %s.%s.encodedcc.org' % (instances_tag_data['name'], domain))
             print('https://%s.demo.encodedcc.org' % instances_tag_data['name'])
 
@@ -444,7 +378,7 @@ def main():
             bdm,
         )
         _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances)
-        spot_client.tag_spot_instance(instances_tag_data, main_args.elasticsearch, main_args.cluster_name)
+        spot_client.tag_spot_instance(instances_tag_data)
         print("Spot instance request had been completed, please check to be sure it was fufilled")
     else:
         bdm = _get_bdm(main_args)
@@ -465,26 +399,6 @@ def main():
             },
         )
         _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances)
-        if 'master_user_data' in run_args and main_args.single_data_master:
-            # ES MASTER instance when deploying elasticsearch data clusters
-            if run_args['master_user_data'] and run_args['count'] > 1 and main_args.elasticsearch == 'yes':
-                instances = ec2_client.create_instances(
-                    ImageId='ami-2133bc59',
-                    MinCount=1,
-                    MaxCount=1,
-                    InstanceType='c5.9xlarge',
-                    SecurityGroups=['ssh-http-https'],
-                    UserData=run_args['master_user_data'],
-                    BlockDeviceMappings=bdm,
-                    InstanceInitiatedShutdownBehavior='terminate',
-                    IamInstanceProfile={
-                        "Name": 'regulome-instance',
-                    },
-                    Placement={
-                        'AvailabilityZone': main_args.availability_zone,
-                    },
-                )
-                _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, cluster_master=True)
 
 
 def parse_args():
@@ -529,36 +443,21 @@ def parse_args():
     parser.add_argument('-b', '--branch', default=None, help="Git branch or tag")
     parser.add_argument('-n', '--name', type=hostname, help="Instance name")
     parser.add_argument('--dry-run-aws', action='store_true', help="Abort before ec2 requests.")
-    parser.add_argument('--single-data-master', action='store_true',
-            help="Create a single data master node.")
     parser.add_argument('--check-price', action='store_true', help="Check price on spot instances")
-    parser.add_argument('--cluster-name', default=None, help="Name of the cluster")
-    parser.add_argument('--cluster-size', default=2, help="Elasticsearch cluster size")
-    parser.add_argument('--elasticsearch', default=None, help="Launch an Elasticsearch instance")
-    parser.add_argument('--es-ip', default='localhost', help="ES Master ip address")
-    parser.add_argument('--es-port', default='9201', help="ES Master ip port")
     parser.add_argument('--image-id', default='ami-2133bc59',
                         help=(
                             "https://us-west-2.console.aws.amazon.com/ec2/home"
                             "?region=us-west-2#LaunchInstanceWizard:ami=ami-2133bc59"
                         ))
-    parser.add_argument('--instance-type', default='c5.9xlarge',
-                        help="c5.9xlarge for indexing. Switch to a smaller instance (m5.xlarge or c5.xlarge).")
+    parser.add_argument('--instance-type', default='t2.medium',
+                        help="AWS Instance type")
     parser.add_argument('--profile-name', default=None, help="AWS creds profile")
-    parser.add_argument('--no-es', action='store_true', help="Use non ES cloud condfig")
     parser.add_argument('--redis-ip', default='localhost', help="Redis IP.")
     parser.add_argument('--redis-port', default=6379, help="Redis Port.")
-    parser.add_argument('--set-region-index-to', type=check_region_index,
-                        help="Override region index in yaml to 'True' or 'False'")
     parser.add_argument('--spot-instance', action='store_true', help="Launch as spot instance")
     parser.add_argument('--spot-price', default='0.70', help="Set price or keep default price of 0.70")
-    parser.add_argument('--teardown-cluster', default=None,
-                        help="Takes down all the cluster launched from the branch")
-    parser.add_argument('--volume-size', default=200, type=check_volume_size,
+    parser.add_argument('--volume-size', default=120, type=check_volume_size,
                         help="Size of disk. Allowed values 120, 200, and 500")
-    parser.add_argument('--wale-s3-prefix', default='s3://regulome-backups-prod/production')
-    parser.add_argument('--candidate', action='store_true', help="Deploy candidate instance")
-    parser.add_argument('--release-candidate', action='store_true', help="Deploy release-candidate instance")
     parser.add_argument(
         '--test', action='store_const', default='demo', const='test', dest='role',
         help="Deploy to production AWS")
@@ -566,22 +465,9 @@ def parse_args():
         help="Set EC2 availabilty zone")
     parser.add_argument('--git-repo', default='https://github.com/ENCODE-DCC/regulome-encoded.git',
             help="Git repo to checkout branches: https://github.com/{user|org}/{repo}.git")
-    # Set Role
-    # - 'demo' role is default for making single or clustered
-    # applications for feature building
-    # - '--test' will set role to test
-    # - 'rc' role is for Release-Candidate QA testing and
-    # is the same as 'demo' except batchupgrade will be skipped during deployment.
-    # This better mimics production but require a command be run after deployment.
-    # - 'candidate' role is for production release that potential can
-    # connect to produciton data.
+    
     args = parser.parse_args()
-    if not args.role == 'test':
-        if args.release_candidate:
-            args.role = 'rc'
-            args.candidate = False
-        elif args.candidate:
-            args.role = 'candidate'
+    args.role = 'candidate'
     print(args.role)
     return args
 
