@@ -24,19 +24,12 @@ from .json_renderer import json_renderer
 STATIC_MAX_AGE = 0
 
 
-def json_asset(spec, **kw):
-    utf8 = codecs.getreader("utf-8")
-    asset = AssetResolver(caller_package()).resolve(spec)
-    return json.load(utf8(asset.stream()), **kw)
-
-
 def static_resources(config):
     from pkg_resources import resource_filename
     import mimetypes
     mimetypes.init()
     mimetypes.init([resource_filename('encoded', 'static/mime.types')])
     config.add_static_view('static', 'static', cache_max_age=STATIC_MAX_AGE)
-    config.add_static_view('profiles', 'schemas', cache_max_age=STATIC_MAX_AGE)
 
     favicon_path = '/static/img/favicon.ico'
     if config.route_prefix:
@@ -80,22 +73,6 @@ def session(config):
     config.set_session_factory(session_factory)
 
 
-def app_version(config):
-    import hashlib
-    import os
-    import subprocess
-    try:
-        version = subprocess.check_output(
-            ['git', '-C', os.path.dirname(__file__), 'describe']).decode('utf-8').strip()
-        diff = subprocess.check_output(
-            ['git', '-C', os.path.dirname(__file__), 'diff', '--no-ext-diff'])
-        if diff:
-            version += '-patch' + hashlib.sha1(diff).hexdigest()[:7]
-    except:
-        # Travis can't run git describe without crashing
-        version = 'version_test'
-
-
 def main(global_config, **local_config):
     """ This function returns a Pyramid WSGI application.
     """
@@ -103,7 +80,6 @@ def main(global_config, **local_config):
     settings.update(local_config)
 
     config = Configurator(settings=settings)
-    config.include(app_version)
 
     config.include(session)
 
