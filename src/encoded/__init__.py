@@ -89,6 +89,7 @@ def main(global_config, **local_config):
 
     config.include('.regulome_search')
     config.include('.regulome_help')
+    config.include('.regulome_notfound')
 
     config.include(static_resources)
 
