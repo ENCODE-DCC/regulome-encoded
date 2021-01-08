@@ -17,8 +17,11 @@ def includeme(config):
     config.scan(__name__)
 
 
-def genomic_data_service_fetch(endpoint, query_string, page_title):
-    url = "http://data-service.demo.regulomedb.org/" + endpoint + "/?" + query_string
+def genomic_data_service_fetch(endpoint,  request, page_title):
+    data_service_url = request.registry.settings['genomic_data_service_url']
+    query_string     = request.query_string
+
+    url = data_service_url + "/" + endpoint + "/?" + query_string
 
     response_format = parse_qs(query_string).get('format', [None])
     if response_format[0] in ['bed', 'tsv']:
@@ -40,7 +43,7 @@ def regulome_home(context, request):
 
 @view_config(route_name='regulome-summary', request_method=('GET', 'POST'))
 def regulome_summary(context, request):
-    return genomic_data_service_fetch("summary", request.query_string, "RegulomeDB Summary")
+    return genomic_data_service_fetch("summary", request, "RegulomeDB Summary")
 
 
 @view_config(route_name='regulome-search', request_method='GET')
@@ -60,5 +63,5 @@ def regulome_search(context, request):
             'title': 'RegulomeDB search'
         }
 
-    return genomic_data_service_fetch("search", request.query_string, "RegulomeDB Search")
+    return genomic_data_service_fetch("search", request, "RegulomeDB Search")
 

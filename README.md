@@ -114,6 +114,8 @@ pyenv local 3.4.3
 - `buildout bootstrap`
 - `bin/buildout`
 
+- Edit the key `genomic_data_service_url` on `development.ini` with the correct Genomic Data Services URL.
+
 >:star: _Note_: If you have issues with Pillow you may need to install new xcode command line tools:
 > Update or Install [Xcode](https://developer.apple.com/xcode/) from the Mac AppStore (reboot may be required) and re-run:  
 > - `xcode-select --install`  
