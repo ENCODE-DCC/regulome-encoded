@@ -322,11 +322,11 @@ def _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, 
     for i, instance in enumerate(instances):
         instances_tag_data['name'] = tmp_name
         if not main_args.spot_instance:
-            print('%s.%s.encodedcc.org' % (instance.id, domain))  # Instance:i-34edd56f
+            print('%s.%s.regulomedb.org' % (instance.id, domain))  # Instance:i-34edd56f
             instance.wait_until_exists()
             tag_ec2_instance(instance, instances_tag_data)
-            print('ssh %s.%s.encodedcc.org' % (instances_tag_data['name'], domain))
-            print('https://%s.demo.encodedcc.org' % instances_tag_data['name'])
+            print('ssh ubuntu@%s.%s.regulolmedb.org' % (instances_tag_data['name'], domain))
+            print('https://%s.demo.regulomedb.org' % instances_tag_data['name'])
 
 
 def main():
