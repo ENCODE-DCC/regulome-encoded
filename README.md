@@ -1,16 +1,10 @@
-# ENCODE Metadata Database
--------------------------------------------------------
-
-
-![Build status](https://travis-ci.org/ENCODE-DCC/encoded.svg?branch=master)
+# Regulome DB
 
 ## Setting Up Your Environment
 
 These are the primary software versions used in production, and you should be able to use them locally:
 - Python 3.4.3
 - Node 10
-- Elasticsearch 5.4 (or later?)
-- Java VM 1.8
 - Ubuntu 14.04
 
 ### **0. Xcode for Mac OS build tools**  
@@ -32,27 +26,8 @@ These are the primary software versions used in production, and you should be ab
 ```bash
 brew install libevent libmagic libxml2 libxslt openssl graphviz nginx
 brew install freetype libjpeg libtiff littlecms webp # chromedriver temporarily broken
-brew tap petere/postgresql
-brew install postgresql@9.3
-brew link --force postgresql@9.3
-brew install --force node@10
-brew link node@10 --force
-brew cask install java8
-brew install elasticsearch@5.6
 pip3 install typing
 ```
->:star: _Note_: Elasticsearch 1.7 does not work with Java 9
->:star: _Note_: To unlink elasticsearch 1.7 and install elasticsearch 5.6
->- `brew search elasticsearch`
->- `brew install elasticsearch@5.6`
->- `brew unlink elasticsearch@1.7 && brew link elasticsearch@5.6 --force`
-
-
->:star: _Note_: Brew cannot find java8
->- `brew tap caskroom/versions # lookup more versions`
->- `brew cask search java # java8 now in list`
->- `brew cask install java8`
-
 >:star: _Note_: This additional step is required for new macOS Sierra installations
 >- `brew cask install Caskroom/cask/xquartz`
 
@@ -84,7 +59,7 @@ pip3 install typing
 
 
 ### **3. Python**  
-Encoded requires a UNIX based system (Mac or Linux) and **Python 3.4.3** (but works with 3.5.x):
+Regulome requires a UNIX based system (Mac or Linux) and **Python 3.4.3** (but works with 3.5.x):
 
  - For local development on a Mac, follow the steps below.  For Linux use apt-get or yum as your Linux flavor demands.  You can consult cloud-config.yml for other steps.
 
@@ -139,8 +114,6 @@ pyenv local 3.4.3
 - `buildout bootstrap`
 - `bin/buildout`
 
-> :star: _Note_: If you have issues with postgres or the python interface to it (psycogpg2) you probably need to install postgresql via homebrew (as above)  
-
 >:star: _Note_: If you have issues with Pillow you may need to install new xcode command line tools:
 > Update or Install [Xcode](https://developer.apple.com/xcode/) from the Mac AppStore (reboot may be required) and re-run:  
 > - `xcode-select --install`  
@@ -153,24 +126,11 @@ pyenv local 3.4.3
 ### **5. Start the application locally**
 
 
-- **Terminal window 1**:  
-  In one terminal window startup the database servers and nginx proxy with:
-
-  - `bin/dev-servers development.ini --app-name app --clear --init --load`
-
-  This will first clear any existing data in `/tmp/encoded`.
-  Then postgres and elasticsearch servers will be initiated within `/tmp/encoded`.
-  An nginx proxy running on port 8000 will be started.
-  The servers are started, and finally the test set will be loaded.
-
-- **Terminal window 2**:  
-  In a second terminal, run the app with:
+- **Terminal window**:
+  In a terminal, run the app with:
 
   - `bin/pserve development.ini`
 
-Indexing will then proceed in a background thread similar to the production setup.
-
->:star: _Note_: If you run into a java stack trace when you run the app, it is worth checking if /usr/local/etc/elasticsearch/elasticsearch.yml *might* have the line: ‘path.plugins: /usr/local/var/lib/elasticsearch/plugins’. If it does, it needs to be commented out.
 
 ### **6. :tada: Check out the app! :tada:**
 - Browse to the interface at http://localhost:8000/.
@@ -237,7 +197,7 @@ The development bundles are not minified, to speed up building. The above comman
   `bin/deploy`
   
   
-- The script above will spin up a server in the AWS cloud with the current branch, and with a computed nameserver alias based on the branch and your username.  Note that this retrieves a Postgres database from the current backup, so "as is" applies specifically to the ENCODE Project (_if you have forked the repo you will not have permission to retrieve the db_).   There are options to use a different branch and/or different instance name and also if you want to use AWS spot instances...and you can specify which AWS profile you want to use.   
+- The script above will spin up a server in the AWS cloud with the current branch, and with a computed nameserver alias based on the branch and your username.  There are options to use a different branch and/or different instance name and also if you want to use AWS spot instances...and you can specify which AWS profile you want to use.   
 
   
 - Deploy script help (how to specify name, instance size, etc):
@@ -319,8 +279,6 @@ Go to the Visual Studio Code marketplace and install these extensions:
 
 - `python3 --version` _returns `Python 3.4.3` (or variant like  3.4.x)_
 - `node --version`  _returns `v10.15.0`  (or variant like  v6.x.y)_
-- `elasticsearch -v` _returns `Version: 1.7.6` (or variant like  Version: 1.7.x)_
-- `postgres --version` _returns `postgres (PostgreSQL) 9.3` (or variant like 9.3.x)_ 
 
 
 **Linting check**
@@ -330,5 +288,5 @@ Go to the Visual Studio Code marketplace and install these extensions:
   
 - **JavaScript**: Make a syntax error, or style error, in a JS file. Warnings and errors should show on the left side of the line.  
 
-# Start of regulome branch commits
-bin/deploy --set-region-index-to True --volume-size 500
+## Start of regulome branch commits
+bin/deploy -b 'branch-name'
