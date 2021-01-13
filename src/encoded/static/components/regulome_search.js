@@ -660,7 +660,7 @@ const filterByAllSelectedFilters = (files, facets) => {
         const facetFilters = facets.filter(d => d.includes(`AND${facetName}`)).map(d => d.split('AND')[0]);
         if (facetFilters.length > 0) {
             // for organ facet, need to check if any of the listed organ terms match any of the organ filters
-            if (facetName === 'organ') {
+            if (facetName === 'organ' && d[faceName]) {
                 newFiles = newFiles.filter(d => d[facetName].split(', ').some(f => facetFilters.includes(f)));
             // for non-organ facets, just check if the term matches any of the facet filters
             } else {
@@ -675,7 +675,7 @@ const filterByOneFilter = (files, facet) => {
     const facetFilter = facet.split('AND')[0];
     const facetName = facet.split('AND')[1];
     let newFiles;
-    if (facetName === 'organ') {
+    if (facetName === 'organ' && d[facetName]) {
         newFiles = files.filter(d => d[facetName].split(', ').some(f => facetFilter.includes(f)));
     // for non-organ facets, just check if the term matches the facet
     } else {
@@ -837,7 +837,7 @@ class GenomeFacets extends React.Component {
                 // so each file can match multiple organ facet terms whereas for other facets, each file matches exactly 1 term
                 // we will probably keep it but we are not sure if it is confusing (the counts don't add up to the number of results for the organ facet) so this may change in a future update
                 let slims;
-                if (facet === 'organ') {
+                if (facet === 'organ' && file[facet]) {
                     slims = file[facet].split(', ');
                 } else {
                     slims = [file[facet]];
@@ -946,7 +946,7 @@ GenomeFacets.propTypes = {
 const appendDatasetsToQuery = (query, chunkDatasets) => {
     let searchQuery = query;
     chunkDatasets.forEach((d) => {
-        const dataset = d.dataset;
+        const dataset = d.dataset_rel;
         searchQuery += `&dataset=${dataset}`;
     });
     return searchQuery;
