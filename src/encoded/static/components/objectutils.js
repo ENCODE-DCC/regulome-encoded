@@ -94,7 +94,7 @@ export function treatmentDisplay(treatment) {
 // If, for whatever reason, no results could be had, an empty object gets returned from the
 // promise.
 export function requestSearch(query) {
-    return fetch(`/search/?${query}`, {
+    return fetch(`https://regulomedb.org/search/?${query}`, {
         method: 'GET',
         headers: {
             Accept: 'application/json',
@@ -200,7 +200,7 @@ export function requestObjects(atIds, uri, filteringObjects) {
 // fileIds: array of file @ids.
 // filteringFiles: Array of files to filter out of the array of file @ids in the fileIds parameter.
 export function requestFiles(fileIds, filteringFiles) {
-    return requestObjects(fileIds, '/search/?type=File&limit=all&status!=deleted&status!=revoked&status!=replaced', filteringFiles);
+    return requestObjects(fileIds, 'https://regulomedb.org/search/?type=File&limit=all&status!=deleted&status!=revoked&status!=replaced', filteringFiles);
 }
 
 
@@ -664,7 +664,7 @@ AlternateAccession.defaultProps = {
  */
 export const InternalTags = ({ context, css }) => {
     const tagBadges = context.internal_tags.map((tag) => {
-        const tagSearchUrl = `/search/?type=${context['@type'][0]}&internal_tags=${globals.encodedURIComponent(tag)}&status=released`;
+        const tagSearchUrl = `https://regulomedb.org/search/?type=${context['@type'][0]}&internal_tags=${globals.encodedURIComponent(tag)}&status=released`;
         return <a href={tagSearchUrl} key={tag}><img src={`/static/img/tag-${tag}.png`} alt={`Search for all ${context['@type'][0]} with internal tag ${tag}`} /></a>;
     });
     return <span className={css}>{tagBadges}</span>;
