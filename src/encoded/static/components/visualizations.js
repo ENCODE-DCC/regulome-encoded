@@ -648,8 +648,8 @@ export class ChartList extends React.Component {
                                         </tr>
                                         {this.state.data.filter(element => filterForKey(element, d, this.props.dataFilter)).map(d2 =>
                                             <tr key={d2.file}>
-                                                <td><a href={`../files/${d2.file}`}>{d2.file}</a></td>
-                                                <td><a href={d2.dataset}>{d2.dataset.split('/')[2]}</a></td>
+                                                <td><a href={`https://regulomedb.org/files/${d2.file}`}>{d2.file}</a></td>
+                                                <td><a href={d2.dataset}>{d2.dataset.split('/')[4]}</a></td>
                                                 <td>{d2.biosample_ontology.organ_slims.join(', ')}</td>
                                                 <td>{d2.method}</td>
                                                 {(this.props.dataFilter === 'chromatin') ?
