@@ -66,11 +66,11 @@ const dataColumnsChromatin = {
     },
     dataset: {
         title: 'Dataset',
-        display: item => <a href={item.dataset}>{item.dataset.split('/')[2]}</a>,
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[4]}</a>,
     },
     file: {
         title: 'File',
-        display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
+        display: item => <a href={`https://regulomedb.org/files/${item.file}/`}>{item.file}</a>,
     },
 };
 
@@ -92,11 +92,11 @@ const dataColumnsQTL = {
     },
     dataset: {
         title: 'Dataset',
-        display: item => <a href={item.dataset}>{item.dataset.split('/')[2]}</a>,
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[4]}</a>,
     },
     file: {
         title: 'File',
-        display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
+        display: item => <a href={`https://regulomedb.org//files/${item.file}/`}>{item.file}</a>,
     },
 };
 
@@ -136,11 +136,11 @@ const dataColumnsOther = {
     },
     dataset: {
         title: 'Dataset',
-        display: item => <a href={item.dataset}>{item.dataset.split('/')[2]}</a>,
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[4]}</a>,
     },
     file: {
         title: 'File',
-        display: item => <a href={`/files/${item.file}/`}>{item.file}</a>,
+        display: item => <a href={`https://regulomedb.org/files/${item.file}/`}>{item.file}</a>,
     },
     value: {
         title: 'Value',
