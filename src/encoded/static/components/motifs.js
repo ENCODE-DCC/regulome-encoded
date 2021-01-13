@@ -74,8 +74,7 @@ export class MotifElement extends React.Component {
     // Generate PWM link from url and document
     generatePWMLink() {
         const element = this.props.element;
-        const urlBase = this.props.urlBase;
-        return `${urlBase}${element.pwm}${element.href}`;
+        return `${element.pwm}${element.href}`;
     }
 
     addMotifElement(response) {
