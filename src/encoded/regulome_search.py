@@ -294,7 +294,7 @@ def filter_maf(raw_maf):
         float(raw_maf)
         return raw_maf
     except ValueError:
-        return None
+        return '0'
 
 def parse_region_query(request):
     # Get raw parameters from request
