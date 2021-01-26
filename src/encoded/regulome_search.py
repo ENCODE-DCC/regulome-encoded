@@ -286,6 +286,21 @@ def get_rsids(atlas, assembly, chrom, start, end):
     return [rsid['rsid'] for rsid in rsids if 'rsid' in rsid]
 
 
+def filter_maf(raw_maf):
+    if raw_maf is None:
+        return None
+
+    # special case for Valis: 0.01/thumbnail=valis
+    if "/" in raw_maf:
+        raw_maf = raw_maf.split("/")[0]
+
+    try:
+        float(raw_maf)
+        return raw_maf
+    except ValueError:
+        return '0'
+
+
 def parse_region_query(request):
     # Get raw parameters from request
     # TODO process "format", "frame" or other params
