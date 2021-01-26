@@ -285,6 +285,16 @@ def get_rsids(atlas, assembly, chrom, start, end):
     )
     return [rsid['rsid'] for rsid in rsids if 'rsid' in rsid]
 
+def filter_maf(raw_maf):
+    # special case for Valis: 0.01/thumbnail=valis
+    if "/" in raw_maf:
+        raw_maf = raw_maf.split("/")[0]
+
+    try:
+        float(raw_maf)
+        return raw_maf
+    except ValueError:
+        return '0'
 
 def parse_region_query(request):
     # Get raw parameters from request
@@ -295,7 +305,7 @@ def parse_region_query(request):
         from_ = request.params.get('from', 0)
         size = request.params.get('limit', 200)
         format = request.params.get('format', 'json')
-        maf = request.params.get('maf', None)
+        maf = filter_maf(request.params.get('maf', None))
     else:  # request.method == 'POST'
         assembly = request.json_body.get('genome', 'GRCh37')
         regions = request.json_body.get('regions', [])
@@ -304,7 +314,7 @@ def parse_region_query(request):
         from_ = request.json_body.get('from', 0)
         size = request.json_body.get('limit', 200)
         format = request.json_body.get('format', 'json')
-        maf = request.json_body.get('maf', None)
+        maf = filter_maf(request.json_body.get('maf', None))
 
     # Parse parameters
     if assembly not in _GENOME_TO_ALIAS.keys():
