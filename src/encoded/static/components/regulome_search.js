@@ -70,7 +70,7 @@ const dataColumnsChromatin = {
     },
     file: {
         title: 'File',
-        display: item => <a href={`https://regulomedb.org/files/${item.file}/`}>{item.file}</a>,
+        display: item => <a href={`https://encodeproject.org/files/${item.file}/`}>{item.file}</a>,
     },
 };
 
@@ -96,7 +96,7 @@ const dataColumnsQTL = {
     },
     file: {
         title: 'File',
-        display: item => <a href={`https://regulomedb.org//files/${item.file}/`}>{item.file}</a>,
+        display: item => <a href={`https://encodeproject.org//files/${item.file}/`}>{item.file}</a>,
     },
 };
 
@@ -140,7 +140,7 @@ const dataColumnsOther = {
     },
     file: {
         title: 'File',
-        display: item => <a href={`https://regulomedb.org/files/${item.file}/`}>{item.file}</a>,
+        display: item => <a href={`https://encodeproject.org/files/${item.file}/`}>{item.file}</a>,
     },
     value: {
         title: 'Value',
