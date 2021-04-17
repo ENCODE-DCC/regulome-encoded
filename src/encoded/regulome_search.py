@@ -6,6 +6,7 @@ import requests
 import logging
 import requests
 from urllib.parse import parse_qs
+from pyramid.response import Response
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ def includeme(config):
     config.add_route('regulome-home', '/')
     config.add_route('regulome-summary', '/regulome-summary{slash:/?}')
     config.add_route('regulome-search', '/regulome-search{slash:/?}')
+    config.add_route('encode-download', '/encode-download/{url:.*}')
     config.scan(__name__)
 
 
@@ -64,4 +66,17 @@ def regulome_search(context, request):
         }
 
     return genomic_data_service_fetch("search", request, "RegulomeDB Search")
+
+
+@view_config(route_name='encode-download', request_method='GET')
+def encode_download(context, request):
+    encode_data = requests.get('https://www.encodeproject.org/' + request.matchdict.get('url'))
+
+    headers = encode_data.headers
+
+    return Response(
+        content_type=headers['Content-Type'],
+        content_length=headers['Content-Length'],
+        body=encode_data.text
+    )
 
