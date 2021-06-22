@@ -1382,7 +1382,7 @@ class RegulomeSearch extends React.Component {
                                                     )}
                                                 </div>
                                             : null}
-                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'less' : 'more'}</button> : null}
+                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'fewer' : 'more'}</button> : null}
                                         </div>
                                     </div>
                                 )}

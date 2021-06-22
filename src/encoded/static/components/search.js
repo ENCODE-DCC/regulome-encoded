@@ -1188,22 +1188,30 @@ FacetList.contextTypes = {
 /**
  * Display the modal for batch download, and pass back clicks in the Download button
  */
-export const BatchDownloadModal = ({ handleDownloadClick, title, additionalContent, disabled }) => (
-    <Modal actuator={<button className="btn btn-info btn-sm" disabled={disabled} data-test="batch-download">{title || 'Download'}</button>}>
-        <ModalHeader title="Using batch download" closeModal />
+export const BatchDownloadModal = ({ handleDownloadClick, title, additionalContent, additionalClasses, showTitle, contentDescription, disabled }) => (
+    <Modal actuator={<button className={`btn btn-info btn-sm ${additionalClasses}`} disabled={disabled} data-test="batch-download">{title || 'Download'}</button>}>
+        <ModalHeader title={showTitle ? 'Using batch download' : ''} closeModal />
         <ModalBody>
-            <p>
-                Click the &ldquo;Download&rdquo; button below to download a &ldquo;files.txt&rdquo; file that contains a list of URLs to a file containing all the experimental metadata and links to download the file.
-                The first line of the file has the URL or command line to download the metadata file.
-            </p>
-            <p>
-                Further description of the contents of the metadata file are described in the <a href="/help/batch-download/">Batch Download help doc</a>.
-            </p>
-            <p>
-                The &ldquo;files.txt&rdquo; file can be copied to any server.<br />
-                The following command using cURL can be used to download all the files in the list:
-            </p>
-            <code>xargs -L 1 curl -O -L &lt; files.txt</code><br />
+            {contentDescription ?
+                <React.Fragment>
+                    {contentDescription}
+                </React.Fragment>
+            :
+                <React.Fragment>
+                    <p>
+                        Click the &ldquo;Download&rdquo; button below to download a &ldquo;files.txt&rdquo; file that contains a list of URLs to a file containing all the experimental metadata and links to download the file.
+                        The first line of the file has the URL or command line to download the metadata file.
+                    </p>
+                    <p>
+                        Further description of the contents of the metadata file are described in the <a href="/help/batch-download/">Batch Download help doc</a>.
+                    </p>
+                    <p>
+                        The &ldquo;files.txt&rdquo; file can be copied to any server.<br />
+                        The following command using cURL can be used to download all the files in the list:
+                    </p>
+                    <code>xargs -L 1 curl -O -L &lt; files.txt</code><br />
+                </React.Fragment>
+            }
             <React.Fragment>{additionalContent}</React.Fragment>
         </ModalBody>
         <ModalFooter
@@ -1223,12 +1231,21 @@ BatchDownloadModal.propTypes = {
     disabled: PropTypes.bool,
     /** Additional content in modal as component */
     additionalContent: PropTypes.object,
+    /** Description of content in modal as component */
+    contentDescription: PropTypes.object,
+    /** True to display default title */
+    showTitle: PropTypes.bool,
+    /** Extra classes for button */
+    additionalClasses: PropTypes.string,
 };
 
 BatchDownloadModal.defaultProps = {
     title: '',
     disabled: false,
     additionalContent: null,
+    contentDescription: null,
+    showTitle: true,
+    additionalClasses: '',
 };
 
 
