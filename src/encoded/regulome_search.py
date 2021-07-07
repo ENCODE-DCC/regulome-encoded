@@ -45,7 +45,16 @@ def regulome_home(context, request):
 
 @view_config(route_name='regulome-summary', request_method=('GET', 'POST'))
 def regulome_summary(context, request):
-    return genomic_data_service_fetch("summary", request, "RegulomeDB Summary")
+    response = genomic_data_service_fetch("summary", request, "RegulomeDB Summary")
+
+    if response['total'] == 1:
+        query = {
+            'regions': response['query_coordinates'],
+            'genome': response['assembly']
+        }
+        raise HTTPSeeOther(location=request.route_url('regulome-search', slash='', _query=query))
+
+    return response
 
 
 @view_config(route_name='regulome-search', request_method='GET')
@@ -62,7 +71,7 @@ def regulome_search(context, request):
             'variants': [],
             'notifications': {},
             '@type': ['regulome-search'],
-            'title': 'RegulomeDB search'
+            'title': 'RegulomeDB Search'
         }
 
     return genomic_data_service_fetch("search", request, "RegulomeDB Search")
