@@ -6,6 +6,8 @@ import { Navbar, Nav, NavItem } from '../libs/bootstrap/navbar';
 import { DropdownMenu, DropdownMenuSep } from '../libs/bootstrap/dropdown-menu';
 import { CartStatus } from './cart';
 import { productionHost } from './globals';
+import { BatchDownloadModal } from './search';
+import { svgIcon } from '../libs/svg-icons';
 
 
 export default class Navigation extends React.Component {
@@ -22,6 +24,7 @@ export default class Navigation extends React.Component {
         this.handleClickWarning = this.handleClickWarning.bind(this);
         this.documentClickHandler = this.documentClickHandler.bind(this);
         this.dropdownClick = this.dropdownClick.bind(this);
+        this.batchDownload = this.batchDownload.bind(this);
     }
 
     // Initialize current React component context for others to inherit.
@@ -72,6 +75,13 @@ export default class Navigation extends React.Component {
         }
     }
 
+    /**
+     * Download data for ENCFF297XMQ
+     */
+    batchDownload() {
+        this.context.navigate('https://www.encodeproject.org/files/ENCFF297XMQ/@@download/ENCFF297XMQ.tsv');
+    }
+
     render() {
         const portal = this.context.portal;
         return (
@@ -80,6 +90,23 @@ export default class Navigation extends React.Component {
                     <Navbar brand={portal.portal_title} brandlink="/" label="main" navClasses="navbar-main" openDropdown={this.state.openDropdown} dropdownClick={this.dropdownClick}>
                         <GlobalSections />
                         <CartStatus />
+                        <BatchDownloadModal
+                            handleDownloadClick={this.batchDownload}
+                            additionalClasses="navigation-modal"
+                            title={
+                                <span className="download-scores">
+                                    <div className="download-svg">{svgIcon('download')}</div>
+                                    <div className="download-text">Download scores</div>
+                                </span>
+                            }
+                            showTitle={false}
+                            contentDescription={
+                                <div>
+                                    <h4>Download pre-calculated scores file for dbSNP v153 common SNPs (MAF &gt; 0.01)</h4>
+                                    <div>Click the &ldquo;Download&rdquo; button below to download the file &ldquo;ENCFF297XMQ.txt&rdquo;. The file size is 1.32 GB.</div>
+                                </div>
+                            }
+                        />
                         <UserActions />
                         {this.props.isHomePage ? null : <ContextActions />}
                     </Navbar>
@@ -112,6 +139,7 @@ Navigation.defaultProps = {
 Navigation.contextTypes = {
     location_href: PropTypes.string,
     portal: PropTypes.object,
+    navigate: PropTypes.func,
 };
 
 Navigation.childContextTypes = {

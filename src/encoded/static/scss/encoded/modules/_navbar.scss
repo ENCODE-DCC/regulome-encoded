@@ -179,3 +179,21 @@
     border-top: 1px solid #c0c0c0;
     border-bottom: 1px solid #fff;
 }
+
+.navigation-modal {
+    margin-top: 10px;
+    border: 0;
+
+    .download-scores {
+        display: flex;
+        .download-svg, .download-text {
+            flex: 0 1 auto;
+        }
+        .download-svg {
+            svg {
+                height: 16px;
+            }
+            margin-right: 5px;
+        }
+    }
+}
