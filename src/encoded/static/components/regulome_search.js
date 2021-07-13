@@ -660,7 +660,7 @@ const filterByAllSelectedFilters = (files, facets) => {
         const facetFilters = facets.filter(d => d.includes(`AND${facetName}`)).map(d => d.split('AND')[0]);
         if (facetFilters.length > 0) {
             // for organ facet, need to check if any of the listed organ terms match any of the organ filters
-            if (facetName === 'organ' && d[faceName]) {
+            if (facetName === 'organ') {
                 newFiles = newFiles.filter(d => d[facetName].split(', ').some(f => facetFilters.includes(f)));
             // for non-organ facets, just check if the term matches any of the facet filters
             } else {
@@ -1192,12 +1192,12 @@ class RegulomeSearch extends React.Component {
             Promise.all(requests).then(() => {
                 // sort by dataset
                 const sortedFiles = _.sortBy(this.state.allFiles, obj => obj.dataset);
-                // add biosample, assay, and target list from dataset to file information
                 sortedFiles.forEach((d) => {
-                    d.biosample = biosampleMap[d.dataset];
-                    d.assay = assayMap[d.dataset];
-                    d.target = targetMap[d.dataset];
-                    d.organ = organMap[d.dataset];
+                    const fileDataset = 'https://www.encodeproject.org' + d.dataset;
+                    d.biosample = biosampleMap[fileDataset];
+                    d.assay = assayMap[fileDataset];
+                    d.target = targetMap[fileDataset];
+                    d.organ = organMap[fileDataset];
                 });
                 // do first pass at filtering down full file list
                 const trimmedFiles0 = sortedFiles.filter((file) => {
