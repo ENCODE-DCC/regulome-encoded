@@ -823,6 +823,8 @@ class GenomeFacets extends React.Component {
     }
 
     createFacets(files) {
+        console.log('files');
+        console.log(files);
         // initialize facet object
         const facetObject = {};
         facetList.forEach((facet) => {
