@@ -661,7 +661,12 @@ const filterByAllSelectedFilters = (files, facets) => {
         if (facetFilters.length > 0) {
             // for organ facet, need to check if any of the listed organ terms match any of the organ filters
             if (facetName === 'organ') {
-                newFiles = newFiles.filter(d => d[facetName].split(', ').some(f => facetFilters.includes(f)));
+                newFiles = newFiles.filter((d) => {
+                    if (d[facetName] && (d[facetName].indexOf(',') > -1)) {
+                        return d[facetName].split(', ').some(f => facetFilters.includes(f));
+                    }
+                    return null;
+                });
             // for non-organ facets, just check if the term matches any of the facet filters
             } else {
                 newFiles = newFiles.filter(d => facetFilters.includes(d[facetName]));
@@ -675,8 +680,13 @@ const filterByOneFilter = (files, facet) => {
     const facetFilter = facet.split('AND')[0];
     const facetName = facet.split('AND')[1];
     let newFiles;
-    if (facetName === 'organ' && d[facetName]) {
-        newFiles = files.filter(d => d[facetName].split(', ').some(f => facetFilter.includes(f)));
+    if (facetName === 'organ') {
+        newFiles = files.filter((d) => {
+            if (d[facetName] && (d[facetName].indexOf(',') > -1)) {
+                return d[facetName].split(', ').some(f => facetFilter.includes(f));
+            }
+            return null;
+        });
     // for non-organ facets, just check if the term matches the facet
     } else {
         newFiles = files.filter(d => facetFilter === d[facetName]);
@@ -836,10 +846,10 @@ class GenomeFacets extends React.Component {
                 // for the organ facet, each file can have multiple organ slims and we are listing them individually
                 // so each file can match multiple organ facet terms whereas for other facets, each file matches exactly 1 term
                 // we will probably keep it but we are not sure if it is confusing (the counts don't add up to the number of results for the organ facet) so this may change in a future update
-                let slims;
-                if (facet === 'organ' && file[facet]) {
+                let slims = [];
+                if (facet === 'organ' && file[facet] && (file[facet].indexOf(',') > -1)) {
                     slims = file[facet].split(', ');
-                } else {
+                } else if (file[facet] && facet !== 'organ') {
                     slims = [file[facet]];
                 }
                 slims.forEach((slim) => {
@@ -953,7 +963,7 @@ const appendDatasetsToQuery = (query, chunkDatasets) => {
 };
 
 // size of each query (how many datasets)
-const chunkSize = 10;
+const chunkSize = 12;
 // number of files to display on genome browser
 const displaySize = 20;
 // Default number of populations to display for allele frequencies.
@@ -972,6 +982,32 @@ const populationOrder = [
     'Estonian',
     'PAGE_STUDY',
 ];
+
+const loadData = (searchQuery) => {
+    return new Promise(((ok) => {
+        requestSearch(searchQuery).then((results) => {
+            const newFiles = (results && results['@graph']) ? results['@graph'] : [];
+            ok(newFiles);
+        });
+    }));
+};
+
+const chunkingDataset = (requests, startIdxWrapper, endIdxWrapper, datasets, baseQuery) => {
+    // iterate over queries
+    const promiseList = [];
+    for (let chunkIdx = startIdxWrapper; chunkIdx < endIdxWrapper; chunkIdx += 1) {
+        // subset of datasets for the query
+        const startIdx = chunkIdx * chunkSize;
+        const endIdx = (chunkIdx + 1) * chunkSize;
+        let chunkDatasets = [];
+        chunkDatasets = datasets.slice(startIdx, endIdx);
+        // this is the query
+        const searchQuery = appendDatasetsToQuery(baseQuery, chunkDatasets);
+        // add results of query to full array of results
+        promiseList.push(loadData(searchQuery));
+    }
+    return promiseList;
+};
 
 class RegulomeSearch extends React.Component {
     constructor() {
@@ -997,9 +1033,7 @@ class RegulomeSearch extends React.Component {
         this.onFilter = this.onFilter.bind(this);
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
-        this.addNewFiles = this.addNewFiles.bind(this);
         this.handlePagination = this.handlePagination.bind(this);
-        this.chunkingDataset = this.chunkingDataset.bind(this);
         this.handleGenomeFacets = this.handleGenomeFacets.bind(this);
     }
 
@@ -1066,21 +1100,6 @@ class RegulomeSearch extends React.Component {
         }
     }
 
-    addNewFiles(searchQuery) {
-        return new Promise((ok) => {
-            requestSearch(searchQuery).then((results) => {
-                const newFiles = (results && results['@graph']) ? results['@graph'] : [];
-                // only update state if new files have been retrieved
-                if (newFiles.length > 0) {
-                    this.setState(prevState => ({
-                        allFiles: [...prevState.allFiles, ...newFiles],
-                    }));
-                }
-                ok('success');
-            });
-        });
-    }
-
     handlePagination(pageDirection) {
         if (pageDirection === 'plus') {
             const pageIdx = this.state.browserCurrentPage;
@@ -1101,22 +1120,6 @@ class RegulomeSearch extends React.Component {
                 browserCurrentPage: prevState.browserCurrentPage - 1,
             }));
         }
-    }
-
-    chunkingDataset(requests, startIdxWrapper, endIdxWrapper, datasets, baseQuery) {
-        // iterate over queries
-        for (let chunkIdx = startIdxWrapper; chunkIdx < endIdxWrapper; chunkIdx += 1) {
-            // subset of datasets for the query
-            const startIdx = chunkIdx * chunkSize;
-            const endIdx = (chunkIdx + 1) * chunkSize;
-            let chunkDatasets = [];
-            chunkDatasets = datasets.slice(startIdx, endIdx);
-            // this is the query
-            const searchQuery = appendDatasetsToQuery(baseQuery, chunkDatasets);
-            // add results of query to full array of results
-            requests[chunkIdx] = this.addNewFiles(searchQuery);
-        }
-        return requests;
     }
 
     handleGenomeFacets(selectedFilters) {
@@ -1184,85 +1187,88 @@ class RegulomeSearch extends React.Component {
             const faireBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all`;
             // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
             // we construct an array of Promises for all the queries
-            this.chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
-            this.chunkingDataset(requests, 0, numDnaseChunks, dnaseDatasets, dnaseBaseQuery);
-            this.chunkingDataset(requests, 0, numFaireChunks, faireDatasets, faireBaseQuery);
+            const chipPromises = chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
+            const dnasePromises = chunkingDataset(requests, 0, numDnaseChunks, dnaseDatasets, dnaseBaseQuery);
+            const fairePromises = chunkingDataset(requests, 0, numFaireChunks, faireDatasets, faireBaseQuery);
+            const allPromises = [...chipPromises, ...dnasePromises, ...fairePromises];
 
-            // once all the data has been retrieved, narrow down full set of files to 2 per dataset
-            Promise.all(requests).then(() => {
-                // sort by dataset
-                const sortedFiles = _.sortBy(this.state.allFiles, obj => obj.dataset);
-                sortedFiles.forEach((d) => {
-                    const fileDataset = 'https://www.encodeproject.org' + d.dataset;
-                    d.biosample = biosampleMap[fileDataset];
-                    d.assay = assayMap[fileDataset];
-                    d.target = targetMap[fileDataset];
-                    d.organ = organMap[fileDataset];
-                });
-                // do first pass at filtering down full file list
-                const trimmedFiles0 = sortedFiles.filter((file) => {
-                    const DatasetFiles0 = sortedFiles.filter(f2 => f2.dataset === file.dataset);
-                    if (DatasetFiles0.length > 2) {
-                        // if there are more than 2 files for a ChIP-seq dataset, we prefer rep 1,2 to rep 1
-                        if (file.assay === 'ChIP-seq') {
-                            if (file.biological_replicates.length === 1) {
-                                return false;
-                            }
-                            return true;
-                        // if there are more than 2 files for a DNase-seq dataset, we prefer rep 1
-                        } else if (file.assay === 'DNase-seq') {
-                            if (file.biological_replicates.length === 1) {
+            Promise.all(allPromises)
+                .then((results) => {
+                    this.setState({ allFiles: results.flat() }, () => {
+                        // sort by dataset
+                        const sortedFiles = _.sortBy(this.state.allFiles, obj => obj.dataset);
+                        sortedFiles.forEach((d) => {
+                            const fileDataset = `https://www.encodeproject.org${d.dataset}`;
+                            d.biosample = biosampleMap[fileDataset];
+                            d.assay = assayMap[fileDataset];
+                            d.target = targetMap[fileDataset];
+                            d.organ = organMap[fileDataset];
+                        });
+                        // once all the data has been retrieved, narrow down full set of files to 2 per dataset
+                        const trimmedFiles0 = sortedFiles.filter((file) => {
+                            const DatasetFiles0 = sortedFiles.filter(f2 => f2.dataset === file.dataset);
+                            if (DatasetFiles0.length > 2) {
+                                // if there are more than 2 files for a ChIP-seq dataset, we prefer rep 1,2 to rep 1
+                                if (file.assay_term_name === 'ChIP-seq') {
+                                    if (file.biological_replicates.length === 1) {
+                                        return false;
+                                    }
+                                    return true;
+                                // if there are more than 2 files for a DNase-seq dataset, we prefer rep 1
+                                } else if (file.assay_term_name === 'DNase-seq') {
+                                    if (file.biological_replicates.length === 1) {
+                                        return true;
+                                    }
+                                    return false;
+                                // if there are more than 2 files for a FAIRE-seq dataset, we prefer multiple replicates
+                                } else if (file.assay_term_name === 'FAIRE-seq') {
+                                    if (file.biological_replicates.length === 0) {
+                                        return false;
+                                    }
+                                    return true;
+                                }
                                 return true;
                             }
-                            return false;
-                        // if there are more than 2 files for a FAIRE-seq dataset, we prefer multiple replicates
-                        } else if (file.assay === 'FAIRE-seq') {
-                            if (file.biological_replicates.length === 0) {
+                            return true;
+                        });
+                        // it is still possible to have multiple files per dataset
+                        // in those cases, we will filter for only "released" files
+                        const trimmedFiles = trimmedFiles0.filter((file) => {
+                            const datasetFiles = trimmedFiles0.filter(f2 => f2.dataset === file.dataset);
+                            // only filter by file status if there are still more than 2 files for the dataset
+                            if (datasetFiles.length > 2) {
+                                if (file.status === 'released') {
+                                    return true;
+                                }
                                 return false;
                             }
                             return true;
+                        });
+                        // if there are more filtered files than we want to display on one page, we will paginate
+                        if (trimmedFiles.length > displaySize) {
+                            const includedFiles = trimmedFiles.slice(0, displaySize);
+                            const browserTotalPages = Math.ceil(trimmedFiles.length / displaySize);
+                            this.setState({
+                                allFiles: trimmedFiles,
+                                includedFiles,
+                                filteredFiles: trimmedFiles,
+                                multipleBrowserPages: true,
+                                browserTotalPages,
+                                browserCurrentPage: 1,
+                            }, () => {
+                                this.updateThumbnail(chosen);
+                            });
+                        } else {
+                            this.setState({
+                                allFiles: trimmedFiles,
+                                filteredFiles: trimmedFiles,
+                                includedFiles: trimmedFiles,
+                            }, () => {
+                                this.updateThumbnail(chosen);
+                            });
                         }
-                        return true;
-                    }
-                    return true;
-                });
-                // it is still possible to have multiple files per dataset
-                // in those cases, we will filter for only "released" files
-                const trimmedFiles = trimmedFiles0.filter((file) => {
-                    const datasetFiles = trimmedFiles0.filter(f2 => f2.dataset === file.dataset);
-                    // only filter by file status if there are still more than 2 files for the dataset
-                    if (datasetFiles.length > 2) {
-                        if (file.status === 'released') {
-                            return true;
-                        }
-                        return false;
-                    }
-                    return true;
-                });
-                // if there are more filtered files than we want to display on one page, we will paginate
-                if (trimmedFiles.length > displaySize) {
-                    const includedFiles = trimmedFiles.slice(0, displaySize);
-                    const browserTotalPages = Math.ceil(trimmedFiles.length / displaySize);
-                    this.setState({
-                        allFiles: trimmedFiles,
-                        includedFiles,
-                        filteredFiles: trimmedFiles,
-                        multipleBrowserPages: true,
-                        browserTotalPages,
-                        browserCurrentPage: 1,
-                    }, () => {
-                        this.updateThumbnail(chosen);
                     });
-                } else {
-                    this.setState({
-                        allFiles: trimmedFiles,
-                        filteredFiles: trimmedFiles,
-                        includedFiles: trimmedFiles,
-                    }, () => {
-                        this.updateThumbnail(chosen);
-                    });
-                }
-            });
+                });
         } else {
             // all necessary data is already available for all other tabs
             this.updateThumbnail(chosen);
