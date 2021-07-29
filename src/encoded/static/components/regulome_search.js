@@ -1580,7 +1580,7 @@ class RegulomeSearch extends React.Component {
                         <div className="lead-logo">
                             <a href="/">
                                 <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
-                                <div className="version-tag">2.0</div>
+                                <div className="version-tag">2.0.3</div>
                             </a>
                         </div>
                         <AdvSearch {...this.props} />
