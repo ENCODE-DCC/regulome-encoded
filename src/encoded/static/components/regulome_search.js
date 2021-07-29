@@ -1068,8 +1068,10 @@ class RegulomeSearch extends React.Component {
 
     addNewFiles(searchQuery) {
         return new Promise((ok) => {
+            console.log(searchQuery);
             requestSearch(searchQuery).then((results) => {
                 const newFiles = (results && results['@graph']) ? results['@graph'] : [];
+                console.log(`there are ${newFiles.length} new files`);
                 // only update state if new files have been retrieved
                 if (newFiles.length > 0) {
                     this.setState(prevState => ({
