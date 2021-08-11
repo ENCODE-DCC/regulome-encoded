@@ -983,14 +983,12 @@ const populationOrder = [
     'PAGE_STUDY',
 ];
 
-const loadData = (searchQuery) => {
-    return new Promise(((ok) => {
-        requestSearch(searchQuery).then((results) => {
-            const newFiles = (results && results['@graph']) ? results['@graph'] : [];
-            ok(newFiles);
-        });
-    }));
-};
+const loadData = searchQuery => new Promise(((ok) => {
+    requestSearch(searchQuery).then((results) => {
+        const newFiles = (results && results['@graph']) ? results['@graph'] : [];
+        ok(newFiles);
+    });
+}));
 
 const chunkingDataset = (requests, startIdxWrapper, endIdxWrapper, datasets, baseQuery) => {
     // iterate over queries
@@ -1525,6 +1523,7 @@ class RegulomeSearch extends React.Component {
                                                 expanded
                                                 assembly={'hg19'}
                                                 coordinates={coordinates}
+                                                selectedFilters={this.state.selectedFilters}
                                             />
                                             {this.state.multipleBrowserPages ?
                                                 <div className="pagination-container">
