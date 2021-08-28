@@ -221,8 +221,8 @@ def _get_bdm(main_args):
     ]
 
 
-def get_user_data(commit, config_file, data_insert, main_args):
-    cmd_list = ['git', 'show', commit + config_file]
+def get_user_data(config_file, data_insert, main_args):
+    cmd_list = ['cat', 'cloud-config.yml']
     config_template = subprocess.check_output(cmd_list).decode('utf-8')
     ssh_pub_key = read_ssh_key()
     if not ssh_pub_key:
@@ -241,7 +241,6 @@ def get_user_data(commit, config_file, data_insert, main_args):
         auth_type=auth_type,
     )
     data_insert['S3_AUTH_KEYS'] = auth_keys_dir
-    data_insert['REDIS_PORT'] = main_args.redis_port
     user_data = config_template % data_insert
     return user_data
 
@@ -300,11 +299,9 @@ def _get_run_args(main_args, instances_tag_data):
         'COMMIT': instances_tag_data['commit'],
         'ROLE': main_args.role,
         'GIT_REPO': main_args.git_repo,
-        'REDIS_IP': main_args.redis_ip,
-        'REDIS_PORT': main_args.redis_port,
     }
     config_file = ':cloud-config.yml'
-    user_data = get_user_data(instances_tag_data['commit'], config_file, data_insert, main_args)
+    user_data = get_user_data(config_file, data_insert, main_args)
     run_args = {
         'count': count,
         'iam_role': iam_role,
@@ -322,11 +319,13 @@ def _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, 
     for i, instance in enumerate(instances):
         instances_tag_data['name'] = tmp_name
         if not main_args.spot_instance:
-            print('%s.%s.regulomedb.org' % (instance.id, domain))  # Instance:i-34edd56f
+            print('AWS EC2 Instance created')
+            print('Instance id: %s' % (instance.id))  # Instance:i-34edd56f
             instance.wait_until_exists()
             tag_ec2_instance(instance, instances_tag_data)
-            print('ssh ubuntu@%s.%s.regulolmedb.org' % (instances_tag_data['name'], domain))
-            print('https://%s.demo.regulomedb.org' % instances_tag_data['name'])
+            print('SSH Access: ssh ubuntu@%s.demo.regulomedb.org' % (instances_tag_data['name']))
+            print('Cloud Config Logs: ssh ubuntu@%s.demo.regulomedb.org \'tail -f /var/log/cloud-init-output.log\'' % (instances_tag_data['name']))
+            print('HTTP Access: https://%s.demo.regulomedb.org' % instances_tag_data['name'])
 
 
 def main():
@@ -403,23 +402,6 @@ def main():
 
 def parse_args():
 
-    def check_region_index(value):
-        lower_value = value.lower()
-        allowed_values = [
-            'true', 't',
-            'false', 'f'
-        ]
-        if value.lower() not in allowed_values:
-            raise argparse.ArgumentTypeError(
-                "Noncase sensitive argument '%s' is not in [%s]." % (
-                    str(value),
-                    ', '.join(allowed_values),
-                )
-            )
-        if lower_value[0] == 't':
-            return 'True'
-        return 'False'
-
     def check_volume_size(value):
         allowed_values = ['120', '200', '500']
         if not value.isdigit() or value not in allowed_values:
@@ -452,15 +434,10 @@ def parse_args():
     parser.add_argument('--instance-type', default='t2.medium',
                         help="AWS Instance type")
     parser.add_argument('--profile-name', default=None, help="AWS creds profile")
-    parser.add_argument('--redis-ip', default='localhost', help="Redis IP.")
-    parser.add_argument('--redis-port', default=6379, help="Redis Port.")
     parser.add_argument('--spot-instance', action='store_true', help="Launch as spot instance")
     parser.add_argument('--spot-price', default='0.70', help="Set price or keep default price of 0.70")
     parser.add_argument('--volume-size', default=120, type=check_volume_size,
                         help="Size of disk. Allowed values 120, 200, and 500")
-    parser.add_argument(
-        '--test', action='store_const', default='demo', const='test', dest='role',
-        help="Deploy to production AWS")
     parser.add_argument('--availability-zone', default='us-west-2a',
         help="Set EC2 availabilty zone")
     parser.add_argument('--git-repo', default='https://github.com/ENCODE-DCC/regulome-encoded.git',
@@ -468,7 +445,6 @@ def parse_args():
     
     args = parser.parse_args()
     args.role = 'candidate'
-    print(args.role)
     return args
 
 
