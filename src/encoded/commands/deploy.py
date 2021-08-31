@@ -221,8 +221,8 @@ def _get_bdm(main_args):
     ]
 
 
-def get_user_data(config_file, data_insert, main_args):
-    cmd_list = ['cat', 'cloud-config.yml']
+def get_user_data(commit, config_file, data_insert, main_args):
+    cmd_list = ['git', 'show', commit + config_file]
     config_template = subprocess.check_output(cmd_list).decode('utf-8')
     ssh_pub_key = read_ssh_key()
     if not ssh_pub_key:
@@ -301,7 +301,7 @@ def _get_run_args(main_args, instances_tag_data):
         'GIT_REPO': main_args.git_repo,
     }
     config_file = ':cloud-config.yml'
-    user_data = get_user_data(config_file, data_insert, main_args)
+    user_data = get_user_data(instances_tag_data['commit'], config_file, data_insert, main_args)
     run_args = {
         'count': count,
         'iam_role': iam_role,
