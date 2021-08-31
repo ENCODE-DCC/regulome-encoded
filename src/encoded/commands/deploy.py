@@ -321,10 +321,10 @@ def _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, 
         if not main_args.spot_instance:
             print('AWS EC2 Instance created')
             print('Instance id: %s' % (instance.id))  # Instance:i-34edd56f
-            instance.wait_until_exists()
+            instance.wait_until_running()
             tag_ec2_instance(instance, instances_tag_data)
-            print('SSH Access: ssh ubuntu@%s.demo.regulomedb.org' % (instances_tag_data['name']))
-            print('Cloud Config Logs: ssh ubuntu@%s.demo.regulomedb.org \'tail -f /var/log/cloud-init-output.log\'' % (instances_tag_data['name']))
+            print('SSH Access: ssh ubuntu@%s' % (instance.public_dns_name))
+            print('Cloud Config Logs: ssh ubuntu@%s \'tail -f /var/log/cloud-init-output.log\'' % (instance.public_dns_name))
             print('HTTP Access: https://%s.demo.regulomedb.org' % instances_tag_data['name'])
 
 
