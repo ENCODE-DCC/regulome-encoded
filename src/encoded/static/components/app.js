@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Auth0Lock from 'auth0-lock';
 import serialize from 'form-serialize';
 import ga from 'google-analytics';
 import { Provider } from 'react-redux';
