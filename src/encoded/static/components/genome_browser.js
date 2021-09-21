@@ -3,8 +3,56 @@ import PropTypes from 'prop-types';
 import _ from 'underscore';
 import { FetchedData, Param } from './fetched';
 import { BrowserFeat } from './browserfeat';
+import Tooltip from '../libs/ui/tooltip';
 
 const domainName = 'https://www.encodeproject.org';
+
+const colorChromatinState = {
+    'Active TSS': '#ff0000',
+    'Flanking TSS': '#ff4400',
+    'Flanking TSS upstream': '#ff4500',
+    'Flanking TSS downstream': '#ff4500',
+    'Strong transcription': '#008000',
+    'Weak transcription': '#006400',
+    'Genic enhancer 1': '#c4e105',
+    'Genic enhancer 2': '#c4e105',
+    'Active enhancer 1': '#ffc44d',
+    'Active enhancer 2': '#ffc44d',
+    'Weak enhancer': '#ffff00',
+    'ZNF genes & repeats': '#66cdaa',
+    Heterochromatin: '#8a91d0',
+    'Bivalent/Poised TSS': '#cd5c5c',
+    'Bivalent enhancer': '#bdb86b',
+    'Repressed PolyComb': '#808080, #8937df',
+    'Weak Repressed PolyComb': '#c0c0c0, #9750e3',
+    'Quiescent/Low': '#ffffff',
+};
+
+const colorCCREs = {
+    'Promoter-like': '#ff0000',
+    'Proximal enhancer-like': '#ffa700',
+    'Distal enhancer-like': '#ffcd00',
+    'DNase-H3K4me3': '#ffaaaa',
+    'CTCF-only': '#00b0f0',
+    'DNase-only': '#06da93',
+    'Low-DNase': '#ffffff',
+};
+
+const colorGenome = {
+    'Nucleobase A': '#0c7489',
+    'Nucleobase T': '#f9ce70',
+    'Nucleobase G': '#0fa3b1',
+    'Nucleobase C': '#c14953',
+    'GC-low': '#0c7489',
+    'GC-rich': '#f9ce70',
+};
+
+const colorGenes = {
+    Transcript: '#cfd7c7',
+    'Protein coding': '#575f5a',
+    'Non-protein coding': '#f9ce70',
+    UTR: '#c14953',
+};
 
 const AutocompleteBox = (props) => {
     const terms = props.auto['@graph']; // List of matching terms from server
@@ -110,6 +158,82 @@ AutocompleteBoxMenu.defaultProps = {
     postText: '',
 };
 
+const LegendLabel = () => (
+    <div className="legend-label">
+        <div className="legend-color-container">
+            <div className="legend-swatch" style={{ background: `${colorGenome['Nucleobase A']}` }} />
+            <div className="legend-swatch" style={{ background: `${colorGenome['Nucleobase T']}` }} />
+            <div className="legend-swatch" style={{ background: `${colorGenome['Nucleobase C']}` }} />
+            <div className="legend-swatch" style={{ background: `${colorGenome['Nucleobase G']}` }} />
+        </div>
+        <div className="legend-name">Legend</div>
+    </div>
+);
+
+/**
+ * Display a legend
+ */
+const GenomeLegend = props => (
+    <Tooltip
+        trigger={<LegendLabel />}
+        tooltipId="genome-legend"
+        css="legend-button"
+        size="large"
+        columnCount={props.colorBlock.length + 2}
+    >
+        <div className="legend-container">
+            <div className="legend-block">
+                <h5>Genome</h5>
+                {Object.keys(colorGenome).map(nucleobase => (
+                    <div className="legend-element" key={nucleobase}>
+                        <div className={`legend-swatch ${colorGenome[nucleobase] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorGenome[nucleobase]}` }} />
+                        <div className="legend-label">{nucleobase}</div>
+                    </div>
+                ))}
+            </div>
+            <div className="legend-block">
+                <h5>Genes</h5>
+                {Object.keys(colorGenes).map(gene => (
+                    <div className="legend-element" key={gene}>
+                        <div className={`legend-swatch ${colorGenes[gene] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorGenes[gene]}` }} />
+                        <div className="legend-label">{gene}</div>
+                    </div>
+                ))}
+            </div>
+            {(props.colorBlock.indexOf('ccres') > -1) ?
+                <div className="legend-block">
+                    <h5>CCREs</h5>
+                    {Object.keys(colorCCREs).map(ccre => (
+                        <div className="legend-element" key={ccre}>
+                            <div className={`legend-swatch ${colorCCREs[ccre] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorCCREs[ccre]}` }} />
+                            <div className="legend-label">{ccre}</div>
+                        </div>
+                    ))}
+                </div>
+            : null}
+            {(props.colorBlock.indexOf('chromatin') > -1) ?
+                <div className="legend-block">
+                    <h5>Chromatin</h5>
+                    {Object.keys(colorChromatinState).map(state => (
+                        <div className="legend-element" key={state}>
+                            {(colorChromatinState[state].indexOf(', ') === -1) ?
+                                <div className={`legend-swatch ${colorChromatinState[state] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorChromatinState[state]}` }} />
+                            :
+                                <div className={`legend-swatch ${colorChromatinState[state] === '#ffffff' ? 'with-border' : ''}`} style={{ backgroundImage: `-webkit-linear-gradient(45deg, ${colorChromatinState[state].split(', ')[0]} 50%, ${colorChromatinState[state].split(', ')[1]} 50%)` }} />
+                            }
+                            <div className="legend-label">{state}</div>
+                        </div>
+                    ))}
+                </div>
+            : null}
+        </div>
+    </Tooltip>
+);
+
+GenomeLegend.propTypes = {
+    colorBlock: PropTypes.array.isRequired,
+};
+
 
 // Files to be displayed for local version of browser
 const dummyFiles = [
@@ -160,6 +284,38 @@ function mapGenome(inputAssembly) {
     return genome;
 }
 
+/**
+ * Display a label for a file’s track.
+ */
+const TrackLabel = ({ file, assembly }) => (
+    <React.Fragment>
+        {(file.name) ?
+            <span>{file.name}</span>
+        : (file.file_format === 'variant' || file.file_format === 'vgenes-dir' || file.title === 'representative DNase hypersensitivity sites' || file.title === 'cCRE, all') ?
+            <span>{file.title}</span>
+        : (file.file_format === 'bigWig') ?
+            <span>
+                {file.target ? `${file.target} - ` : ''}
+                {file.assay_term_name} - {(file.biosample_ontology && file.biosample_ontology.term_name) ? file.biosample_ontology.term_name : ''}
+            </span>
+        : (file.file_format === 'vdna-dir') ?
+            <span>{assembly.split(' ')[0]}</span>
+        :
+            <span>
+                {file.target ? `${file.target} - ` : ''}
+                {file.assay_term_name} - {(file.biosample_ontology && file.biosample_ontology.term_name) ? file.biosample_ontology.term_name : ''}
+            </span>
+        }
+    </React.Fragment>
+);
+
+TrackLabel.propTypes = {
+    /** File object being displayed in the track */
+    file: PropTypes.object.isRequired,
+    /** File object being displayed in the track */
+    assembly: PropTypes.string.isRequired,
+};
+
 class GenomeBrowser extends React.Component {
     constructor(props, context) {
         super(props, context);
@@ -176,6 +332,7 @@ class GenomeBrowser extends React.Component {
             pinnedFiles: [],
             disableBrowserForIE: false,
             geneSearch: false,
+            colorBlock: this.props.selectedFilters.filter(f => f.indexOf('biosample') > -1).length > 0 ? ['chromatin'] : [],
         };
         this.setBrowserDefaults = this.setBrowserDefaults.bind(this);
         this.filesToTracks = this.filesToTracks.bind(this);
@@ -205,6 +362,11 @@ class GenomeBrowser extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.props.selectedFilters.filter(f => (f.indexOf('biosample') > -1)).length > 0) {
+            if (this.state.colorBlock.length === 0) {
+                this.setState({ colorBlock: ['chromatin'] });
+            }
+        }
         if (!(this.state.disableBrowserForIE)) {
             if (this.state.contig !== prevState.contig && this.state.visualizer) {
                 this.state.visualizer.setLocation({ contig: this.state.contig, x0: this.state.x0, x1: this.state.x1 });
@@ -228,6 +390,7 @@ class GenomeBrowser extends React.Component {
                 let domain = `${window.location.protocol}//${window.location.hostname}`;
                 if (domain.includes('localhost')) {
                     domain = domainName;
+                    files = [...this.state.pinnedFiles, ...dummyFiles];
                     newFiles = [...this.state.pinnedFiles, ...dummyFiles];
                 } else {
                     files = this.props.files;
@@ -257,6 +420,24 @@ class GenomeBrowser extends React.Component {
                 href: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19.vgenes-dir',
                 title: 'GENCODE V29',
             },
+            {
+                title: 'dbSNP (153)',
+                file_format: 'variant',
+                path: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19-dbSNP153.vvariants-dir',
+            },
+            // We are going to add in "representative DNase hypersensitivity sites" and "cCRE, all" tracks after update to GRCh38
+            // {
+            //     file_format: 'bigBed',
+            //     href: '/files/ENCFF088UEJ/@@download/ENCFF088UEJ.bigBed',
+            //     dataset: '/annotations/ENCSR169HLH/',
+            //     title: 'representative DNase hypersensitivity sites',
+            // },
+            // {
+            //     file_format: 'bigBed',
+            //     href: '/files/ENCFF389ZVZ/@@download/ENCFF389ZVZ.bigBed',
+            //     dataset: '/annotations/ENCSR439EAZ/',
+            //     title: 'cCRE, all',
+            // },
         ];
         this.setState({
             pinnedFiles,
@@ -305,35 +486,58 @@ class GenomeBrowser extends React.Component {
         const tracks = files.map((file) => {
             if (file.name) {
                 const trackObj = {};
-                trackObj.name = file.name;
+                trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
                 trackObj.type = 'signal';
                 trackObj.path = file.href;
                 trackObj.heightPx = 50;
                 return trackObj;
-            } else if (file.file_format === 'bigWig') {
+            }
+            if (file.file_format === 'bigWig') {
                 const trackObj = {};
-                trackObj.name = `${file.target ? `${file.target} ` : ''}${file.assay_term_name} - ${(file.biosample_ontology && file.biosample_ontology.term_name) ? file.biosample_ontology.term_name : ''}`;
+                trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
                 trackObj.type = 'signal';
                 trackObj.path = domain + file.href;
                 trackObj.heightPx = 50;
                 return trackObj;
-            } else if (file.file_format === 'vdna-dir') {
+            }
+            if (file.file_format === 'vdna-dir') {
                 const trackObj = {};
-                trackObj.name = this.props.assembly.split(' ')[0];
+                trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
                 trackObj.type = 'sequence';
                 trackObj.path = file.href;
                 trackObj.heightPx = 50;
                 return trackObj;
-            } else if (file.file_format === 'vgenes-dir') {
+            }
+            if (file.file_format === 'vgenes-dir') {
                 const trackObj = {};
-                trackObj.name = file.title;
+                trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
                 trackObj.type = 'annotation';
                 trackObj.path = file.href;
                 trackObj.heightPx = 120;
                 return trackObj;
             }
+            if (file.title === 'representative DNase hypersensitivity sites' || file.title === 'cCRE, all') {
+                const trackObj = {};
+                trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
+                trackObj.type = 'annotation';
+                trackObj.path = file.href;
+                trackObj.heightPx = file.title === 'representative DNase hypersensitivity sites' ? 50 : 30;
+                trackObj.expandable = false;
+                trackObj.displayLabels = false;
+                return trackObj;
+            }
+            if (file.file_format === 'variant') {
+                const trackObj = {};
+                trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
+                trackObj.type = 'variant';
+                trackObj.path = file.href || file.path; // some titles like dBSNP set path
+                trackObj.heightPx = 40;
+                trackObj.expandable = true;
+                trackObj.displayLabels = true;
+                return trackObj;
+            }
             const trackObj = {};
-            trackObj.name = `${file.target ? `${file.target} ` : ''}${file.assay_term_name} - ${(file.biosample_ontology && file.biosample_ontology.term_name) ? file.biosample_ontology.term_name : ''}`;
+            trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
             trackObj.type = 'annotation';
             trackObj.path = domain + file.href;
             // bigBed bedRNAElements, bigBed peptideMapping, bigBed bedExonScore, bed12, and bed9 have two tracks and need extra height
@@ -363,6 +567,7 @@ class GenomeBrowser extends React.Component {
         const highlightString = `${this.state.contig}:${highlightLocation}`;
         const visualizer = new this.GV.GenomeVisualizer({
             clampToTracks: true,
+            reorderTracks: true,
             removableTracks: false,
             highlightLocation: highlightString,
             originalChr: this.state.contig,
@@ -401,16 +606,9 @@ class GenomeBrowser extends React.Component {
 
     handleOnFocus() {
         this.setState({ showAutoSuggest: false });
-        console.log(this.props.assembly);
-        console.log(`${this.context.location_href.split('/experiments/')[0]}/suggest/?genome=${this.state.genome}&q=${this.state.searchTerm}`);
-
         const hrefForSuggestion = `https://encodeproject.org/suggest/?genome=${this.state.genome}&q=${this.state.searchTerm}`;
 
         getCoordinateData(hrefForSuggestion, this.context.fetch).then((response) => {
-            console.log('this is the response');
-            console.log(response);
-            console.log('href');
-            console.log(this.context.location_href);
             // Find the response line that matches the search
             const responseIndex = response['@graph'].findIndex(responseLine => responseLine.text === this.state.searchTerm);
 
@@ -424,7 +622,6 @@ class GenomeBrowser extends React.Component {
             const contig = `chr${annotation.chromosome}`;
             const xStart = +annotation.start - (annotationLength / 2);
             const xEnd = +annotation.end + (annotationLength / 2);
-            console.log(annotation);
             const printStatement = `Success: found gene location for ${this.state.searchTerm}`;
             console.log(printStatement);
 
@@ -471,6 +668,9 @@ class GenomeBrowser extends React.Component {
                                 <button className="submit-gene-search btn btn-info" onClick={this.handleOnFocus}>Submit</button>
                             </div>
                         : null}
+                        <div className="regulome-legend">
+                            <GenomeLegend colorBlock={this.state.colorBlock} />
+                        </div>
                         <button className="reset-browser-button" onClick={this.resetLocation}>
                             <i className="icon icon-undo" />
                             <span className="reset-title">Reset to query variant</span>
@@ -497,11 +697,13 @@ GenomeBrowser.propTypes = {
     expanded: PropTypes.bool.isRequired,
     assembly: PropTypes.string,
     coordinates: PropTypes.string.isRequired,
+    selectedFilters: PropTypes.array,
 };
 
 GenomeBrowser.defaultProps = {
     fixedHeight: false,
     assembly: '',
+    selectedFilters: [],
 };
 
 GenomeBrowser.contextTypes = {

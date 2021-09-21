@@ -12,20 +12,23 @@
 
 .valis-browser {
     width: 100%;
-    min-height: 400px;
-    margin-top: 40px;
+    min-height: 200px;
+    margin-top: 5px;
+
     button {
         svg {
             margin-left: 0 !important;
             margin-top: 0 !important;
         }
     }
-    div {
-        text-align: center;
-        margin-right: 0 !important;
-        &:empty {
-            width: 10px !important;
-            margin-right: 0 !important;
+}
+
+.valis-genome-visualizer {
+    .react-object-container {
+        div {
+            background-color: white !important;
+            color: #333;
+            font-family: Khula, sans-serif;
         }
     }
 }
@@ -34,7 +37,7 @@
     position: absolute;
     z-index: 9;
     line-height: 1;
-    left: 20px;
+    left: 10px;
     text-align: left;
     background-color: #f2f2f2;
     border: 1px solid #BFBFBF;
@@ -44,6 +47,7 @@
     font-size: 14px;
     border-radius: 4px;
     display: flex;
+    margin-top: 5px;
     .icon-undo {
         padding-right: 5px;
         flex: 0 1 20px;
@@ -68,22 +72,67 @@
     }
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .hpgv_ui-block {
     color: #364565;
     background-color: #f2f2f2;
     font-size: 16px;
     box-shadow: none;
-    border: 0;
-    border: 1px solid #BFBFBF;
+    font-family: 'Khula', sans-serif;
+    border: 1px solid #bfbfbf;
+
+    /* stylelint-disable-next-line selector-class-pattern */
     &.hpgv_track-header {
         font-size: 14px;
         line-height: 1.2;
+        padding: 7px 5px;
+        box-shadow: 0 0 12px inset rgba(0, 0, 0, 0.07);
     }
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .hpgv_panel {
     color: #333;
     font-size: 12px;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.hpgv_track-reorder-container {
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+a {
+    pointer-events: all;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.hpgv_track-reorder-button {
+    height: 8px;
+    opacity: 0.8;
+    pointer-events: all;
+    cursor: pointer;
+
+    svg {
+        display: none;
+    }
+
+    &.move-up {
+        background: linear-gradient(#a2a2a2, 30%, #f2f2f2);
+
+        &:hover {
+            background: linear-gradient(#f1c428, #fff0c1);
+        }
+    }
+
+    &.move-down {
+        background: linear-gradient(#f2f2f2, 70%, #a2a2a2);
+
+        &:hover {
+            background: linear-gradient(#fff0c1, #f1c428);
+        }
+    }
 }
 
 .hpgv_track-sequence {
@@ -107,7 +156,7 @@
 
     --coding-max-score: #575F5A;
     --non-coding-max-score: #575F5A;
-    
+
     // if we want to hide all of the annotations
     // color: rgba(0, 0, 0, 0);
 }
@@ -120,15 +169,21 @@
 .hpgv_track {
     background-color: #fff;
     border-bottom: 1px solid #d2d2d2;
+
     --loading-indicator: #8ea1bf;
     --cursor: #3645653b;
     --secondary-cursor: #3645653b;
 }
 
-// this is a hack-y way to make the labels on the browser longer
-// .hpgv_ui-block.hpgv_track-header {
-//     width: 400px !important;
-// }
+/* stylelint-disable-next-line selector-class-pattern */
+.hpgv_track-expander {
+    left: unset;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.hpgv_track-close-button {
+    display: none;
+}
 
 .hpgv {
     color: black;
@@ -204,7 +259,7 @@
             background: white;
             color: black;
         }
-        
+
     }
     .btn {
         margin-left: 10px;
@@ -284,6 +339,7 @@
 
 .tall-browser-container {
     min-height: 1200px;
+    position: relative;
 }
 
 .filter-browser-files, .browser-selections-container {
@@ -311,4 +367,82 @@
 
 .filter-browser-files {
     margin-bottom: 40px;
+}
+
+.legend-button {
+    margin: 10px auto 10px 2px;
+
+    .tooltip-container__trigger {
+        margin-left: auto;
+        margin-right: 0;
+    }
+}
+
+.legend-container {
+    text-align: left;
+
+    .legend-element {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 3px;
+    }
+
+    .legend-swatch {
+        flex: 0 1 20px;
+    }
+
+    .legend-label {
+        flex: 0 1 auto;
+    }
+
+    .legend-swatch {
+        height: 20px;
+        width: 20px;
+        margin-right: 5px;
+
+        &.with-border {
+            border: 1px solid #bbb;
+        }
+    }
+}
+
+.legend-label {
+    display: flex;
+
+    .legend-color-container {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: 3px;
+        height: 20px;
+        width: 20px;
+
+        .legend-swatch {
+            height: 10px;
+            width: 10px;
+        }
+    }
+
+    .legend-name {
+        padding: 0 5px;
+    }
+}
+
+#genome-legend {
+    .tooltip-inner {
+        max-width: 880px;
+    }
+
+    .legend-container {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 880px;
+    }
+
+    .legend-block {
+        flex: 0 1 206px;
+    }
+}
+
+.regulome-legend {
+    text-align: right;
 }
