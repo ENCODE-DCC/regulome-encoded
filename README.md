@@ -109,7 +109,7 @@ pyenv local 3.4.3
 
 ### **4. Run buildout:**
 
-- `pip3 install -U zc.buildout setuptools`
+- `pip3 install -U zc.buildout setuptools==45.0.0`
 - `pyenv rehash`
 - `buildout bootstrap`
 - `bin/buildout`
