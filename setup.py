@@ -23,7 +23,7 @@ requires = [
     'pyramid_tm',
     'python-magic',
     'pytz',
-    'setuptools',
+    'setuptools==45.0.0',
     'simplejson',
     'subprocess_middleware',
     'xlrd'
