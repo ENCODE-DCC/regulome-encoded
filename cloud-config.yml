@@ -62,9 +62,9 @@ bootcmd:
 - cloud-init-per once mkswap-swapfile mkswap /swapfile
 package_upgrade: true
 packages:
-- apache2-mpm-worker
+- apache2
 - awscli
-- bsdtar
+- libarchive-tools
 - build-essential
 - git
 - graphviz
@@ -86,10 +86,10 @@ packages:
 - ntp
 - pv
 - python2.7-dev
-- python3.4-dev
+- python3-dev
 - python3-pip
-- python-software-properties
-- python-virtualenv
+- software-properties-common
+- python3-virtualenv
 - ruby-dev
 - unattended-upgrades
 - update-notifier-common
