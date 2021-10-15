@@ -2,9 +2,10 @@
 ssh_authorized_keys:
   - %(LOCAL_SSH_KEY)s
 apt_sources:
-- source: "deb https://deb.nodesource.com/node_10.x trusty main"
+- source: "deb https://deb.nodesource.com/node_10.x focal main"
   key: |
     -----BEGIN PGP PUBLIC KEY BLOCK-----
+
     Version: GnuPG v1
     Comment: GPGTools - https://gpgtools.org
     mQINBFObJLYBEADkFW8HMjsoYRJQ4nCYC/6Eh0yLWHWfCh+/9ZSIj4w/pOe2V6V+
