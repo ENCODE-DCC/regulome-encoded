@@ -4,6 +4,7 @@
 """
 
 import pytest
+from ..regulome_search import get_coordinate
 
 pytestmark = [pytest.mark.indexing]
 
@@ -70,8 +71,7 @@ def test_regulome_summary(testapp, workbook, region_index):
     ('rs10905307\textra string', ('chr10', 5894499, 5894500), True),
 ])
 def test_get_coordinate(query_term, expected, valid):
-    from encoded.regulome_search import get_coordinate
-    if valid:
+    if valtest_genericsid:
         assert get_coordinate(query_term) == expected
     else:
         error_msg = 'Region "{}" is not recognizable.'.format(query_term)

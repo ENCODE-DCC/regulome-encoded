@@ -8,10 +8,6 @@ from pytest import fixture
 
 pytest_plugins = [
     'encoded.tests.datafixtures',
-    'snovault.tests.serverfixtures',
-    'snovault.tests.testappfixtures',
-    'snovault.tests.toolfixtures',
-    'snovault.tests.pyramidfixtures',
 ]
 
 
