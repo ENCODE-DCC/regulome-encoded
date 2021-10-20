@@ -4,7 +4,7 @@
 """
 
 import pytest
-from ..regulome_search import get_coordinate
+import encoded.regulome_search
 
 pytestmark = [pytest.mark.indexing]
 
@@ -64,17 +64,3 @@ def test_regulome_summary(testapp, workbook, region_index):
     assert res.json['notifications'] == expected_notes
 
 
-@pytest.mark.parametrize("query_term,expected,valid", [
-    ('chrx:5894499-5894500', ('chrX', 5894499, 5894500), True),
-    ('chr10:5894499-5894500extra string ', ('chr10', 5894499, 5894500), True),
-    ('chr10 5894499\t5894500\trs10905307', ('chr10', 5894499, 5894500), True),
-    ('rs10905307\textra string', ('chr10', 5894499, 5894500), True),
-])
-def test_get_coordinate(query_term, expected, valid):
-    if valtest_genericsid:
-        assert get_coordinate(query_term) == expected
-    else:
-        error_msg = 'Region "{}" is not recognizable.'.format(query_term)
-        with pytest.raises(ValueError) as excinfo:
-            get_coordinate(query_term)
-        assert str(excinfo.value) == error_msg
