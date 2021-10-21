@@ -3,9 +3,9 @@
 ## Setting Up Your Environment
 
 These are the primary software versions used in production, and you should be able to use them locally:
-- Python 3.4.3
+- Python 3.8.10
 - Node 10
-- Ubuntu 14.04
+- Ubuntu 20.04
 
 ### **0. Xcode for Mac OS build tools**  
 - Install [Xcode](https://developer.apple.com/xcode/) from the website or Mac App store because the local build will use some of Xcode's compilation tools.
@@ -59,13 +59,13 @@ pip3 install typing
 
 
 ### **3. Python**  
-Regulome requires a UNIX based system (Mac or Linux) and **Python 3.4.3** (but works with 3.5.x):
+Regulome requires a UNIX based system (Mac or Linux) and **Python 3.8.10**:
 
  - For local development on a Mac, follow the steps below.  For Linux use apt-get or yum as your Linux flavor demands.  You can consult cloud-config.yml for other steps.
 
 - _Note_: Production is currently using the versions above thus your primary development should always work on that version, and you should test that your code works on versions that will be used in production.
 
-- Linux: apt-get install python3.4-dev or equivalent
+- Linux: apt-get install python3.8-dev or equivalent
     
 **Mac OSX Python install instructions**  
 
@@ -79,12 +79,12 @@ The Python version management tool `pyenv` is very useful.
 **Install `pyenv` and set the default versions:**
 ```bash 
 brew install pyenv
-pyenv install 3.4.3
+pyenv install 3.8.10
 pyenv install 2.7.13
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
 echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
-echo 'eval "pyenv shell 2.7.13 3.4.3"' >> ~/.bash_profile
+echo 'eval "pyenv shell 2.7.13 3.8.10"' >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
@@ -104,7 +104,7 @@ source ~/.bash_profile
 
 **Set the correct Python for the current directory:**
 ```bash
-pyenv local 3.4.3
+pyenv local 3.8.10
 ```
 
 ### **4. Run buildout:**
@@ -241,12 +241,12 @@ To get Sublime to lint Python code using `pyenv` you must add the python version
 ```json
 {
     "user": {
-        "@python": 3.4,
+        "@python": 3.8,
         
         "paths": {
             "linux": [],
             "osx": [
-                "/Users/YOURUSERNAME/.pyenv/versions/3.4.3/bin/",
+                "/Users/YOURUSERNAME/.pyenv/versions/3.8.10/bin/",
                 "/Users/YOURUSERNAME/.pyenv/versions/2.7/bin/"
             ],
             "windows": []
@@ -254,7 +254,7 @@ To get Sublime to lint Python code using `pyenv` you must add the python version
         "python_paths": {
             "linux": [],
             "osx": [
-                "/Users/YOURUSERNAME/.pyenv/versions/3.4.3/bin/python3",
+                "/Users/YOURUSERNAME/.pyenv/versions/3.8.10/bin/python3",
                 "/Users/YOURUSERNAME/.pyenv/versions/2.7/bin/python"
             ],
             "windows": []
@@ -279,7 +279,7 @@ Go to the Visual Studio Code marketplace and install these extensions:
 
 **Versions**
 
-- `python3 --version` _returns `Python 3.4.3` (or variant like  3.4.x)_
+- `python3 --version` _returns `Python 3.8.10` (or variant like  3.8.x)_
 - `node --version`  _returns `v10.15.0`  (or variant like  v6.x.y)_
 
 

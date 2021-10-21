@@ -426,11 +426,7 @@ def parse_args():
     parser.add_argument('-n', '--name', type=hostname, help="Instance name")
     parser.add_argument('--dry-run-aws', action='store_true', help="Abort before ec2 requests.")
     parser.add_argument('--check-price', action='store_true', help="Check price on spot instances")
-    parser.add_argument('--image-id', default='ami-2133bc59',
-                        help=(
-                            "https://us-west-2.console.aws.amazon.com/ec2/home"
-                            "?region=us-west-2#LaunchInstanceWizard:ami=ami-2133bc59"
-                        ))
+    parser.add_argument('--image-id', default='ami-0964546d3da97e3ab', help="Default machine is ubuntu 20.04")
     parser.add_argument('--instance-type', default='t2.medium',
                         help="AWS Instance type")
     parser.add_argument('--profile-name', default=None, help="AWS creds profile")
