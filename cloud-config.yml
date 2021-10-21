@@ -3,47 +3,7 @@ ssh_authorized_keys:
   - %(LOCAL_SSH_KEY)s
 bootcmd:
 - set -ex
-- cloud-init-per once fallocate-swapfile fallocate -l 4G /swapfile
-- cloud-init-per once chmod-swapfile chmod 600 /swapfile
-- cloud-init-per once mkswap-swapfile mkswap /swapfile
-- cloud-init-per once curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-package_upgrade: true
-packages:
-- apache2
-- awscli
-- libarchive-tools
-- build-essential
-- git
-- graphviz
-- libapache2-mod-wsgi-py3
-- libcurl4-gnutls-dev
-- libevent-dev
-- libfreetype6-dev
-- libjpeg-dev
-- liblcms2-dev
-- libmagic-dev
-- libpq-dev
-- libssl-dev
-- libtiff5-dev
-- libwebp-dev
-- libxml2-dev
-- libxslt1-dev
-- lzop
-- nodejs
-- npm
-- ntp
-- pv
-- python2.7-dev
-- python3-dev
-- python3-pip
-- software-properties-common
-- python3-virtualenv
-- ruby-dev
-- unattended-upgrades
-- update-notifier-common
-- zlib1g-dev
-- libffi-dev
-- bsd-mailx
+- echo "Booting"
 power_state:
   mode: reboot
 output:
@@ -51,7 +11,6 @@ output:
 runcmd:
 - sudo -u ubuntu mv /home/ubuntu/.ssh/authorized_keys /home/ubuntu/.ssh/authorized_keys2
 - sudo -u ubuntu aws s3 cp --region=us-west-2 %(S3_AUTH_KEYS)s /home/ubuntu/.ssh/authorized_keys
-  # Manually install java
 - sudo -u ubuntu mkdir /home/ubuntu/.aws
 - sudo -u ubuntu aws s3 cp --region=us-west-2 s3://regulome-conf-prod/.aws-regulome/credentials ~ubuntu/.aws
 - sudo -u ubuntu rm -r /home/ubuntu/.aws
