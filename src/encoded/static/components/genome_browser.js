@@ -563,7 +563,7 @@ class GenomeBrowser extends React.Component {
     }
 
     drawTracks(container) {
-        const highlightLocation = Math.floor((this.state.x1 + this.state.x0) / 2);
+        const highlightLocation = Math.floor((this.state.x1 + this.state.x0) / 2) + 1; // browser uses base 1
         const highlightString = `${this.state.contig}:${highlightLocation}`;
         const visualizer = new this.GV.GenomeVisualizer({
             clampToTracks: true,
