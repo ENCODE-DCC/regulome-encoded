@@ -4,15 +4,6 @@ import PropTypes from 'prop-types';
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 const Footer = ({ version }, reactContext) => {
-    const session = reactContext.session;
-    const disabled = !session;
-    let userActionRender;
-
-    if (!(session && session['auth.userid'])) {
-        userActionRender = <a href="#" data-trigger="login" disabled={disabled}>Submitter sign-in</a>;
-    } else {
-        userActionRender = <a href="#" data-trigger="logout">Submitter sign out</a>;
-    }
     return (
         <footer id="page-footer">
             <div className="container">

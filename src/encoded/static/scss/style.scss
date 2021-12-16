@@ -25,7 +25,6 @@ $brand-info: #4F689E;
 
 // Reset
 @import "bootstrap/normalize";
-//@import "bootstrap/print";
 
 // Core CSS
 @import "bootstrap/scaffolding";
@@ -38,39 +37,24 @@ $brand-info: #4F689E;
 
 // Components
 @import "bootstrap/component-animations";
-//@import "bootstrap/glyphicons";
 @import "bootstrap/dropdowns";
 @import "bootstrap/button-groups";
 @import "bootstrap/input-groups";
 @import "bootstrap/navs";
 @import "bootstrap/navbar";
-@import "bootstrap/breadcrumbs";
-//@import "bootstrap/pagination";
-//@import "bootstrap/pager";
 @import "bootstrap/labels";
-@import "bootstrap/badges";
-//@import "bootstrap/jumbotron";
 @import "bootstrap/thumbnails";
 @import "bootstrap/alerts";
-//@import "bootstrap/progress-bars";
-//@import "bootstrap/media";
-//@import "bootstrap/list-group";
 @import "bootstrap/panels";
-@import "bootstrap/wells";
 @import "bootstrap/close";
 
 // Components w/ JavaScript
 @import "bootstrap/modals";
 @import "bootstrap/tooltip";
-//@import "bootstrap/popovers";
-//@import "bootstrap/carousel";
 
 // ENCODED
 // Font Awesome
 @import "fontawesome/font-awesome";
-
-// react-forms bootstrap theme
-@import "react-forms/index";
 
 // ENCODE Project styles & mixins
 @import "encoded/mixins-custom";
@@ -79,47 +63,13 @@ $brand-info: #4F689E;
 @import "encoded/math";
 @import "encoded/layout";
 @import "encoded/bootstrap-lib";
-@import "encoded/modules/breadcrumbs",
-        "encoded/modules/pager",
-        "encoded/modules/forms",
-        "encoded/modules/cart",
-        "encoded/modules/key-value-display",
-        "encoded/modules/lightbox",
-        "encoded/modules/facet",
-        "encoded/modules/matrix",
-        "encoded/modules/auditmatrix",
-        "encoded/modules/collection",
-        "encoded/modules/lists",
-        "encoded/modules/loading-spinner",
-        "encoded/modules/modals",
-        "encoded/modules/navbar",
-        "encoded/modules/panels",
-        "encoded/modules/signin-box",
-        "encoded/modules/tables",
-        "encoded/modules/search",
-        "encoded/modules/summary",
-        "encoded/modules/genome_browser",
-        "encoded/modules/characterizations",
-        "encoded/modules/audits",
-        "encoded/modules/genetic_modification",
-        "encoded/modules/award",
-        "encoded/modules/pipeline",
-        "encoded/modules/quality_metric",
-        "encoded/modules/report",
-        "encoded/modules/schema",
-        "encoded/modules/tooltip",
-        "encoded/modules/badge",
-        "encoded/modules/status",
-        "encoded/modules/news",
-        "encoded/modules/visualize",
-        "encoded/modules/home",
-        "encoded/modules/blocks",
-        "encoded/modules/layout-editor",
-        "encoded/modules/schema",
-        "encoded/modules/regulome_motifs",
-        "encoded/modules/regulome_details",
-        "encoded/modules/regulome_summary",
-        "encoded/modules/regulome_search";
+@import "encoded/modules/regulome_search";
+@import "encoded/modules/regulome_details";
+@import "encoded/modules/regulome_summary";
+@import "encoded/modules/regulome_motifs";
+@import "encoded/modules/regulome_help";
+@import "encoded/modules/navbar";
+@import "encoded/modules/genome_browser";
 @import "encoded/state";
 @import "encoded/theme";
 

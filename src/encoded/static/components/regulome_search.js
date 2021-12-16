@@ -1007,7 +1007,7 @@ const chunkingDataset = (requests, startIdxWrapper, endIdxWrapper, datasets, bas
     return promiseList;
 };
 
-class RegulomeSearch extends React.Component {
+export class RegulomeSearch extends React.Component {
     constructor() {
         super();
 
@@ -1600,7 +1600,6 @@ class RegulomeSearch extends React.Component {
                         <div className="link-to-legacy-regulome">Looking for the old version? Click <a href="http://legacy.regulomedb.org">here.</a></div>
                     </React.Fragment>
                 }
-
             </div>
         );
     }

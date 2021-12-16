@@ -1,7 +1,6 @@
 import _ from 'underscore';
 import ga from 'google-analytics';
 import Registry from '../libs/registry';
-import DataColors from './datacolors';
 
 // Item pages
 export const contentViews = new Registry();
@@ -279,38 +278,3 @@ export const dbxrefPrefixMap = {
 export const sanitizedString = inputString => inputString.toLowerCase()
     .replace(/ /g, '') // remove spaces (to allow multiple word searches)
     .replace(/[*?()+[\]\\/]/g, ''); // remove certain special characters (these cause console errors)
-
-
-// Keep lists of currently known project and biosample_type. As new project and biosample_type
-// enter the system, these lists must be updated. Used mostly to keep chart and matrix colors
-// consistent.
-export const projectList = [
-    'ENCODE',
-    'Roadmap',
-    'modENCODE',
-    'modERN',
-    'GGR',
-];
-
-export const biosampleTypeList = [
-    'cell line',
-    'tissue',
-    'primary cell',
-    'whole organisms',
-    'in vitro differentiated cells',
-    'single cell',
-    'cell-free sample',
-    'organoid',
-];
-
-export const replicateTypeList = [
-    'unreplicated',
-    'isogenic',
-    'anisogenic',
-];
-
-
-// Make `project` and `biosample_type` color mappings for downstream modules to use.
-export const projectColors = new DataColors(projectList);
-export const biosampleTypeColors = new DataColors(biosampleTypeList);
-export const replicateTypeColors = new DataColors(replicateTypeList);

@@ -222,31 +222,3 @@ FetchedData.contextTypes = {
 FetchedData.propTypes = {
     children: PropTypes.node.isRequired,
 };
-
-
-const Items = (props) => {
-    const { Component, data } = props;
-    const items = data ? data['@graph'] : [];
-    return <Component {...props} items={items} total={data.total} />;
-};
-
-Items.propTypes = {
-    Component: PropTypes.func.isRequired,
-    data: PropTypes.object,
-};
-
-Items.defaultProps = {
-    data: undefined,
-};
-
-
-export const FetchedItems = props => (
-    <FetchedData>
-        <Param name="data" url={props.url} />
-        <Items {...props} />
-    </FetchedData>
-);
-
-FetchedItems.propTypes = {
-    url: PropTypes.string.isRequired,
-};

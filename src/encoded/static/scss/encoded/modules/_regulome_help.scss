@@ -1,0 +1,6 @@
+.richtextblock {
+    padding: 0 10%;
+    @media screen and (max-width: $screen-md-min) {
+        padding: 0 10px;
+    }
+}
