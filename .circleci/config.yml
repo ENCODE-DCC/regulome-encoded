@@ -43,6 +43,7 @@ commands:
               nodejs \
               openjdk-8-jdk \
               postgresql-9.3 \
+              postgresql-contrib-9.3 \
               python3.4-dev \
               python3-pip
             sed -i '1s;^;alias python=python3\n;' $BASH_ENV
