@@ -4,7 +4,7 @@
   "description": "domready held back.",
   "scripts": {
     "test": "jest --silent",
-    "circleci-test": "jest --ci --runInBand --reporters=default --reporters=jest-junit",
+    "circleci-test": "jest --runInBand",
     "build": "gulp build",
     "dev": "gulp dev"
   },
