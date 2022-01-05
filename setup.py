@@ -41,6 +41,7 @@ tests_require = [
     'pytest-mock',
     'pytest-splinter',
     'pytest_exact_fixtures',
+    'snovault',
 ]
 
 setup(
