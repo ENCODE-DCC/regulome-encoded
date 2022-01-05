@@ -54,7 +54,7 @@ commands:
       - run:
           name: Run buildout
           command: |
-            sudo python3.4 -m pip install -U zc.buildout setuptools==51.3.3
+            sudo python3.4 -m pip install -U zc.buildout setuptools
             buildout bootstrap
             bin/buildout
 
