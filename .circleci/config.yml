@@ -52,7 +52,7 @@ commands:
       - run:
           name: Run buildout
           command: |
-            sudo python3 -m pip install -U zc.buildout setuptools
+            sudo python3 -m pip install -U zc.buildout setuptools<52
             buildout bootstrap
             bin/buildout
 
