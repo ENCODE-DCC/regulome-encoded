@@ -37,7 +37,7 @@ commands:
             sudo apt-key add /etc/apt/pg_gpg_key
             echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" | sudo tee -a /etc/apt/sources.list
             sudo apt-get update && sudo apt-get install -y \
-              bsdtar \
+              libarchive-tools \
               graphviz \
               nodejs \
               openjdk-8-jdk \
