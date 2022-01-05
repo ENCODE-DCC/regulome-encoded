@@ -41,7 +41,6 @@ tests_require = [
     'pytest-mock',
     'pytest-splinter',
     'pytest_exact_fixtures',
-    "selenium<4",
 ]
 
 setup(
