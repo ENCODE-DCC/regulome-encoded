@@ -134,7 +134,7 @@ jobs:
       - checkout
       - run:
           name: Install Javascript packages and build
-          command: make javascript
+          command: npm ci && npm run build
       - run:
           name: npm tests
           command: |
