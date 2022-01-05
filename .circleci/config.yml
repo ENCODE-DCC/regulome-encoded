@@ -1,0 +1,155 @@
+version: 2.1
+
+orbs:
+  browser-tools: circleci/browser-tools@1.2.3
+
+executors:
+  regulome-encoded-executor:
+    docker:
+      - image: cimg/base:2021.12
+    working_directory: ~/regulome-encoded
+    environment:
+      - BASH_ENV: /home/circleci/.bashrc
+      - ES_JAVA_OPTS: -Xms2g -Xmx3g
+      - JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
+  node:
+    docker:
+      - image: cimg/node:10.24.1
+    working_directory: ~/regulome-encoded
+
+commands:
+  install-app:
+    description: Install dependencies and application based on regulome-encoded-executor
+    steps:
+      - checkout
+      - run:
+          name: Add apt repositories
+          command: |
+            sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates software-properties-common
+            curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+            sudo add-apt-repository -y ppa:openjdk-r/ppa
+            sudo apt-get update
+      - run:
+          name: Install dependencies
+          command: |
+            sudo wget -qO - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/pg_gpg_key
+            sudo apt-key add /etc/apt/pg_gpg_key
+            echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" | sudo tee -a /etc/apt/sources.list
+            sudo apt-get update && sudo apt-get install -y \
+              bsdtar \
+              graphviz \
+              nodejs \
+              openjdk-8-jdk \
+              postgresql-9.3
+              python3.4-dev \
+              python3-pip
+            sed -i '1s;^;alias python=python3\n;' $BASH_ENV
+            wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.16.deb
+            sudo dpkg -i elasticsearch-5.6.16.deb
+            sudo apt-get install -f
+            sudo chown -R circleci /etc/elasticsearch
+            sed -i '1s;^;export PATH=/usr/share/elasticsearch/bin:/usr/lib/postgresql/9.3/bin:$PATH\n;' $BASH_ENV
+      - run:
+          name: Run buildout
+          command: |
+            sudo pip3 install -U zc.buildout setuptools
+            buildout bootstrap
+            bin/buildout
+
+jobs:
+  bdd:
+    executor: regulome-encoded-executor
+    resource_class: xlarge
+    steps:
+      - install-app
+      # orb dependencies
+      - run: sudo apt-get update -y && sudo apt-get install -y libgbm1
+      # Use install tasks from the orb
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
+      - run:
+          name: Run bdd tests
+          command: |
+            mkdir -p test-results/pytest-bdd
+            bin/test --exitfirst -s -vv -m "bdd" --tb=short \
+              --splinter-implicit-wait=2 \
+              --splinter-webdriver=chrome \
+              --splinter-socket-timeout=300 \
+              --splinter-session-scoped-browser=false \
+              --splinter-headless=true \
+              --chrome-options "--disable-gpu --no-sandbox --disable-dev-shm-usage --disable-extensions --whitelisted-ips --window-size=1920,1080" \
+              --junitxml=test-results/pytest-bdd/junit.xml
+          no_output_timeout: 30m
+      - store_test_results:
+          path: test-results
+  indexing:
+    executor: regulome-encoded-executor
+    resource_class: large
+    steps:
+      - install-app
+      - run:
+          name: indexing tests
+          command: |
+            mkdir -p test-results/pytest-indexing
+            pytest --exitfirst -s -vv \
+              -m "indexing" \
+              --junitxml=test-results/pytest-indexing/junit.xml
+          no_output_timeout: 5m
+      - store_test_results:
+          path: test-results
+  indexer:
+    executor: regulome-encoded-executor
+    resource_class: large
+    steps:
+      - install-app
+      - run:
+          name: indexer tests
+          command: |
+            mkdir -p test-results/pytest-indexer
+            bin/test --exitfirst -s -vv \
+              -m "indexer" \
+              --junitxml=test-results/pytest-indexer/junit.xml
+          no_output_timeout: 5m
+      - store_test_results:
+          path: test-results
+  not-bdd-non-indexing:
+    executor: regulome-encoded-executor
+    resource_class: medium+
+    steps:
+      - install-app
+      - run:
+          name: non bdd non indexing tests
+          command: |
+            mkdir -p test-results/pytest-not-bdd-not-indexer
+            bin/test --exitfirst -s -vv \
+              -m "not bdd and not indexing and not indexer" \
+              --junitxml=test-results/pytest-not-bdd-not-indexer/junit.xml
+      - store_test_results:
+          path: test-results
+  npm:
+    executor: node
+    resource_class: medium+
+    steps:
+      - checkout
+      - run:
+          name: Install Javascript packages and build
+          command: make javascript
+      - run:
+          name: npm tests
+          command: |
+            mkdir -p test-results/npm
+            npm run circleci-test
+            cp junit.xml test-results/npm
+      - store_test_results:
+          path: test-results
+
+workflows:
+  version: 2
+  regulome-encoded-tests:
+    jobs:
+      - bdd
+      - indexing
+      - indexer
+      - not-bdd-non-indexing
+      - npm
