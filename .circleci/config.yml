@@ -6,7 +6,7 @@ orbs:
 executors:
   regulome-encoded-executor:
     docker:
-      - image: cimg/base:2021.12-18.04
+      - image: cimg/base:2021.12
     working_directory: ~/regulome-encoded
     environment:
       - BASH_ENV: /home/circleci/.bashrc
@@ -29,7 +29,6 @@ commands:
             curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
             curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
             sudo add-apt-repository -y ppa:openjdk-r/ppa
-            sudo add-apt-repository -y ppa:deadsnakes/ppa
             sudo apt-get update
       - run:
           name: Install dependencies
@@ -43,9 +42,7 @@ commands:
               nodejs \
               openjdk-8-jdk \
               postgresql-9.3 \
-              python3.4-dev \
-              python3-pip
-            sed -i '1s;^;alias python=python3.4\n;' $BASH_ENV
+            sed -i '1s;^;alias python=python3\n;' $BASH_ENV
             wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.16.deb
             sudo dpkg -i elasticsearch-5.6.16.deb
             sudo apt-get install -f
@@ -54,7 +51,7 @@ commands:
       - run:
           name: Run buildout
           command: |
-            sudo python3.4 -m pip install -U zc.buildout setuptools
+            sudo pip3 install -U zc.buildout setuptools
             buildout bootstrap
             bin/buildout
 
