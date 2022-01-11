@@ -15,7 +15,7 @@ describe('Server rendering', () => {
     const home = {
         '@id': '/',
         '@type': ['Portal'],
-        portal_title: 'Regulome',
+        portal_title: 'RegulomeDB',
         title: 'Home',
     };
 
