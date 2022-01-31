@@ -13,7 +13,6 @@ import * as globals from './globals';
 import Navigation from './navigation';
 import Footer from './footer';
 import Home from './home';
-import newsHead from './page';
 
 
 const portal = {
@@ -172,7 +171,7 @@ class App extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePopState = this.handlePopState.bind(this);
         this.confirmNavigation = this.confirmNavigation.bind(this);
-        this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
+        // this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
         this.navigate = this.navigate.bind(this);
         this.receiveContextResponse = this.receiveContextResponse.bind(this);
         this.listActionsFor = this.listActionsFor.bind(this);
@@ -208,7 +207,7 @@ class App extends React.Component {
             session_cookie: sessionCookie,
             session,
         });
-        
+
         // Set browser features in the <html> CSS class.
         BrowserFeat.setHtmlFeatClass();
 
@@ -363,7 +362,7 @@ class App extends React.Component {
             return response.json();
         }).then((sessionProperties) => {
             this.setState({ session_properties: sessionProperties });
-            return this.initializeCartFromSessionProperties(sessionProperties);
+            // return this.initializeCartFromSessionProperties(sessionProperties);
         });
     }
 
@@ -403,71 +402,74 @@ class App extends React.Component {
 
     // Retrieve the cart contents for the current logged-in user and add them to the in-memory cart.
     initializeCartFromSessionProperties(sessionProperties) {
+        console.log(sessionProperties);
+        console.log(this);
+        return null;
         // Retrieve the logged-in user's cart.
-        cartCacheSaved({}, this.cartStore.dispatch);
-        const savedCartObjPromise = this.fetch('/carts/@@get-cart', {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-            },
-        }).then((response) => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error(response);
-        }).then((userCart) => {
-            const userCartAtId = userCart['@graph'].length > 0 ? userCart['@graph'][0] : null;
-            if (userCartAtId) {
-                return this.fetch(`${userCartAtId}?datastore=database`, {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                    },
-                });
-            }
-            return Promise.resolve(null);
-        }).then((response) => {
-            if (!response) {
-                // No saved cart for the user.
-                return null;
-            }
-            if (response.ok) {
-                // Decode the user's saved cart.
-                return response.json();
-            }
-            throw new Error(response);
-        });
-
-        // Once we have the user's first saved cart object, see if we need to merge it into the
-        // user's in-memory cart, and whether we then have to save the updated cart.
-        savedCartObjPromise.then((savedCartObj) => {
-            const savedCart = (savedCartObj && savedCartObj.elements) || [];
-            let memoryCart = this.cartStore.getState().cart;
-            if (memoryCart.length !== savedCart.length || !_.isEqual(memoryCart, savedCart)) {
-                // We now know the saved and in-memory carts are different somehow. If the user has
-                // a saved cart, merge its contents with the in-memory cart.
-                if (savedCartObj) {
-                    cartAddElements(savedCart, this.cartStore.dispatch);
-                    cartCacheSaved(savedCartObj, this.cartStore.dispatch);
-                }
-
-                // Save the (updated if it got merged with the saved cart) in-memory cart if it had
-                // anything in it on page load.
-                if (memoryCart.length > 0) {
-                    memoryCart = this.cartStore.getState().cart;
-                    return cartSave(memoryCart, savedCartObj, sessionProperties.user, this.fetch).then((updatedSavedCartObj) => {
-                        cartCacheSaved(updatedSavedCartObj, this.cartStore.dispatch);
-                    });
-                }
-            } else if (savedCartObj) {
-                // User has a cart object from before. Cache the user's cart so we know what cart
-                // to save to.
-                cartCacheSaved(savedCartObj, this.cartStore.dispatch);
-            }
-            return savedCartObj;
-        }).catch((err) => {
-            globals.parseAndLogError('Load savedCartObj on page load', err);
-        });
+        // cartCacheSaved({}, this.cartStore.dispatch);
+        // const savedCartObjPromise = this.fetch('/carts/@@get-cart', {
+        //     method: 'GET',
+        //     headers: {
+        //         Accept: 'application/json',
+        //     },
+        // }).then((response) => {
+        //     if (response.ok) {
+        //         return response.json();
+        //     }
+        //     throw new Error(response);
+        // }).then((userCart) => {
+        //     const userCartAtId = userCart['@graph'].length > 0 ? userCart['@graph'][0] : null;
+        //     if (userCartAtId) {
+        //         return this.fetch(`${userCartAtId}?datastore=database`, {
+        //             method: 'GET',
+        //             headers: {
+        //                 Accept: 'application/json',
+        //             },
+        //         });
+        //     }
+        //     return Promise.resolve(null);
+        // }).then((response) => {
+        //     if (!response) {
+        //         // No saved cart for the user.
+        //         return null;
+        //     }
+        //     if (response.ok) {
+        //         // Decode the user's saved cart.
+        //         return response.json();
+        //     }
+        //     throw new Error(response);
+        // });
+        //
+        // // Once we have the user's first saved cart object, see if we need to merge it into the
+        // // user's in-memory cart, and whether we then have to save the updated cart.
+        // savedCartObjPromise.then((savedCartObj) => {
+        //     const savedCart = (savedCartObj && savedCartObj.elements) || [];
+        //     let memoryCart = this.cartStore.getState().cart;
+        //     if (memoryCart.length !== savedCart.length || !_.isEqual(memoryCart, savedCart)) {
+        //         // We now know the saved and in-memory carts are different somehow. If the user has
+        //         // a saved cart, merge its contents with the in-memory cart.
+        //         if (savedCartObj) {
+        //             cartAddElements(savedCart, this.cartStore.dispatch);
+        //             cartCacheSaved(savedCartObj, this.cartStore.dispatch);
+        //         }
+        //
+        //         // Save the (updated if it got merged with the saved cart) in-memory cart if it had
+        //         // anything in it on page load.
+        //         if (memoryCart.length > 0) {
+        //             memoryCart = this.cartStore.getState().cart;
+        //             return cartSave(memoryCart, savedCartObj, sessionProperties.user, this.fetch).then((updatedSavedCartObj) => {
+        //                 cartCacheSaved(updatedSavedCartObj, this.cartStore.dispatch);
+        //             });
+        //         }
+        //     } else if (savedCartObj) {
+        //         // User has a cart object from before. Cache the user's cart so we know what cart
+        //         // to save to.
+        //         cartCacheSaved(savedCartObj, this.cartStore.dispatch);
+        //     }
+        //     return savedCartObj;
+        // }).catch((err) => {
+        //     globals.parseAndLogError('Load savedCartObj on page load', err);
+        // });
     }
 
     /* eslint no-script-url: 0 */ // We're not *using* a javascript: link -- just checking them.
@@ -632,16 +634,16 @@ class App extends React.Component {
         return true;
     }
 
-    handleBeforeUnload() {
-        // Determine if the cart has items in it but no saved cart object exists.
-        const cartState = this.cartStore.getState();
-        const unsavedCart = cartState.cart.length > 0 && Object.keys(cartState.savedCartObj).length === 0;
-
-        if (this.state.unsavedChanges.length || unsavedCart) {
-            return 'You have unsaved changes.';
-        }
-        return undefined;
-    }
+    // handleBeforeUnload() {
+    //     // Determine if the cart has items in it but no saved cart object exists.
+    //     const cartState = this.cartStore.getState();
+    //     const unsavedCart = cartState.cart.length > 0 && Object.keys(cartState.savedCartObj).length === 0;
+    //
+    //     if (this.state.unsavedChanges.length || unsavedCart) {
+    //         return 'You have unsaved changes.';
+    //     }
+    //     return undefined;
+    // }
 
     navigate(href, options) {
         const mutatableOptions = options || {};
@@ -897,7 +899,6 @@ class App extends React.Component {
                     <link rel="shortcut icon" href="/static/img/favicon.ico?7" type="image/x-icon" />
                     {this.props.inline ? <script data-prop-name="inline" dangerouslySetInnerHTML={{ __html: this.props.inline }} /> : null}
                     {this.props.styles ? <link rel="stylesheet" href={this.props.styles} /> : null}
-                    {newsHead(this.props, `${hrefUrl.protocol}//${hrefUrl.host}`)}
                     <link href="https://fonts.googleapis.com/css?family=Khula:300,400,600,700,800" rel="stylesheet" />
                 </head>
                 <body onClick={this.handleClick} onSubmit={this.handleSubmit}>
