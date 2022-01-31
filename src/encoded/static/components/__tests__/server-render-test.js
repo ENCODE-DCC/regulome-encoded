@@ -11,12 +11,12 @@ jest.mock('../browserfeat');
 
 describe('Server rendering', () => {
     let document;
-    const homeUrl = 'http://localhost/';
+    const homeUrl = 'http://localhost/regulome-search';
     const home = {
-        '@id': '/',
-        '@type': ['Portal'],
-        portal_title: 'RegulomeDB',
-        title: 'Home',
+        '@id': '/regulome-search',
+        '@type': ['/regulome-search'],
+        portal_title: 'RegulomeDB Search – RegulomeDB',
+        title: 'RegulomeDB Search',
     };
 
     beforeEach(() => {
