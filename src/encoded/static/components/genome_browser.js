@@ -319,7 +319,10 @@ TrackLabel.propTypes = {
 class GenomeBrowser extends React.Component {
     constructor(props, context) {
         super(props, context);
-
+        const highlightLocationStart = +props.coordinates.split(':')[1].split('-')[0];
+        const highlightLocationEnd = +props.coordinates.split(':')[1].split('-')[1];
+        const x0 = highlightLocationStart - 2000;
+        const x1 = highlightLocationEnd + 2000;
         this.state = {
             trackList: [],
             visualizer: null,
@@ -327,8 +330,10 @@ class GenomeBrowser extends React.Component {
             searchTerm: '',
             genome: '',
             contig: props.coordinates.split(':')[0],
-            x0: +props.coordinates.split(':')[1].split('-')[0] - 5000,
-            x1: +props.coordinates.split(':')[1].split('-')[1] + 5000,
+            x0: x0,
+            x1: x1,
+            highlightLocationStart: highlightLocationStart,
+            highlightLocationEnd: highlightLocationEnd,
             pinnedFiles: [],
             disableBrowserForIE: false,
             geneSearch: false,
@@ -563,8 +568,9 @@ class GenomeBrowser extends React.Component {
     }
 
     drawTracks(container) {
-        const highlightLocation = Math.floor((this.state.x1 + this.state.x0) / 2) + 1; // browser uses base 1
-        const highlightString = `${this.state.contig}:${highlightLocation}`;
+        const highlightLocationStart = this.state.highlightLocationStart;
+        const highlightLocationEnd = this.state.highlightLocationEnd;
+        const highlightString = `${this.state.contig}:${highlightLocationStart}-${highlightLocationEnd}`;
         const visualizer = new this.GV.GenomeVisualizer({
             clampToTracks: true,
             reorderTracks: true,
