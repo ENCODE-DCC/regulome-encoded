@@ -321,8 +321,8 @@ class GenomeBrowser extends React.Component {
         super(props, context);
         const highlightLocationStart = +props.coordinates.split(':')[1].split('-')[0];
         const highlightLocationEnd = +props.coordinates.split(':')[1].split('-')[1];
-        const x0 = highlightLocationStart - 2000;
-        const x1 = highlightLocationEnd + 2000;
+        const x0 = highlightLocationStart - 5000;
+        const x1 = highlightLocationEnd + 5000;
         this.state = {
             trackList: [],
             visualizer: null,
