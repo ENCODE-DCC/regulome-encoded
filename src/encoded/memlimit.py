@@ -11,6 +11,8 @@ class Generator2:
         for item in self.__iterable:
             yield item
 
+
+
     def close(self):
         try:
             if hasattr(self.__iterable, 'close'):
