@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 // The farthest left column is an index (no important nucleotide information)
 // The next three columns describe the frequency of occurrence of each nucleotide
 // Columns correspond from left to right to nucleotides A, C, G, and T
-function convertTextToObj(str) {
+export function convertPwmTextToObj(str) {
     // Split the file by row and create a new object
     // The new object has an element corresponding to each row and each element is an array of the entries in that row, split by tab (the PWM file is tab-delineated)
     const cells = str.split('\n').map(el => el.split(/\s+/));
@@ -21,6 +21,39 @@ function convertTextToObj(str) {
         }
     });
     // We will use "obj" to create the logos because it has all the important nucleotide frequency information from the PWM file
+    return obj;
+}
+
+// The format of .jaspar files is approximately an inverted structure as .pwm files
+// We ascertain the length (n) of the first row of nucleotide data, and generate an empty array of arrays where each array is 4 elements long (one element for each nucleotide) and there are n rows, then we populate the arrays with data
+export function convertJasparTextToObj(str) {
+    const cells = str.split('\n').map(el => el.split(/\s+/));
+    let obj = [];
+    const nucleotides = ['A', 'C', 'G', 'T'];
+    for (let idx = 0; idx < cells.length; idx += 1) {
+        const cell = cells[idx];
+        // Finding first row of nuceotide information
+        if (nucleotides.includes(cell[0][0])) {
+            obj = new Array(cell.length - 3);
+            for (let i = 0; i < obj.length; i += 1) {
+                obj[i] = new Array(4).fill(0);
+            }
+            break;
+        }
+    }
+    // Populating the arrays with the retrieved data
+    cells.forEach((cell) => {
+        if (nucleotides.includes(cell[0][0])) {
+            let rIdx = 0;
+            const nIdx = nucleotides.indexOf(cell[0][0]);
+            cell.forEach((c, cIdx) => {
+                if (c !== ']' && c !== '[' && cIdx > 0) {
+                    obj[rIdx][nIdx] = +c;
+                    rIdx += 1;
+                }
+            });
+        }
+    });
     return obj;
 }
 
@@ -46,6 +79,7 @@ export class MotifElement extends React.Component {
     constructor() {
         super();
 
+        this.mounted = false;
         this.generatePWMLink = this.generatePWMLink.bind(this);
         this.addMotifElement = this.addMotifElement.bind(this);
     }
@@ -56,19 +90,22 @@ export class MotifElement extends React.Component {
             // this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
             this.sequenceLogos = require('d3-sequence-logo');
             const pwmLink = this.generatePWMLink();
+            this.mounted = true;
 
             getMotifData(pwmLink, this.context.fetch).then((response) => {
-                this.addMotifElement(response);
+                this.addMotifElement(response, pwmLink.includes('.pwm') ? 'pwm' : 'jaspar');
             });
         });
     }
 
     // Redraw charts when window changes
     componentDidUpdate() {
-        const pwmLink = this.generatePWMLink();
-        getMotifData(pwmLink, this.context.fetch).then((response) => {
-            this.addMotifElement(response);
-        });
+        if (this.mounted) {
+            const pwmLink = this.generatePWMLink();
+            getMotifData(pwmLink, this.context.fetch).then((response) => {
+                this.addMotifElement(response, pwmLink.includes('.pwm') ? 'pwm' : 'jaspar');
+            });
+        }
     }
 
     // Generate PWM link from url and document
@@ -77,9 +114,14 @@ export class MotifElement extends React.Component {
         return `${element.pwm}${element.href}`;
     }
 
-    addMotifElement(response) {
+    addMotifElement(response, fileType) {
         // Convert PWM text data to object
-        const PWM = convertTextToObj(response);
+        let PWM;
+        if (fileType === 'pwm') {
+            PWM = convertPwmTextToObj(response);
+        } else {
+            PWM = convertJasparTextToObj(response);
+        }
 
         // Determine padding required for alignment of logos
         const alignmentCoordinate = +this.props.coordinates.split(':')[1].split('-')[0];
@@ -197,7 +239,6 @@ MotifElement.contextTypes = {
 
 export const Motifs = (props) => {
     const results = props.context['@graph'];
-    const urlBase = props.urlBase;
     const limit = +props.limit;
     const classList = props.classList;
 
@@ -207,7 +248,7 @@ export const Motifs = (props) => {
     // Find all pwms that have both matching document and matching target(s)
     // Group pwms based on these two properties
     // Result is object with keys that are "[document link]#[target list linked by '-'s]"
-    const groupedList = _.groupBy(pwmLinkListFull, link => `${link.documents[0]['@id']}#${link.targets.join('-')}`);
+    const groupedList = _.groupBy(pwmLinkListFull, link => `${link.documents[0]['@id']}#${link.targets.sort().join('-')}`);
 
     // Flatten group to create an array of pwms
     // Properties that are identical across the group (for instance: pwm document, strand, and targets) are collapsed
@@ -265,7 +306,6 @@ export const Motifs = (props) => {
                                 <MotifElement
                                     key={d.pwm}
                                     element={d}
-                                    urlBase={urlBase}
                                     shortened={limit > 0}
                                     coordinates={props.context.query_coordinates[0]}
                                     alignedStartCoordinate={alignedStartCoordinate}
@@ -281,7 +321,6 @@ export const Motifs = (props) => {
 
 Motifs.propTypes = {
     context: PropTypes.object.isRequired,
-    urlBase: PropTypes.string.isRequired,
     limit: PropTypes.number.isRequired,
     classList: PropTypes.string,
 };
