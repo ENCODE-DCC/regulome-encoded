@@ -78,10 +78,6 @@ const dataColumnsQTL = {
     method: {
         title: 'Method',
     },
-    peak: {
-        title: 'QTL location',
-        getValue: item => `${item.chrom}:${item.start}..${item.end}`,
-    },
     biosample_term_name: {
         title: 'Biosample',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
@@ -538,6 +534,65 @@ ResultsTable.propTypes = {
 ResultsTable.defaultProps = {
     dataFilter: '',
     shortened: false,
+};
+
+const BasicTable = (props) => {
+    const headers = props.headers ? props.headers : Object.keys(props.data[0]);
+    // props.data.forEach((d) => {
+    //     headers.forEach((h) => {
+    //         if (d[h] && d[h].indexOf('http') > -1) {
+    //             console.log(d[h]);
+    //             console.log(d[h].split('/'));
+    //             console.log(d[h].split('/').slice(-2, -1));
+    //         }
+    //     });
+    // });
+    return (
+        <div className="basic-table">
+            {props.title ?
+                <div className="table-title">{props.title}</div>
+            : null}
+            <table>
+                {props.headerTitles ?
+                    <thead>
+                        {props.headerTitles.map(h =>
+                            <th>{h}</th>
+                        )}
+                    </thead>
+                : null}
+                {props.data.map(d =>
+                    <tr>
+                        {headers.map(h =>
+                            <React.Fragment>
+                                {(d[h] && d[h].indexOf('http') === -1 && h.indexOf('.') === -1 && d[h].length > 0) ?
+                                    <td>{d[h]}</td>
+                                : (h.indexOf('.') > -1) ?
+                                    <td>{d[h.split('.')[0]][h.split('.')[1]]}</td>
+                                : (d[h].indexOf('http') > -1) ?
+                                    <td><a href={d[h]}>{d[h].split('/').slice(-2, -1)}</a></td>
+                                :
+                                    <td>N/A</td>
+                                }
+                            </React.Fragment>
+                        )}
+                    </tr>
+                )}
+            </table>
+        </div>
+    );
+};
+
+BasicTable.propTypes = {
+    data: PropTypes.array.isRequired,
+    title: PropTypes.string,
+    headers: PropTypes.array,
+    headerTitles: PropTypes.array,
+};
+
+BasicTable.defaultProps = {
+    title: '',
+    headers: null,
+    headerTitles: null,
 };
 
 class FacetButton extends React.Component {
@@ -1325,6 +1380,21 @@ class RegulomeSearch extends React.Component {
             });
         }
 
+        const snpsTable = [];
+        if (hitSnps && Object.keys(hitSnps)[0]) {
+            console.log(hitSnps);
+            const snp = Object.keys(hitSnps)[0];
+            sortedPopulations[snp].forEach(population =>
+                snpsTable.push({
+                    population,
+                    T: hitSnps[snp][population].split(', ')[0],
+                    C: hitSnps[snp][population].split(', ')[1],
+                })
+            );
+        }
+        const QTLcolumns = ['method', 'biosample_ontology.term_name', 'targets', 'dataset', 'file'];
+        const QTLcolumnTitles = ['Method', 'Biosample', 'Targets', 'Dataset', 'File'];
+
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
                 { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total !== 0) ?
@@ -1346,50 +1416,21 @@ class RegulomeSearch extends React.Component {
                         </div>
                         <React.Fragment>
                             <div className="search-information">
-                                {(context.query_coordinates) ?
-                                    <div className="notification-line">
-                                        <div className="notification-label">Searched coordinates</div>
-                                        <div className="notification">{context.query_coordinates[0]}</div>
-                                    </div>
-                                : null}
-                                {allData && allData.length > 0 ?
-                                    <div className="notification-line">
-                                        <div className="notification-label">Peaks</div>
-                                        <div className="notification">{allData.length - chromatinData.length} peaks</div>
-                                    </div>
-                                : null}
-                                {(context.regulome_score) ?
-                                    <React.Fragment>
-                                        <div className="notification-line">
-                                            <div className="notification-label">Rank</div>
-                                            <div className="notification">{context.regulome_score.ranking}</div>
-                                        </div>
-                                        <div className="notification-line">
-                                            <div className="notification-label">Score</div>
-                                            <div className="notification">{context.regulome_score.probability}</div>
-                                        </div>
-                                    </React.Fragment>
-                                : null}
                                 {Object.keys(hitSnps).map(rsid =>
-                                    <div className="notification-line" key={rsid}>
-                                        <div className="notification-label">{rsid}</div>
-                                        <div className="notification">
-                                            <div>
-                                                {sortedPopulations[rsid].slice(0, 3).map(
-                                                    population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
-                                                )}
-                                            </div>
-                                            {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
-                                                <div>
-                                                    {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
-                                                        population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
-                                                    )}
-                                                </div>
-                                            : null}
-                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'fewer' : 'more'}</button> : null}
-                                        </div>
+                                    <div>
+                                        <div className="rsid-title">{rsid}</div>
+                                        <div>{context.query_coordinates[0]}</div>
                                     </div>
                                 )}
+                                <div className="small-break" />
+                                <div>Rank: {context.regulome_score.ranking}</div>
+                                <div>Score: {context.regulome_score.probability}</div>
+                                <div className="table-wrapper">
+                                    <BasicTable data={snpsTable} title="Population prevalence" />
+                                    {QTLData.length > 0 ?
+                                        <BasicTable data={QTLData} title="QTL data" headers={QTLcolumns} headerTitles={QTLcolumnTitles} />
+                                    : null}
+                                </div>
                             </div>
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
@@ -1475,22 +1516,6 @@ class RegulomeSearch extends React.Component {
                                         </React.Fragment>
                                     : null}
                                 </button>
-                                <button
-                                    className={`thumbnail ${thumbnail === 'qtl' ? 'active' : ''}`}
-                                    onClick={() => this.chooseThumbnail('qtl')}
-                                >
-                                    <h4>QTL data</h4>
-                                    {(thumbnail === null) ?
-                                        <React.Fragment>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
-                                                <div>
-                                                    (<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})
-                                                </div>
-                                            </div>
-                                            <ResultsTable data={QTLData} displayTitle={''} dataFilter={'qtl'} errorMessage={'No result table is available for this SNP.'} shortened />
-                                        </React.Fragment>
-                                    : null}
-                                </button>
                                 {(thumbnail) ?
                                     <button
                                         className="thumbnail expand-thumbnail"
@@ -1562,8 +1587,6 @@ class RegulomeSearch extends React.Component {
                                                 </React.Fragment>
                                             }
                                         </React.Fragment>
-                                    : (thumbnail === 'qtl') ?
-                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
                                     : (thumbnail === 'chromatin') ?
                                         <React.Fragment>
                                             {chromatinData.length > 0 ?

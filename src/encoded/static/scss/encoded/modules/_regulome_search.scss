@@ -3,6 +3,34 @@ body {
     background: #fff;
 }
 
+.table-wrapper {
+    display: flex;
+    justify-content: center;
+    // .basic-table {
+    //     flex: 0 0 50%;
+    // }
+}
+
+.rsid-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.small-break {
+    height: 10px;
+}
+
+.basic-table {
+    margin: 20px 5px;
+    table {
+        margin: auto;
+    }
+    td, th {
+        border: 1px solid #d2d2d2;
+    }
+}
+
 .lead-logo {
     a {
         position: relative;
@@ -575,7 +603,7 @@ table {
             padding-top: 20px;
         }
     }
-    
+
     .facet-term {
         &.assay_term_name {
             border-left: 5px solid #75BBA7;
@@ -708,7 +736,7 @@ table {
 
 .search-information {
     text-align: center;
-    padding-bottom: 40px;
+    // padding-bottom: 40px;
     p {
         margin-bottom: 5px;
     }

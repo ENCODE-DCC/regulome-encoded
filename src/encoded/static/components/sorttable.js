@@ -68,6 +68,8 @@ import { Panel, PanelHeading } from '../libs/bootstrap/panel';
 export const SortTablePanel = (props) => {
     const { title, header, noDefaultClasses } = props;
 
+    console.log(noDefaultClasses);
+
     return (
         <Panel addClasses={`table-file + ${noDefaultClasses ? '' : ' table-panel'}`} noDefaultClasses={noDefaultClasses}>
             {title ?
