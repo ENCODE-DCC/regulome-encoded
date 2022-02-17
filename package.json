@@ -85,7 +85,7 @@
     "scriptjs": "^2.5.7",
     "source-map-support": "^0.4.11",
     "subprocess-middleware": "^0.1.0",
-    "underscore": "^1.8.3",
+    "underscore": "^1.12.1",
     "whatwg-fetch": "git+https://github.com/ENCODE-DCC/fetch.git"
   }
 }
