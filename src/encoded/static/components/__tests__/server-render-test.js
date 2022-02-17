@@ -11,37 +11,21 @@ jest.mock('../browserfeat');
 
 describe('Server rendering', () => {
     let document;
-    const homeUrl = 'http://localhost/';
+    const homeUrl = 'http://localhost/regulome-search';
     const home = {
-        '@id': '/',
-        '@type': ['Portal'],
-        portal_title: 'RegulomeDB',
-        title: 'Home',
+        '@id': '/regulome-search',
+        '@type': ['regulome-search'],
+        portal_title: 'RegulomeDB Search – RegulomeDB',
+        title: 'RegulomeDB Search',
+        query_coordinates: [],
+        total: 0,
+        variants: [],
+        notifications: {
+            Failed: 'Received 0 region queries. Exact one region or one variant can be processed by regulome-search',
+        },
     };
 
     beforeEach(() => {
-        // Mock the node fetch() call within App.fetch().
-        global.fetch = jest.fn().mockImplementation(() => (
-            new Promise((resolve) => {
-                resolve({
-                    ok: true,
-                    headers: {
-                        get: () => null,
-                    },
-                    json: () => (
-                        ({
-                            '@type': [
-                                'JSONSchemas',
-                            ],
-                            AntibodyLot: 'Antibody lot',
-                            CpgCorrelationQualityMetric: 'CpG correlation quality metric',
-                            PublicationData: 'Publication data',
-                        })
-                    ),
-                });
-            })
-        ));
-
         const serverApp = <App context={home} href={homeUrl} styles="/static/build/style.css" />;
         const markup = `<!DOCTYPE html>\n${ReactDOMServer.renderToString(serverApp)}`;
         const parser = new DOMParser();

@@ -185,7 +185,6 @@ export class MotifElement extends React.Component {
 
 MotifElement.propTypes = {
     element: PropTypes.object.isRequired,
-    urlBase: PropTypes.string.isRequired,
     shortened: PropTypes.bool.isRequired,
     coordinates: PropTypes.string.isRequired,
     alignedStartCoordinate: PropTypes.number.isRequired,

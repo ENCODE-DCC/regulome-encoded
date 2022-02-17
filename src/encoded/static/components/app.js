@@ -2,18 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import serialize from 'form-serialize';
 import ga from 'google-analytics';
-import { Provider } from 'react-redux';
 import _ from 'underscore';
 import url from 'url';
 import jsonScriptEscape from '../libs/jsonScriptEscape';
 import origin from '../libs/origin';
-import initializeCart, { cartAddElements, cartCacheSaved, cartSave } from './cart';
 import { BrowserFeat } from './browserfeat';
 import * as globals from './globals';
 import Navigation from './navigation';
 import Footer from './footer';
-import Home from './home';
-import newsHead from './page';
 
 
 const portal = {
@@ -155,12 +151,6 @@ class App extends React.Component {
             promisePending: false,
         };
 
-        this.cartStore = initializeCart();
-
-        this.triggers = {
-            profile: 'triggerProfile'
-        };
-
         // Bind this to non-React methods.
         this.fetch = this.fetch.bind(this);
         this.fetchSessionProperties = this.fetchSessionProperties.bind(this);
@@ -172,7 +162,6 @@ class App extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePopState = this.handlePopState.bind(this);
         this.confirmNavigation = this.confirmNavigation.bind(this);
-        this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
         this.navigate = this.navigate.bind(this);
         this.receiveContextResponse = this.receiveContextResponse.bind(this);
         this.listActionsFor = this.listActionsFor.bind(this);
@@ -208,19 +197,9 @@ class App extends React.Component {
             session_cookie: sessionCookie,
             session,
         });
-        
+
         // Set browser features in the <html> CSS class.
         BrowserFeat.setHtmlFeatClass();
-
-        // Make a URL for the logo.
-        const hrefInfo = url.parse(this.state.href);
-        const logoHrefInfo = {
-            hostname: hrefInfo.hostname,
-            port: hrefInfo.port,
-            protocol: hrefInfo.protocol,
-            pathname: '/static/img/RegulomeLogoFinal.gif',
-        };
-        const logoUrl = url.format(logoHrefInfo);
 
         // Initialize browesr history mechanism
         if (this.constructor.historyEnabled()) {
@@ -261,7 +240,6 @@ class App extends React.Component {
         } else {
             window.onhashchange = this.onHashChange;
         }
-        window.onbeforeunload = this.handleBeforeUnload;
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -363,7 +341,6 @@ class App extends React.Component {
             return response.json();
         }).then((sessionProperties) => {
             this.setState({ session_properties: sessionProperties });
-            return this.initializeCartFromSessionProperties(sessionProperties);
         });
     }
 
@@ -398,75 +375,6 @@ class App extends React.Component {
             exDescription: `${mutatableUri}@${line},${column}: ${msg}`,
             exFatal: true,
             location: window.location.href,
-        });
-    }
-
-    // Retrieve the cart contents for the current logged-in user and add them to the in-memory cart.
-    initializeCartFromSessionProperties(sessionProperties) {
-        // Retrieve the logged-in user's cart.
-        cartCacheSaved({}, this.cartStore.dispatch);
-        const savedCartObjPromise = this.fetch('/carts/@@get-cart', {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-            },
-        }).then((response) => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error(response);
-        }).then((userCart) => {
-            const userCartAtId = userCart['@graph'].length > 0 ? userCart['@graph'][0] : null;
-            if (userCartAtId) {
-                return this.fetch(`${userCartAtId}?datastore=database`, {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                    },
-                });
-            }
-            return Promise.resolve(null);
-        }).then((response) => {
-            if (!response) {
-                // No saved cart for the user.
-                return null;
-            }
-            if (response.ok) {
-                // Decode the user's saved cart.
-                return response.json();
-            }
-            throw new Error(response);
-        });
-
-        // Once we have the user's first saved cart object, see if we need to merge it into the
-        // user's in-memory cart, and whether we then have to save the updated cart.
-        savedCartObjPromise.then((savedCartObj) => {
-            const savedCart = (savedCartObj && savedCartObj.elements) || [];
-            let memoryCart = this.cartStore.getState().cart;
-            if (memoryCart.length !== savedCart.length || !_.isEqual(memoryCart, savedCart)) {
-                // We now know the saved and in-memory carts are different somehow. If the user has
-                // a saved cart, merge its contents with the in-memory cart.
-                if (savedCartObj) {
-                    cartAddElements(savedCart, this.cartStore.dispatch);
-                    cartCacheSaved(savedCartObj, this.cartStore.dispatch);
-                }
-
-                // Save the (updated if it got merged with the saved cart) in-memory cart if it had
-                // anything in it on page load.
-                if (memoryCart.length > 0) {
-                    memoryCart = this.cartStore.getState().cart;
-                    return cartSave(memoryCart, savedCartObj, sessionProperties.user, this.fetch).then((updatedSavedCartObj) => {
-                        cartCacheSaved(updatedSavedCartObj, this.cartStore.dispatch);
-                    });
-                }
-            } else if (savedCartObj) {
-                // User has a cart object from before. Cache the user's cart so we know what cart
-                // to save to.
-                cartCacheSaved(savedCartObj, this.cartStore.dispatch);
-            }
-            return savedCartObj;
-        }).catch((err) => {
-            globals.parseAndLogError('Load savedCartObj on page load', err);
         });
     }
 
@@ -567,7 +475,6 @@ class App extends React.Component {
         }
 
         const options = {};
-        const actionUrl = url.parse(url.resolve(this.state.href, target.action));
         let search = serialize(target);
 
         if (target.getAttribute('data-removeempty')) {
@@ -630,17 +537,6 @@ class App extends React.Component {
             return res;
         }
         return true;
-    }
-
-    handleBeforeUnload() {
-        // Determine if the cart has items in it but no saved cart object exists.
-        const cartState = this.cartStore.getState();
-        const unsavedCart = cartState.cart.length > 0 && Object.keys(cartState.savedCartObj).length === 0;
-
-        if (this.state.unsavedChanges.length || unsavedCart) {
-            return 'You have unsaved changes.';
-        }
-        return undefined;
     }
 
     navigate(href, options) {
@@ -837,20 +733,14 @@ class App extends React.Component {
         // Switching between collections may leave component in place
         const key = context && context['@id'] && context['@id'].split('?')[0];
         const currentAction = this.currentAction();
-        const isHomePage = context.default_page && context.default_page.name === 'homepage' && (!hrefUrl.hash || hrefUrl.hash === '#logged-out');
-        if (isHomePage) {
+        const isHomePage = null;
+        if (!currentAction && context.default_page) {
             context = context.default_page;
-            content = <Home context={context} />;
-            containerClass = 'container-homepage';
-        } else {
-            if (!currentAction && context.default_page) {
-                context = context.default_page;
-            }
-            if (context) {
-                const ContentView = globals.contentViews.lookup(context, currentAction);
-                content = <ContentView context={context} />;
-                containerClass = 'container';
-            }
+        }
+        if (context) {
+            const ContentView = globals.contentViews.lookup(context, currentAction);
+            content = <ContentView context={context} />;
+            containerClass = 'container';
         }
         const errors = this.state.errors.map(i => <div key={i} className="alert alert-error" />);
 
@@ -897,7 +787,6 @@ class App extends React.Component {
                     <link rel="shortcut icon" href="/static/img/favicon.ico?7" type="image/x-icon" />
                     {this.props.inline ? <script data-prop-name="inline" dangerouslySetInnerHTML={{ __html: this.props.inline }} /> : null}
                     {this.props.styles ? <link rel="stylesheet" href={this.props.styles} /> : null}
-                    {newsHead(this.props, `${hrefUrl.protocol}//${hrefUrl.host}`)}
                     <link href="https://fonts.googleapis.com/css?family=Khula:300,400,600,700,800" rel="stylesheet" />
                 </head>
                 <body onClick={this.handleClick} onSubmit={this.handleSubmit}>
@@ -916,16 +805,12 @@ class App extends React.Component {
                                 </div>
                             </div>
                             <div id="layout">
-                                <Provider store={this.cartStore}>
-                                    <div>
-                                        <Navigation isHomePage={isHomePage} />
-                                        <div id="content" className={containerClass} key={key}>
-                                            {content}
-                                        </div>
-                                        {errors}
-                                        <div id="layout-footer" />
-                                    </div>
-                                </Provider>
+                                <Navigation isHomePage={isHomePage} />
+                                <div id="content" className={containerClass} key={key}>
+                                    {content}
+                                </div>
+                                {errors}
+                                <div id="layout-footer" />
                             </div>
                             <Footer version={this.props.context.app_version} />
                         </div>

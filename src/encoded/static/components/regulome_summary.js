@@ -93,7 +93,7 @@ const RegulomeSummary = (props) => {
                     </div>
                 )}
                 <div>
-                    <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-tsv">Download BED</a>
+                    <a className="btn btn-info btn-sm" href={`${context['@id']}&format=bed`} data-bypass data-test="download-bed">Download BED</a>
                     <a className="btn btn-info btn-sm" href={`${context['@id']}&format=tsv`} data-bypass data-test="download-tsv">Download TSV</a>
                 </div>
             </div>
@@ -124,5 +124,7 @@ RegulomeSummary.contextTypes = {
     location_href: PropTypes.string,
     navigate: PropTypes.func,
 };
+
+export default RegulomeSummary;
 
 globals.contentViews.register(RegulomeSummary, 'regulome-summary');
