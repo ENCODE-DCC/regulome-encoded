@@ -1,5 +1,4 @@
 FROM ubuntu:20.04
-#FROM node:12-bullseye-slim
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -22,8 +21,8 @@ RUN apt-get -y install liblcms2-utils
 RUN apt-get -y install webp
 RUN apt-get -y install nodejs
 RUN apt-get -y install npm 
-
 RUN pip3 install -U zc.buildout setuptools==43
+
 WORKDIR /app
 COPY . .
 RUN buildout bootstrap
