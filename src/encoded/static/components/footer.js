@@ -24,7 +24,7 @@ const Footer = ({ version }, reactContext) => {
                         <div className="col-sm-6 col-sm-pull-6">
                             <ul className="footer-logos">
                                 <li><a href="/regulome-search"><img src="/static/img/RegulomeLogoFinal_mixedcolors.png" alt="Regulome" id="encode-logo" height="35px" width="120px" /></a></li>
-                                <li><a href="http://www.stanford.edu"><img src="/static/img/su-logo-white-2x.png" alt="Stanford University" id="su-logo" width="105px" height="49px" /></a></li>
+                                <li><a href="https://www.stanford.edu"><img src="/static/img/su-logo-white-2x.png" alt="Stanford University" id="su-logo" width="105px" height="49px" /></a></li>
                                 <li><a href="https://umich.edu/"><img src="/static/img/umich-logo-blue.svg" alt="University of Michigan" id="umich-logo" width="75px" height="81px" /></a></li>
                                 <li><a href="https://creativecommons.org/licenses/by/4.0/"><img src="/static/img/creative-commons-logo.png" alt="Creative Commons" id="cc-logo" /></a></li>
                             </ul>
