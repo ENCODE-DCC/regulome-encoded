@@ -330,10 +330,10 @@ class GenomeBrowser extends React.Component {
             searchTerm: '',
             genome: '',
             contig: props.coordinates.split(':')[0],
-            x0: x0,
-            x1: x1,
-            highlightLocationStart: highlightLocationStart,
-            highlightLocationEnd: highlightLocationEnd,
+            x0,
+            x1,
+            highlightLocationStart,
+            highlightLocationEnd,
             pinnedFiles: [],
             disableBrowserForIE: false,
             geneSearch: false,
@@ -519,6 +519,7 @@ class GenomeBrowser extends React.Component {
                 trackObj.type = 'annotation';
                 trackObj.path = file.href;
                 trackObj.heightPx = 120;
+                trackObj.displayLabels = true;
                 return trackObj;
             }
             if (file.title === 'representative DNase hypersensitivity sites' || file.title === 'cCRE, all') {
