@@ -1,6 +1,6 @@
 # Regulome DB
 
-## Setting Up Your Environment
+## Setting up your local environment
 
 These are the primary software versions used in production, and you should be able to use them locally:
 - Python 3.8.10
@@ -137,6 +137,22 @@ pyenv local 3.8.10
 ### **6. :tada: Check out the app! :tada:**
 - Browse to the interface at http://localhost:8000/.
 
+## Running app using docker
+
+### **1. Buiding image using docker**  
+
+- Make sure you have docker (<https://docs.docker.com/get-docker/>) and docker compose (<https://docs.docker.com/compose/install/>) installed. Build the image regulome:
+  - `docker build . -t regulome`
+
+### **2. running the app using docker or docker compose**  
+
+- You can use docker to run regulome:
+  - `docker run -d -p 6543:6543 regulome`
+
+- You can also use docker compose to run regulome:
+  - `docker-compose up`
+
+- The app will be running at <http://localhost:6543>.
 
 ## Running tests
 
