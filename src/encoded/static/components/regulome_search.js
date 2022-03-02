@@ -1275,7 +1275,6 @@ export class RegulomeSearch extends React.Component {
 
     render() {
         const context = this.props.context;
-        const urlBase = this.context.location_href.split('/regulome-search')[0];
         const coordinates = context.query_coordinates[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
@@ -1376,13 +1375,13 @@ export class RegulomeSearch extends React.Component {
                                         <div className="notification">
                                             <div>
                                                 {sortedPopulations[rsid].slice(0, 3).map(
-                                                    population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                    population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
                                                 )}
                                             </div>
                                             {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
                                                 <div>
                                                     {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
-                                                        population => <div>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                        population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
                                                     )}
                                                 </div>
                                             : null}
@@ -1471,7 +1470,7 @@ export class RegulomeSearch extends React.Component {
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />Click to see PWM and Footprint data.</div>
-                                            <Motifs {...this.props} urlBase={urlBase} limit={4} />
+                                            <Motifs {...this.props} limit={4} />
                                         </React.Fragment>
                                     : null}
                                 </button>
@@ -1505,7 +1504,7 @@ export class RegulomeSearch extends React.Component {
                                     {(thumbnail === 'motifs') ?
                                         <React.Fragment>
                                             <h4>Motifs</h4>
-                                            <Motifs {...this.props} urlBase={urlBase} limit={0} classList={'padded'} />
+                                            <Motifs {...this.props} limit={0} classList={'padded'} />
                                         </React.Fragment>
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
