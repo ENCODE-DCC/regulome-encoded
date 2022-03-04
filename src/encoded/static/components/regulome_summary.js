@@ -53,15 +53,11 @@ const snpsColumns = {
     },
 };
 
-export const SNPSummary = (props) => {
-    console.log(props);
-    // const snps = props.variants;
-    return (
-        <SortTablePanel title="Summary of SNP analysis">
-            <SortTable list={props.snps} columns={snpsColumns} />
-        </SortTablePanel>
-    );
-};
+export const SNPSummary = props => (
+    <SortTablePanel title="Summary of SNP analysis">
+        <SortTable list={props.snps} columns={snpsColumns} />
+    </SortTablePanel>
+);
 
 SNPSummary.propTypes = {
     snps: PropTypes.array.isRequired,
@@ -72,8 +68,6 @@ const RegulomeSummary = (props) => {
     const variants = context.variants || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
-
-    console.log(props);
 
     return (
         <React.Fragment>
