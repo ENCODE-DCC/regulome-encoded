@@ -340,8 +340,6 @@ class AdvSearch extends React.Component {
                                 </div>
 
                                 <input type="submit" value="Search" className="btn btn-sm btn-info" onClick={this.handleOnFocus} />
-                                <input type="hidden" name="genome" value={this.state.genome} />
-                                <input type="hidden" name="maf" value={this.state.maf} />
                             </div>
                         </div>
                     </div>
