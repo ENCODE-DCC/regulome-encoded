@@ -53,17 +53,18 @@ const snpsColumns = {
     },
 };
 
-const SNPSummary = (props) => {
-    const snps = props.context.variants;
+export const SNPSummary = (props) => {
+    console.log(props);
+    // const snps = props.variants;
     return (
         <SortTablePanel title="Summary of SNP analysis">
-            <SortTable list={snps} columns={snpsColumns} />
+            <SortTable list={props.snps} columns={snpsColumns} />
         </SortTablePanel>
     );
 };
 
 SNPSummary.propTypes = {
-    context: PropTypes.object.isRequired,
+    snps: PropTypes.array.isRequired,
 };
 
 const RegulomeSummary = (props) => {
@@ -71,6 +72,8 @@ const RegulomeSummary = (props) => {
     const variants = context.variants || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
+
+    console.log(props);
 
     return (
         <React.Fragment>
@@ -99,7 +102,7 @@ const RegulomeSummary = (props) => {
             </div>
             {variants.length > 0 ?
                 <div className="summary-table-hoverable">
-                    <SNPSummary {...props} />
+                    <SNPSummary snps={props.context.variants} />
                 </div>
             :
                 <div className="notification-label-centered">Try another search to see results.</div>
@@ -111,13 +114,6 @@ const RegulomeSummary = (props) => {
 
 RegulomeSummary.propTypes = {
     context: PropTypes.object.isRequired,
-    currentRegion: PropTypes.func,
-    region: PropTypes.string,
-};
-
-RegulomeSummary.defaultProps = {
-    currentRegion: null,
-    region: null,
 };
 
 RegulomeSummary.contextTypes = {
