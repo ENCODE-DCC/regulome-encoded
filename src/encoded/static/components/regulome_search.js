@@ -4,16 +4,35 @@ import _ from 'underscore';
 import url from 'url';
 import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
+import { SNPSummary } from './regulome_summary';
 import { Motifs } from './motifs';
 import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visualizations';
 import { requestSearch, shadeOverflowOnScroll } from './objectutils';
 import GenomeBrowser from './genome_browser';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/modal';
 
 const screenMediumMax = 787;
 const screenSmallMax = 483;
 
 // Number of terms to show, the rest will be viewable on scroll
 const displayedTermsCount = 14;
+
+// Fetch data from href
+function fetchData(href, fetch) {
+    return fetch(href, {
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+        },
+    }).then((response) => {
+        if (response.ok) {
+            return response.json();
+        }
+        throw new Error('not ok');
+    }).catch((e) => {
+        console.log('OBJECT LOAD ERROR: %s', e);
+    });
+}
 
 // Define facets (probably this should be in a schema really)
 const facetList = ['file_format', 'organ', 'biosample', 'assay', 'target'];
@@ -229,6 +248,8 @@ class AdvSearch extends React.Component {
             genome: 'GRCh37',
             searchInput: '',
             maf: 0.01,
+            summaryData: null,
+            modal: null,
         };
         /* eslint-enable react/no-unused-state */
 
@@ -236,6 +257,7 @@ class AdvSearch extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleOnFocus = this.handleOnFocus.bind(this);
         this.handleExample = this.handleExample.bind(this);
+        this.hideModal = this.hideModal.bind(this);
     }
 
     handleChange(e) {
@@ -251,7 +273,23 @@ class AdvSearch extends React.Component {
     }
 
     handleOnFocus() {
-        this.context.navigate(this.context.location_href);
+        const summaryHref = `/regulome-summary/?regions=${this.state.searchInput.replaceAll('\n', '%0D%0A')}&genome=${this.state.genome}&maf=${this.state.maf}`;
+        if (this.state.searchInput) {
+            fetchData(summaryHref, this.context.fetch).then((response) => {
+                if (response.total > 0) {
+                    // this.setState({ summaryData: response });
+                    this.context.navigate(summaryHref);
+                } else {
+                    this.setState({ modal: 'Please define valid SNP(s) to complete a search.' });
+                }
+            });
+        } else {
+            this.setState({ modal: 'Please define at least one SNP to complete a search.' });
+        }
+    }
+
+    hideModal() {
+        this.setState({ modal: null });
     }
 
     render() {
@@ -260,34 +298,54 @@ class AdvSearch extends React.Component {
 
         return (
             <React.Fragment>
-                <form id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
-                    <div className="form-group">
-                        <label htmlFor="annotation">
-                            <i className="icon icon-search" />Search by dbSNP ID or coordinate range (hg19)
-                        </label>
-                        <div className="input-group input-group-region-input">
-                            <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />
-
-                            <div className="example-inputs">
-                                Click for example entry:
-                                {exampleEntries.map((entry, entryIdx) =>
-                                    <span key={entry.label}>
-                                        <ExampleEntry label={entry.label} input={entry.input} handleExample={this.handleExample} />
-                                        { entryIdx !== (exampleEntries.length - 1) ?
-                                            'or'
-                                        :
-                                        null}
-                                    </span>
-                                )}
+                {this.state.modal ?
+                  <Modal closeModal={this.hideModal}>
+                      <ModalHeader title="Invalid SNP(s)." closeModal={this.hideModal} />
+                      <ModalBody>
+                          <p>{this.state.modal}</p>
+                      </ModalBody>
+                      <ModalFooter closeModal={this.hideModal} cancelTitle="OK" />
+                  </Modal>
+                : null}
+                {(this.state.summaryData) ?
+                    <React.Fragment>
+                        {this.state.summaryData.total > 0 ?
+                            <div className="summary-table-hoverable">
+                                <SNPSummary snps={this.state.summaryData.variants} />
                             </div>
+                        :
+                            <div className="notification-label-centered">Try another search to see results.</div>
+                        }
+                    </React.Fragment>
+                :
+                    <div id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
+                        <div className="form-group">
+                            <label htmlFor="annotation">
+                                <i className="icon icon-search" />Search by dbSNP ID or coordinate range (hg19)
+                            </label>
+                            <div className="input-group input-group-region-input">
+                                <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />
 
-                            <input type="submit" value="Search" className="btn btn-sm btn-info" />
-                            <input type="hidden" name="genome" value={this.state.genome} />
-                            <input type="hidden" name="maf" value={this.state.maf} />
+                                <div className="example-inputs">
+                                    Click for example entry:
+                                    {exampleEntries.map((entry, entryIdx) =>
+                                        <span key={entry.label}>
+                                            <ExampleEntry label={entry.label} input={entry.input} handleExample={this.handleExample} />
+                                            { entryIdx !== (exampleEntries.length - 1) ?
+                                                'or'
+                                            :
+                                            null}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <input type="submit" value="Search" className="btn btn-sm btn-info" onClick={this.handleOnFocus} />
+                                <input type="hidden" name="genome" value={this.state.genome} />
+                                <input type="hidden" name="maf" value={this.state.maf} />
+                            </div>
                         </div>
                     </div>
-
-                </form>
+                }
 
                 {(context.notification && context.notification !== 'No annotations found') ?
                     <div className="notification">{context.notification}</div>
@@ -325,6 +383,7 @@ AdvSearch.propTypes = {
 AdvSearch.contextTypes = {
     location_href: PropTypes.string,
     navigate: PropTypes.func,
+    fetch: PropTypes.func,
 };
 
 const NearbySNPsDrawing = (props) => {
