@@ -231,7 +231,7 @@ pip3 install boto3
 python src/encoded/commands/deploy.py --profile-name regulome
 ```
 
-- The demo link uses this format: https://instance_name].demo.regulomedb.org/regulome-search/
+- The demo link uses this format: https://[instance_name].demo.regulomedb.org/regulome-search/
 
 ## Linting your code within your code editor
 
