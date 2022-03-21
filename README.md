@@ -224,6 +224,14 @@ The development bundles are not minified, to speed up building. The above comman
       
 For all options, including setting up ES clusters (needed for full production).  After indexing (currently 8+hrs) the machine can be downsized at AWS to an m4.2xlarge, unless you are planning to submit significant data to it.
 
+- If you don't buildout locally, you can install denpendency boto3 first then deploy:
+
+```bash
+pip3 install boto3
+python src/encoded/commands/deploy.py --profile-name regulome
+```
+
+- The demo link uses this format: https://instance_name].demo.regulomedb.org/regulome-search/
 
 ## Linting your code within your code editor
 
