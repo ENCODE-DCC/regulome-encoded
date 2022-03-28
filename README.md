@@ -154,6 +154,13 @@ pyenv local 3.8.10
 
 - The app will be running at <http://localhost:6543>.
 
+### **3. frontend development using docker compose**
+
+- In Docker Desktop, find the running docker compose(should be named as "regulome-encoded"), there will be one docker container runing inside. Select the "CLI" to open the terminal:
+  - `npm run dev`
+
+The above command runs continually in the terminal window and watches for changes in Javascript and SCSS files, rebuilding the bundles as you make changes.
+
 ## Running tests
 
 - To run specific tests locally:
