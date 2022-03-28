@@ -3,5 +3,9 @@ version: '3'
 services:
   regulome:
     build: .
+    volumes:
+      - "./src:/app/src"
     ports:
       - "6543:6543"
+
+  
