@@ -144,7 +144,7 @@ pyenv local 3.8.10
 - Make sure you have docker (<https://docs.docker.com/get-docker/>) and docker compose (<https://docs.docker.com/compose/install/>) installed. Build the image regulome:
   - `docker build . -t regulome`
 
-### **2. running the app using docker or docker compose**  
+### **2. Running the app using docker or docker compose**  
 
 - You can use docker to run regulome:
   - `docker run -d -p 6543:6543 regulome`
@@ -154,9 +154,9 @@ pyenv local 3.8.10
 
 - The app will be running at <http://localhost:6543>.
 
-### **3. frontend development using docker compose**
+### **3. Frontend development using docker compose**
 
-- In Docker Desktop, find the running docker compose(should be named as "regulome-encoded"), there will be one docker container runing inside. Select the "CLI" to open the terminal:
+- In Docker Desktop, find the running docker compose (should be named as "regulome-encoded"), there will be one docker container runing inside. Select the "CLI" to open the terminal:
   - `npm run dev`
 
 The above command runs continually in the terminal window and watches for changes in Javascript and SCSS files, rebuilding the bundles as you make changes.

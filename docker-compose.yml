@@ -7,5 +7,3 @@ services:
       - "./src:/app/src"
     ports:
       - "6543:6543"
-
-  
