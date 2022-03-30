@@ -139,17 +139,22 @@ pyenv local 3.8.10
 
 ## Running app using docker
 
-### **1. Buiding image using docker**  
+### **1. Runing RegulomeDB using docker**  
 
-- Make sure you have docker (<https://docs.docker.com/get-docker/>) and docker compose (<https://docs.docker.com/compose/install/>) installed. Build the image regulome:
+- Make sure you have docker (<https://docs.docker.com/get-docker/>) installed. Build the image regulome:
   - `docker build . -t regulome`
 
-### **2. Running the app using docker or docker compose**  
-
-- You can use docker to run regulome:
+- Run regulome:
   - `docker run -d -p 6543:6543 regulome`
 
-- You can also use docker compose to run regulome:
+- The app will be running at <http://localhost:6543>.
+
+### **2. Running RegulomeDB using docker compose**  
+
+- Make sure you have docker compose (<https://docs.docker.com/compose/install/>) installed. Build the image regulome:
+  - `docker-compose build`
+
+- Run regulome:
   - `docker-compose up`
 
 - The app will be running at <http://localhost:6543>.
@@ -160,6 +165,11 @@ pyenv local 3.8.10
   - `npm run dev`
 
 The above command runs continually in the terminal window and watches for changes in Javascript and SCSS files, rebuilding the bundles as you make changes.
+
+### **3. Running test using docker compose**
+
+- Choose the regulome service and run the specific test command, for example:
+  - `docker-compose run regulome npm test`
 
 ## Running tests
 
