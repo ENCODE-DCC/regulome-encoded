@@ -27,5 +27,3 @@ WORKDIR /app
 COPY . .
 RUN buildout bootstrap
 RUN bin/buildout
-
-ENTRYPOINT bin/pserve development.ini

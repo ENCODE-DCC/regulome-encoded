@@ -3,5 +3,10 @@ version: '3'
 services:
   regulome:
     build: .
+    volumes:
+      - "./src/encoded/static/:/app/src/encoded/static/"
+      - /app/src/encoded/static/build-server
+      - /app/src/encoded/static/build
+    command: bin/pserve development.ini
     ports:
       - "6543:6543"
