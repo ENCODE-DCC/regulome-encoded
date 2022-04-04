@@ -53,17 +53,14 @@ const snpsColumns = {
     },
 };
 
-const SNPSummary = (props) => {
-    const snps = props.context.variants;
-    return (
-        <SortTablePanel title="Summary of SNP analysis">
-            <SortTable list={snps} columns={snpsColumns} />
-        </SortTablePanel>
-    );
-};
+export const SNPSummary = props => (
+    <SortTablePanel title="Summary of SNP analysis">
+        <SortTable list={props.snps} columns={snpsColumns} />
+    </SortTablePanel>
+);
 
 SNPSummary.propTypes = {
-    context: PropTypes.object.isRequired,
+    snps: PropTypes.array.isRequired,
 };
 
 const RegulomeSummary = (props) => {
@@ -99,7 +96,7 @@ const RegulomeSummary = (props) => {
             </div>
             {variants.length > 0 ?
                 <div className="summary-table-hoverable">
-                    <SNPSummary {...props} />
+                    <SNPSummary snps={props.context.variants} />
                 </div>
             :
                 <div className="notification-label-centered">Try another search to see results.</div>
@@ -111,13 +108,6 @@ const RegulomeSummary = (props) => {
 
 RegulomeSummary.propTypes = {
     context: PropTypes.object.isRequired,
-    currentRegion: PropTypes.func,
-    region: PropTypes.string,
-};
-
-RegulomeSummary.defaultProps = {
-    currentRegion: null,
-    region: null,
 };
 
 RegulomeSummary.contextTypes = {
