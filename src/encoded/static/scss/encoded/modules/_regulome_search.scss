@@ -575,7 +575,7 @@ table {
             padding-top: 20px;
         }
     }
-    
+
     .facet-term {
         &.assay_term_name {
             border-left: 5px solid #75BBA7;
@@ -680,6 +680,8 @@ table {
         text-align: center;
         padding: 2px 5px;
         cursor: pointer;
+        font-weight: 600;
+        color: $regulomeGreen;
         &:hover {
             text-decoration: underline;
         }
@@ -1048,6 +1050,7 @@ button {
         font-size: 1.1rem;
         line-height: 1.1;
         text-align: left;
+        margin-right: 0;
         @media screen and (max-width: $screen-sm-min) {
             margin-left: 0;
             border-bottom: 0;
@@ -1285,9 +1288,9 @@ button {
         padding-bottom: 4px;
         font-weight: 700;
         font-size: 1rem;
-        padding: 4px 10px 3px;
+        padding: 4px 6px 3px;
         @media screen and (max-width: $screen-sm-min) {
-            padding: 6px 10px 4px;
+            padding: 6px 6px 4px;
             font-size: 0.9rem;
         }
         &:hover, &.active {
@@ -1295,12 +1298,12 @@ button {
             font-weight: 800;
         }
         &.active {
-            padding: 4px 10px 1px;
+            padding: 4px 3px 1px;
             border: 2px solid;
             font-weight: 700;
             text-decoration: none;
             @media screen and (max-width: $screen-sm-min) {
-                padding: 6px 10px 3px;
+                padding: 6px 3px 3px;
                 font-size: 0.9rem;
             }
         }
@@ -1310,6 +1313,7 @@ button {
     }
     .bar {
         margin-bottom: 0;
+        float: left;
     }
     .bar-annotation {
         top: 4px;
@@ -1326,10 +1330,6 @@ button {
             }
         }
     }
-}
-
-.bar-chart-bars {
-    margin-bottom: 40px;
 }
 
 .pagination-container {

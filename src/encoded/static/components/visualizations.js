@@ -2,12 +2,32 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'underscore';
 import * as globals from './globals';
-import { ResultsTable } from './regulome_search';
 import { isLight } from './datacolors';
+import { initializedChromatinObject } from './chromatin_view';
 
 const sanitizedString = globals.sanitizedString;
+const classString = globals.classString;
 
-const mapChromatinNames = {
+const defaultColor = '#276A8E';
+
+export const chromatinHierarchy = Object.keys(initializedChromatinObject);
+
+export const sortChromatin = (a, b) => chromatinHierarchy.indexOf(a) - chromatinHierarchy.indexOf(b);
+
+const extraTallLabels = ['endothelial cell of umbilical vein', 'myoepithelial cell of mammary gland'];
+
+const shortenedLabel = name => name.replace('activated', 'ϟ')
+    .replace('stimulated', '☆')
+    .replace('alpha', 'α')
+    .replace('beta', 'β')
+    .replace('delta', 'δ')
+    .replace('gamma', 'γ')
+    .replace('-positive,', '+')
+    .replace('-negative,', '-')
+    .replace('-positive', '+')
+    .replace('-negative', '-');
+
+export const mapChromatinNames = {
     TssAFlnk: 'Flanking Active TSS',
     TssA: 'Active TSS',
     TxFlnk: "Transcr. at gene 5' and 3'",
@@ -16,7 +36,7 @@ const mapChromatinNames = {
     EnhG: 'Genic enhancers',
     EnhBiv: 'Bivalent Enhancer',
     Enh: 'Enhancers',
-    'ZNF/Rpts': 'ZNF genes & repeats',
+    ZNFRpts: 'ZNF genes & repeats',
     Het: 'Heterochromatin',
     TssBiv: 'Bivalent/Poised TSS',
     BivFlnk: 'Flanking Bivalent TSS/Enh',
@@ -26,51 +46,34 @@ const mapChromatinNames = {
 };
 
 const colorChromatinState = {
-    'Flanking Active TSS': '#FF4500',
-    'Active TSS': '#FF0000',
-    "Transcr. at gene 5' and 3'": '#32CD32',
-    'Strong transcription': '#008000',
-    'Weak transcription': '#006400',
-    'Genic enhancers': '#C2E105',
-    Enhancers: '#FFFF00',
+    'Active TSS': '#B85151',
+    'Flanking Active TSS': '#E68363',
+    "Transcr. at gene 5' and 3'": '#A7DAA7',
+    'Strong transcription': '#6c9f6d',
+    'Weak transcription': '#88BF89',
+    'Genic enhancers': '#C8DD41',
+    Enhancers: '#f4f400',
     'ZNF genes & repeats': '#66CDAA',
     Heterochromatin: '#8A91D0',
-    'Bivalent/Poised TSS': '#CD5C5C',
-    'Flanking Bivalent TSS/Enh': '#E9967A',
+    'Bivalent/Poised TSS': '#DD9292',
+    'Flanking Bivalent TSS/Enh': '#F0BAA8',
     'Bivalent Enhancer': '#BDB76B',
-    'Repressed PolyComb': '#808080',
-    'Weak Repressed PolyComb': '#C0C0C0',
-    'Quiescent/Low': '#DADADA', // this should be white but white is not visible against a white background
+    'Repressed PolyComb': '#7F6265',
+    'Weak Repressed PolyComb': '#968A88',
+    'Quiescent/Low': '#C2C2C2',
 };
 
 const lookupColorChromatinState = chrom => colorChromatinState[chrom];
 
 export const lookupChromatinNames = (chrom) => {
     let result;
+    const newChrom = chrom.replace(/[^A-Za-z]+/g, '');
     Object.keys(mapChromatinNames).forEach((m) => {
-        if (chrom.includes(m)) {
+        if (newChrom === m) {
             result = mapChromatinNames[m];
         }
     });
     return result;
-};
-
-const initializedChromatinObject = {
-    'Active TSS': 0,
-    'Flanking Active TSS': 0,
-    "Transcr. at gene 5' and 3'": 0,
-    'Strong transcription': 0,
-    'Weak transcription': 0,
-    'Genic enhancers': 0,
-    Enhancers: 0,
-    'ZNF genes & repeats': 0,
-    Heterochromatin: 0,
-    'Bivalent/Poised TSS': 0,
-    'Flanking Bivalent TSS/Enh': 0,
-    'Bivalent Enhancer': 0,
-    'Repressed PolyComb': 0,
-    'Weak Repressed PolyComb': 0,
-    'Quiescent/Low': 0,
 };
 
 // Consideration: may want to add back axis labels but they are not used now
@@ -793,205 +796,175 @@ export class ChartTable extends React.Component {
     constructor(props, context) {
         super(props, context);
 
+        const chartKeys = props.sortedKeys || Object.keys(props.chartData);
+        const chartArray = chartKeys.map(key => props.chartData[key].total);
+        const chartMax = Math.max(...chartArray);
+
+        let leftMargin = 0;
+        Object.keys(props.chartData).forEach((d) => {
+            const numLen = d.replace(/\D/g, '').length > 0 ? 30 : 0;
+            const stringLen = d.length;
+            if (this.props.fullData) {
+                leftMargin = Math.max((stringLen * 7) + 60, leftMargin);
+            } else {
+                leftMargin = Math.max(((stringLen * 7) - numLen), leftMargin);
+            }
+        });
+        // add in some extra margin for white space and caret icon
+        leftMargin += 38;
+        if (props.chartWidth > 0 && props.chartWidth <= leftMargin) {
+            leftMargin = props.chartWidth - 40;
+        }
+
         this.state = {
-            chartData: [],
-            filteredChartData: [],
-            chartMax: 0,
-            leftMargin: 0,
-            data: [],
-            filteredData: [],
-            unsanitizedSearchTerm: '',
-            selectedStates: [],
+            chartMax,
+            leftMargin,
+            chartData: props.chartData,
+            chartKeys: props.sortedKeys || Object.keys(props.chartData).sort(),
         };
 
-        // Bind `this` to non-React methods.
-        this.drawCharts = this.drawCharts.bind(this);
         this.handleClick = this.handleClick.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
-        this.clearSearch = this.clearSearch.bind(this);
     }
 
-    componentDidMount() {
-        this.drawCharts();
+    componentDidUpdate(prevProps) {
+        if (!(_.isEqual(prevProps.sortedKeys, this.props.sortedKeys)) && this.props.sortedKeys) {
+            this.setState({
+                chartKeys: this.props.sortedKeys,
+            });
+        }
+        if (prevProps.chartWidth !== this.props.chartWidth) {
+            if (this.props.chartWidth <= this.state.leftMargin) {
+                this.setState({
+                    leftMargin: (this.props.chartWidth - 40),
+                });
+            }
+        }
     }
 
     handleClick(clickID) {
-        let modifiedSelectedStates;
-        if (this.state.selectedStates.includes(clickID)) {
-            modifiedSelectedStates = [...this.state.selectedStates];
-            modifiedSelectedStates.splice(modifiedSelectedStates.indexOf(clickID), 1);
-        } else {
-            modifiedSelectedStates = [...this.state.selectedStates, clickID];
-        }
-        this.setState(prevState => ({
-            selectedStates: modifiedSelectedStates,
-            filteredData: prevState.data.filter((d) => {
-                const searchTerm = String(sanitizedString(this.state.unsanitizedSearchTerm));
-                if (searchTerm === '') {
-                    return (modifiedSelectedStates.includes(sanitizedString(lookupChromatinNames(d.value))));
-                }
-                if (d.biosample_ontology.term_name) {
-                    return (sanitizedString(lookupChromatinNames(d.value)).includes(searchTerm) || sanitizedString(d.biosample_ontology.term_name).includes(searchTerm) || sanitizedString(d.biosample_ontology.organ_slims.join(', ')).includes(searchTerm)) && modifiedSelectedStates.includes(sanitizedString(lookupChromatinNames(d.value)));
-                }
-                return (sanitizedString(lookupChromatinNames(d.value)).includes(searchTerm)) && modifiedSelectedStates.includes(sanitizedString(lookupChromatinNames(d.value)));
-            }),
-        }));
-    }
-
-    handleSearch(event) {
-        // Unsanitized search term entered by user for display
-        this.setState({ unsanitizedSearchTerm: event.target.value });
-        // Search term entered by the user
-        const filterVal = String(sanitizedString(event.target.value));
-        let filteredData = [];
-        if (filterVal === '') {
-            filteredData = this.state.data;
-        } else {
-            filteredData = this.state.data.filter((d) => {
-                if (d.biosample_ontology.term_name) {
-                    return sanitizedString(lookupChromatinNames(d.value)).includes(filterVal) || sanitizedString(d.biosample_ontology.term_name).includes(filterVal) ||
-                    sanitizedString(d.biosample_ontology.organ_slims.join(', ')).includes(filterVal);
-                }
-                return sanitizedString(lookupChromatinNames(d.value)).includes(filterVal);
-            });
-        }
-        const fakeFacets = Object.keys(this.state.chartData)
-            .reduce((obj, key) => {
-                obj[key] = 0;
-                return obj;
-            }, {});
-        const newSelectedStates = [];
-        filteredData.forEach((d) => {
-            fakeFacets[lookupChromatinNames(d.value)] += 1;
-            const chromatinValue = sanitizedString(lookupChromatinNames(d.value));
-            if (!newSelectedStates.includes(chromatinValue)) {
-                newSelectedStates.push(chromatinValue);
-            }
-        });
-        this.setState({
-            filteredData,
-            filteredChartData: fakeFacets,
-            selectedStates: newSelectedStates,
-        });
-    }
-
-    clearSearch() {
-        // clear both search terms
-        this.setState(prevState => ({
-            unsanitizedSearchTerm: '',
-            filteredData: prevState.data.filter(d => (prevState.selectedStates.includes(sanitizedString(lookupChromatinNames(d.value))))),
-            filteredChartData: prevState.chartData,
-        }));
-    }
-
-    drawCharts() {
-        const data = this.props.data;
-        const initialChartData = Object.assign({}, initializedChromatinObject);
-        data.forEach((d) => {
-            initialChartData[lookupChromatinNames(d.value)] += 1;
-        });
-        const chartData = Object.keys(initialChartData)
-            .filter(key => initialChartData[key] > 0)
-            .reduce((obj, key) => {
-                obj[key] = initialChartData[key];
-                return obj;
-            }, {});
-        const chartKeys = Object.keys(chartData);
-        const chartArray = chartKeys.map(key => chartData[key]);
-        const chartMax = Math.max(...chartArray);
-        // compute left margin
-        let leftMargin = 60;
-        Object.keys(chartData).forEach((d) => {
-            leftMargin = Math.max(d.length * 7, leftMargin);
-        });
-        // add in some extra margin for white space and caret icon
-        leftMargin += 50;
-        this.setState({
-            chartData,
-            filteredChartData: chartData,
-            chartMax,
-            leftMargin,
-            data,
-            selectedStates: [],
-        });
+        this.props.handleChartFilters(clickID);
     }
 
     render() {
-        const chartTitle = this.props.displayTitle;
         return (
-            <div className="bar-chart-container bar-chart-chromatin">
-                <div className="bar-chart-header short">
-                    <h4>{chartTitle}</h4>
-                    <div className="chart-typeahead-container">
-                        <div className="chart-typeahead" role="search">
-                            <i className="icon icon-search" />
-                            <div className="searchform">
-                                <input type="search" aria-label="search to filter biosample results" placeholder="Search for a biosample name, chromatin state, or organ" value={this.state.unsanitizedSearchTerm} onChange={this.handleSearch} />
-                            </div>
-                            <i className="icon icon-times" aria-label="clear search and see all biosample results" onClick={this.clearSearch} onKeyDown={this.clearSearch} role="button" tabIndex="0" />
-                        </div>
-                    </div>
-                </div>
+            <div className={`bar-chart-container bar-chart-chromatin ${this.props.additionalClass}`}>
                 <div className="bar-chart-bars">
-                    {Object.keys(this.state.filteredChartData).map((d) => {
+                    {this.state.chartKeys.map((d, dIdx) => {
                         const dKey = sanitizedString(d);
-                        const barWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.filteredChartData[d];
+                        let barWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d].total;
                         const remainderWidth = this.props.chartWidth - barWidth - this.state.leftMargin;
-                        return (
-                            <div
-                                className={`biosample-table table${dKey} display-table`}
-                                key={`table${dKey}`}
-                            >
-                                <div className="bar-row" key={this.state.filteredChartData[d]}>
-                                    <button
-                                        className={`bar-label ${this.state.selectedStates.includes(dKey) ? 'active' : ''}`}
-                                        style={{
-                                            width: `${this.state.leftMargin}px`,
-                                        }}
-                                        onClick={() => this.handleClick(dKey)}
-                                        id={`barchart-button-${dKey}`}
-                                    >
-                                        {d}
-                                    </button>
-                                    <div
-                                        className="bar-container"
-                                        style={{
-                                            width: `${barWidth}px`,
-                                            marginRight: `${remainderWidth}px`,
-                                        }}
-                                    >
-                                        <div
-                                            className="bar"
+
+                        if (this.state.leftMargin === (this.props.chartWidth - 40)) {
+                            barWidth = (this.state.leftMargin / this.state.chartMax) * this.state.chartData[d].total;
+                        }
+
+                        let fullResultOrgan = '';
+                        if (this.props.fullData) {
+                            const fullResult = this.props.fullData.find(d2 => d2.biosample_ontology.term_name === d);
+                            fullResultOrgan = (fullResult && fullResult.biosample_ontology) ? fullResult.biosample_ontology.organ_slims.join(', ') : '';
+                        }
+
+                        if (this.state.chartData[d].total > 0) {
+                            const stateKeys = Object.keys(this.state.chartData[d]).sort(sortChromatin);
+                            return (
+                                <div
+                                    className={`biosample-table table${dKey} display-table`}
+                                    key={`table${dKey}-${dIdx}`}
+                                >
+                                    <div className="bar-row" key={this.state.chartData[d].total}>
+                                        <button
+                                            className={`bar-label ${(this.props.selectedStates.includes(dKey) || this.props.selectedStates.includes(classString(dKey))) ? 'active' : ''}`}
                                             style={{
-                                                backgroundColor: lookupColorChromatinState(d),
-                                                width: `${barWidth}px`,
+                                                width: `${this.state.leftMargin}px`,
                                             }}
-                                        />
+                                            onClick={() => this.handleClick(dKey)}
+                                            id={`barchart-button-${dKey}`}
+                                        >
+                                            {shortenedLabel(d)}
+                                            {fullResultOrgan ?
+                                                <span className="organ-label">{fullResultOrgan}</span>
+                                            : null}
+                                        </button>
                                         <div
-                                            className="bar-annotation"
+                                            className="bar-container"
                                             style={{
-                                                color: `${(isLight(lookupColorChromatinState(d)) || d === 'Enhancers' || barWidth <= 20) ? 'black' : 'white'}`,
-                                                right: `${barWidth > 20 ? '5px' : '-12px'}`,
+                                                width: !this.props.fixedBars ? `${barWidth}px` : '30px',
+                                                marginRight: !this.props.fixedBars ? `${remainderWidth}px` : '0px',
                                             }}
                                         >
-                                            {this.state.filteredChartData[d]}
+                                            {stateKeys && !this.props.fixedBars ?
+                                                <React.Fragment>
+                                                    {stateKeys.map((state) => {
+                                                        let stateWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d][state];
+                                                        if (this.state.leftMargin === (this.props.chartWidth - 40)) {
+                                                            stateWidth = (this.state.leftMargin / this.state.chartMax) * this.state.chartData[d][state];
+                                                        }
+                                                        if (state !== 'total') {
+                                                            return (
+                                                                <div
+                                                                    key={`bar${state}`}
+                                                                    className="bar"
+                                                                    style={{
+                                                                        backgroundColor: lookupColorChromatinState(state) || defaultColor,
+                                                                        width: `${stateWidth}px`,
+                                                                        height: `${extraTallLabels.includes(shortenedLabel(d)) ? '39px' : '24px'}`,
+                                                                        marginTop: `${extraTallLabels.includes(shortenedLabel(d)) ? '-15px' : '0px'}`,
+                                                                    }}
+                                                                />
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })}
+                                                </React.Fragment>
+                                            :
+                                                <div
+                                                    className="bar"
+                                                    style={{
+                                                        backgroundColor: lookupColorChromatinState(stateKeys[1]) || defaultColor,
+                                                        width: '30px',
+                                                    }}
+                                                />
+                                            }
+                                            {!this.props.fixedBars ?
+                                                <div
+                                                    className="bar-annotation"
+                                                    style={{
+                                                        color: 'black',
+                                                        right: `${barWidth > 20 ? '5px' : '-12px'}`,
+                                                    }}
+                                                >
+                                                    {this.state.chartData[d].total}
+                                                </div>
+                                            : null}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
+                            );
+                        }
+                        return null;
                     })}
                 </div>
-                <ResultsTable data={this.state.filteredData} displayTitle={''} dataFilter={'chromatin'} errorMessage={'Click on a chromatin state name or enter a different search term to see results.'} />
             </div>
         );
     }
 }
 
 ChartTable.propTypes = {
-    data: PropTypes.array.isRequired,
-    displayTitle: PropTypes.string.isRequired,
+    chartData: PropTypes.object.isRequired,
     chartWidth: PropTypes.number.isRequired,
+    handleChartFilters: PropTypes.func.isRequired,
+    selectedStates: PropTypes.array.isRequired,
+    additionalClass: PropTypes.string,
+    fixedBars: PropTypes.bool,
+    sortedKeys: PropTypes.array,
+    fullData: PropTypes.array,
+};
+
+ChartTable.defaultProps = {
+    additionalClass: '',
+    fixedBars: false,
+    sortedKeys: null,
+    fullData: null,
 };
 
 export default {
