@@ -55,7 +55,7 @@ const snpsColumns = {
 
 export const SNPSummary = props => (
     <SortTablePanel title="Summary of SNP analysis">
-        <SortTable list={props.snps} columns={snpsColumns} />
+        <SortTable list={props.snps} columns={snpsColumns} sortColumn="ranking" />
     </SortTablePanel>
 );
 

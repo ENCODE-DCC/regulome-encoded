@@ -1,0 +1,477 @@
+$activetss: #B85151;
+$flankingactivetss: #E68363;
+$transcratgeneand: #A7DAA7;
+$strongtranscription: #6c9f6d;
+$weaktranscription: #88BF89;
+$genicenhancers: #C8DD41;
+$enhancers: #f4f400;
+$znfgenesrepeats: #66CDAA;
+$heterochromatin: #8A91D0;
+$bivalentpoisedtss: #DD9292;
+$flankingbivalenttssenh: #F0BAA8;
+$bivalentenhancer: #BDB76B;
+$repressedpolycomb: #666666;
+$weakrepressedpolycomb: #858585;
+$quiescentlow: #A3A3A3;
+
+$statestroke: #7D6167;
+
+// "body-image-container" is the wrapper for the body map SVG "BodyMap"
+// Within the body map, we want to highlight all the different SVG shapes
+.body-image-container {
+    .homo-sapiens {
+        path, polyline, circle, ellipse, rect, polygon {
+            &:hover:not(.cls-5):not(.cls-nervebackground):not(.active) {
+                cursor: pointer;
+            }
+
+            &.highlight:not(.cls-5):not(.cls-nervebackground):not(.active) {
+                cursor: pointer;
+                opacity: 0.8;
+            }
+        }
+    }
+}
+
+// for "skin of body" (cls-5), entire body map should not turn light purple on hover, just the outline
+// .homo-sapiens {
+//     .cls-5 {
+//         &:hover {
+//             stroke: lighten($Homo-sapiens, 20%);
+//             cursor: pointer;
+//         }
+//
+//         &.highlight {
+//             stroke: lighten($Homo-sapiens, 20%);
+//             cursor: pointer;
+//         }
+//     }
+// }
+
+// We need a couple special cases for highlighting specific elements on the body map
+// For "skin of body" (cls-5), entire body map should not turn light purple on hover so it is excluded from highlight styles
+// However, we do want the outline to be highlighted and we need it to appear clickable
+// .cls-5 {
+//     &:hover {
+//         stroke: lighten($Homo-sapiens, 20%);
+//         cursor: pointer;
+//     }
+//
+//     &.highlight {
+//         stroke: lighten($Homo-sapiens, 20%);
+//         cursor: pointer;
+//     }
+// }
+// Similarly, "cls-nervebackground" should not turn light purple on hover so it is excluded from highlight styles
+// However, we do want it to appear clickable
+.cls-nervebackground {
+    &:hover {
+        cursor: pointer;
+    }
+
+    &.highlight {
+        cursor: pointer;
+    }
+}
+
+.human-map {
+    .bodymap-path {
+        fill: white;
+        stroke: #8c8c8c;
+
+        &.highlight {
+            cursor: pointer;
+        }
+
+        &.activetss {
+            fill: #C56D6D;
+            stroke: #eecbcb;
+
+            &.active, &.highlight {
+                fill: #B85151;
+                stroke-width: 2px;
+            }
+        }
+        &.flankingactivetss {
+            fill: #F4997B;
+            stroke: #A33814;
+
+            &.active, &.highlight {
+                fill: #E68363;
+            }
+        }
+        &.transcratgeneand {
+            fill: #E1F4E1;
+            stroke: #427342;
+
+            &.active, &.highlight {
+                fill: #A7DAA7;
+            }
+        }
+        &.strongtranscription {
+            fill: #94C595;
+            stroke: #008000;
+
+            &.active, &.highlight {
+                fill: #6c9f6d;
+                stroke-width: 2px;
+            }
+        }
+        &.weaktranscription {
+            fill: #BDDBBE;
+            stroke: #008000;
+
+            &.active, &.highlight {
+                fill: #88BF89;
+            }
+        }
+        &.genicenhancers {
+            fill: #E5F386;
+            stroke: #A2B331;
+
+            &.active, &.highlight {
+                fill: #C8DD41;
+            }
+        }
+        &.enhancers {
+            fill: #fdfdad;
+            stroke: #e3e319;
+            stroke-width: 2px;
+
+            &.active, &.highlight {
+                fill: #f4f400;
+                stroke: #c3c327;
+            }
+        }
+        &.znfgenesrepeats {
+            fill: #A3E1CC;
+            stroke: #1E5C48;
+
+            &.active, &.highlight {
+                fill: #66CDAA;
+            }
+        }
+        &.heterochromatin {
+            fill: #aeb3df;
+            stroke: #666dac;
+
+            &.active, &.highlight {
+                fill: #8A91D0;
+                stroke-width: 2px;
+            }
+        }
+        &.bivalentpoisedtss {
+            fill: #e5aaaa;
+            stroke: #6D2222;
+
+            &.active, &.highlight {
+                fill: #DD9292;
+            }
+        }
+        &.flankingbivalenttssenh {
+            fill: #f7dbd2;
+            stroke: #AF411D;
+
+            &.active, &.highlight {
+                fill: #F0BAA8;
+            }
+        }
+        &.bivalentenhancer {
+            fill: #dcd9b2;
+            stroke: #8D883F;
+
+            &.active, &.highlight {
+                fill: #BDB76B;
+            }
+        }
+        &.repressedpolycomb {
+            fill: #C2C2C2;
+            stroke: #1F1F1F;
+
+            &.active, &.highlight {
+                fill: #666666;
+                stroke-width: 2px;
+            }
+        }
+        &.weakrepressedpolycomb {
+            fill: #D6D6D6;
+            stroke: #292929;
+
+            &.active, &.highlight {
+                fill: #858585;
+                stroke-width: 2px;
+            }
+        }
+        &.quiescentlow {
+            fill: #EBEBEB;
+            stroke: #292929;
+
+            &.active, &.highlight {
+                fill: #A3A3A3;
+                stroke-width: 2px;
+            }
+        }
+    }
+}
+
+
+.organ-label {
+    padding: 0 0 0 10px;
+    font-weight: 200;
+    color: #373737;
+    font-size: 1rem;
+}
+
+.selections-hed {
+    padding-right: 5px;
+    font-weight: 600;
+}
+
+.selections {
+    padding: 10px 0 0;
+}
+
+.selected-chromatin-filter {
+    margin: 0 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+    line-height: 0.8;
+    border-bottom: 2px solid #dddddd;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: normal;
+
+    &:hover:enabled {
+        text-decoration: none;
+        font-weight: normal;
+        background: #f2f2f2;
+    }
+
+    .icon {
+        margin-right: 5px;
+    }
+}
+
+.chromatin-view {
+    .bar-row {
+        @media screen and (max-width: $screen-sm-min) {
+            margin-bottom: 10px;
+        }
+    }
+
+    .body-map-expander {
+        display: none;
+
+        @media screen and (max-width: $screen-sm-min) {
+            display: block;
+        }
+    }
+
+    .chromatin-filters {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 1200px;
+        position: relative;
+        margin-bottom: 50px;
+        margin: auto;
+        margin-bottom: 40px;
+        justify-content: space-between;
+
+        @media screen and (max-width: 1200px) {
+            justify-content: center;
+        }
+
+        @media screen and (max-width: $screen-sm-min) {
+            justify-content: left;
+        }
+
+        .chromatin-filter {
+            &.body-map {
+                flex: 0 1 220px;
+
+                @media screen and (max-width: 1200px) {
+                    order: 1;
+                    margin: 0 10px;
+                }
+
+                @media screen and (max-width: $screen-sm-min) {
+                    margin: 0;
+                }
+            }
+
+            &.biosample {
+                flex: 0 1 690px;
+
+                @media screen and (max-width: 1200px) {
+                    order: 3;
+                    margin-top: 40px;
+                }
+
+                @media screen and (max-width: $screen-sm-min) {
+                    margin: 0;
+                }
+            }
+
+            &.chromatin-state {
+                flex: 0 1 270px;
+
+                @media screen and (max-width: 1200px) {
+                    order: 2;
+                    margin: 0 10px;
+                }
+
+                @media screen and (max-width: $screen-sm-min) {
+                    margin: 40px 0;
+                }
+            }
+        }
+
+        .chromatin-hed {
+            border-bottom: 10px;
+            font-size: 18px;
+
+            .icon-filter {
+                color: #919191;
+                margin-right: 5px;
+            }
+        }
+    }
+
+    .button-wrapper {
+        flex: 0 1 100%;
+        margin-top: 10px;
+
+        @media screen and (max-width: 1200px) {
+            order: 4;
+            margin-top: 30px;
+        }
+    }
+
+    .reset-all-filters {
+        text-align: center;
+        background: #36582E;
+        color: white;
+        padding: 5px 20px 3px;
+        border-radius: 5px;
+    }
+
+    .bar-chart-chromatin {
+        min-width: 200px;
+        padding: 10px;
+        border: 2px solid $regulomeGreen;
+
+        &.scrollable-table {
+            max-height: 367px;
+            overflow-y: scroll;
+            background: linear-gradient(white, 90%, #b5b3b3);
+        }
+    }
+}
+
+.body-inset-container {
+    button[disabled] {
+        opacity: 0.4;
+    }
+}
+
+.body-inset {
+    position: relative;
+
+    img {
+        width: 100%;
+    }
+
+    &.active {
+        .overlay {
+            opacity: 0.6;
+        }
+    }
+
+    &.highlight, &:hover {
+        .overlay {
+            opacity: 0.5;
+        }
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        opacity: 0.2;
+        border-radius: 50%;
+    }
+}
+
+.activetss .overlay {
+    background: $activetss;
+    border: 2px solid $activetss;
+}
+
+.flankingactivetss .overlay {
+    background: $flankingactivetss;
+    border: 2px solid $flankingactivetss;
+}
+
+.transcratgeneand .overlay {
+    background: $transcratgeneand;
+    border: 2px solid $transcratgeneand;
+}
+
+.strongtranscription .overlay {
+    background: $strongtranscription;
+    border: 2px solid $strongtranscription;
+}
+
+.weaktranscription .overlay {
+    background: $weaktranscription;
+    border: 2px solid $weaktranscription;
+}
+
+.genicenhancers .overlay {
+    background: $genicenhancers;
+    border: 2px solid $genicenhancers;
+}
+
+.enhancers .overlay {
+    background: $enhancers;
+    border: 2px solid $enhancers;
+}
+
+.znfgenesrepeats .overlay {
+    background: $znfgenesrepeats;
+    border: 2px solid $znfgenesrepeats;
+}
+
+.heterochromatin .overlay {
+    background: $heterochromatin;
+    border: 2px solid $heterochromatin;
+}
+
+.bivalentpoisedtss .overlay {
+    background: $bivalentpoisedtss;
+    border: 2px solid $bivalentpoisedtss;
+}
+
+.flankingbivalenttssenh .overlay {
+    background: $flankingbivalenttssenh;
+    border: 2px solid $flankingbivalenttssenh;
+}
+
+.bivalentenhancer .overlay {
+    background: $bivalentenhancer;
+    border: 2px solid $bivalentenhancer;
+}
+
+.repressedpolycomb .overlay {
+    background: $repressedpolycomb;
+    border: 2px solid $repressedpolycomb;
+}
+
+.weakrepressedpolycomb .overlay {
+    background: $weakrepressedpolycomb;
+    border: 2px solid $weakrepressedpolycomb;
+}
+
+.quiescentlow .overlay {
+    background: $quiescentlow;
+    border: 2px solid $quiescentlow;
+}

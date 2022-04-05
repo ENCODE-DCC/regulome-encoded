@@ -1,0 +1,530 @@
+.body-map-thumbnail-and-modal {
+    .body-inset {
+        .overlay {
+            width: 30px;
+            height: 30px;
+        }
+    }
+}
+
+.body-map-container-pop-up {
+    .body-inset {
+        .overlay {
+            width: 55px;
+            height: 55px;
+        }
+    }
+}
+
+.human-map {
+    .cls-nervebackground {
+        opacity: 0;
+    }
+
+    .cls-1 {
+        fill: url(#linear-gradient);
+    }
+
+    .cls-2 {
+        fill: url(#linear-gradient-2);
+    }
+
+    .cls-3,.cls-4,.cls-50,.cls-51,.cls-55,.cls-56,.cls-60,.cls-61,.cls-62,.cls-64,.cls-69,.cls-70,.cls-71,.cls-78,.cls-89,.cls-90,.cls-91,.cls-96,.cls-99 {
+        fill: none;
+    }
+
+    .cls-4,.cls-71 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-101,.cls-29,.cls-4,.cls-50,.cls-51,.cls-55,.cls-56,.cls-60,.cls-61,.cls-62,.cls-64,.cls-69,.cls-70,.cls-71,.cls-78,.cls-79,.cls-81,.cls-89,.cls-90,.cls-91,.cls-94,.cls-96,.cls-97,.cls-98,.cls-99 {
+        stroke-miterlimit: 10;
+    }
+
+    .cls-4 {
+        stroke-width: 0.58px;
+    }
+
+    .cls-breast {
+        fill: white;
+    }
+
+    .cls-5 {
+        fill: white;
+    }
+
+    .cls-5, .cls-limb-skin {
+        &:hover {
+            stroke-width: 2px;
+        }
+    }
+
+    .cls-limb-skin {
+        fill: white;
+    }
+
+    .cls-6 {
+        fill: white;
+    }
+
+    .cls-limb {
+        fill: white;
+    }
+
+    .cls-nose {
+        fill: white;
+    }
+
+    .cls-7 {
+        fill: white;
+    }
+
+    .cls-37, .cls-8, .cls-stomach {
+        fill: white;
+        opacity: 0.75;
+    }
+
+    .cls-9 {
+        mask: url(#mask);
+        -webkit-mask: url(#mask);
+    }
+
+    .cls-vein {
+        fill: white;
+    }
+
+    .cls-10 {
+        display: none;
+    }
+
+    .cls-11 {
+        fill: white;
+    }
+
+    .cls-11new {
+        display: none;
+    }
+
+    .cls-12 {
+        fill: white;
+    }
+
+    .cls-13 {
+        fill: white;
+    }
+
+    .cls-14 {
+        fill: white;
+    }
+
+    .cls-15 {
+        fill: white;
+    }
+
+    .cls-16,.cls-31 {
+        fill: white;
+    }
+
+    .cls-17 {
+        fill: white;
+    }
+
+    .cls-18 {
+        fill: white;
+    }
+
+    .cls-19 {
+        fill: white;
+    }
+
+    .cls-20 {
+        mask: url(#mask-2);
+        -webkit-mask: url(#mask-2);
+    }
+
+    .cls-21 {
+        fill: white;
+    }
+
+    .cls-22,.cls-59 {
+        fill: white;
+    }
+
+    .cls-22,.cls-24,.cls-25,.cls-26,.cls-27,.cls-28,.cls-29,.cls-30,.cls-31,.cls-32,.cls-33,.cls-34,.cls-35,.cls-36,.cls-37,.cls-39,.cls-thymus,.cls-42,.cls-43,.cls-44,.cls-45,.cls-46,.cls-47,.cls-48,.cls-49,.cls-lg-intestine {
+        fill-rule: evenodd;
+    }
+
+    .cls-23 {
+        fill: white;
+    }
+
+    .cls-24 {
+        fill: white;
+    }
+
+    .cls-95 {
+        fill: white;
+    }
+
+    .cls-lg-intestine {
+        fill: white;
+    }
+
+    .cls-25 {
+        fill: white;
+    }
+
+    .cls-27 {
+        fill: white;
+    }
+
+    .cls-28 {
+        fill: white;
+    }
+
+    .cls-29,.cls-30 {
+        fill: white;
+    }
+
+    .cls-101,.cls-29 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-29 {
+        stroke-width: 0.72px;
+    }
+
+    .cls-32 {
+        fill: white;
+    }
+
+    .cls-gallbladder {
+        fill: white;
+        opacity: 0.9;
+    }
+
+    .cls-uterus {
+        fill: white;
+    }
+
+    .cls-33 {
+        fill: white;
+    }
+
+    .cls-kidney {
+        fill: white;
+    }
+
+    .cls-41 {
+        fill: white;
+    }
+
+    .cls-34 {
+        fill: white;
+    }
+
+    .cls-35 {
+        fill: white;
+    }
+
+    .cls-36 {
+        fill: white;
+    }
+
+    .cls-38,.cls-43 {
+        fill: white;
+    }
+
+    .cls-39, .cls-thymus {
+        fill: white;
+    }
+
+    .cls-40 {
+        fill: white;
+    }
+
+    .cls-42 {
+        fill: white;
+    }
+
+    .cls-44 {
+        fill: white;
+    }
+
+    .cls-45 {
+        fill: white;
+    }
+
+    .cls-46,.cls-47,.cls-48,.cls-49,.cls-81 {
+        fill: white;
+    }
+
+    .cls-46 {
+        opacity: 0.35;
+    }
+
+    .cls-47 {
+        opacity: 0.65;
+    }
+
+    .cls-48 {
+        opacity: 0.86;
+    }
+
+    .cls-50,.cls-51 {
+        stroke: #fff;
+    }
+
+    .cls-50,.cls-51,.cls-62 {
+        stroke-width: 1.48px;
+    }
+
+    .cls-51 {
+        display: none;
+    }
+
+    .cls-51 {
+        stroke-dasharray: 4.45 4.45;
+    }
+
+    .cls-52 {
+        clip-path: url(#clip-path);
+        -webkit-clip-path: url(#clip-path);
+    }
+
+    .cls-53 {
+        fill: white;
+    }
+
+    .cls-ovary, .cls-testis {
+        fill: white;
+    }
+
+    .cls-54 {
+        fill: white;
+    }
+
+    .cls-55,.cls-56 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-55,.cls-60 {
+        stroke-width: 1.42px;
+    }
+
+    .cls-56,.cls-61 {
+        stroke-width: 0.85px;
+    }
+
+    .cls-57 {
+        stroke: #8c8c8c;
+        stroke-width: 2px;
+        fill: white;
+    }
+
+    .cls-58 {
+        fill: #598db8;
+    }
+
+    .cls-60,.cls-61 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-62 {
+        stroke: #8c8c8c;
+        fill: white;
+    }
+
+    .cls-63 {
+        clip-path: url(#clip-path-2);
+        -webkit-clip-path: url(#clip-path-2);
+    }
+
+    .cls-64 {
+        stroke: #8c8c8c;
+        stroke-width: 2.4px;
+    }
+
+    .cls-65, .cls-epiglottis, .cls-vagina {
+        fill: white;
+    }
+
+    .cls-epiglottis {
+        display: none;
+    }
+
+    .cls-vagina2 {
+        fill: white;
+    }
+
+    .cls-66 {
+        fill: white;
+    }
+
+    .cls-67 {
+        clip-path: url(#clip-path-3);
+        -webkit-clip-path: url(#clip-path-3);
+    }
+
+    .cls-68 {
+        fill: white;
+    }
+
+    .cls-69 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-69,.cls-70 {
+        stroke-linecap: round;
+        stroke-width: 1.22px;
+    }
+
+    .cls-70 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-71 {
+        stroke-width: 0.39px;
+    }
+
+    .cls-72 {
+        clip-path: url(#clip-path-4);
+        -webkit-clip-path: url(#clip-path-4);
+    }
+
+    .cls-73 {
+        fill: #fff;
+    }
+
+    .cls-74 {
+        fill: white;
+    }
+
+    .cls-75 {
+        fill: white;
+    }
+
+    .cls-76 {
+        clip-path: url(#clip-path-5);
+        -webkit-clip-path: url(#clip-path-5);
+    }
+
+    .cls-77 {
+        fill: white;
+    }
+
+    .cls-78,.cls-79,.cls-81 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-78,.cls-79,.cls-81,.cls-94 {
+        stroke-width: 1.39px;
+    }
+
+    .cls-79 {
+        fill: white;
+    }
+
+    .cls-80 {
+        fill: white;
+    }
+
+    .cls-82 {
+        clip-path: url(#clip-path-7);
+        -webkit-clip-path:  url(#clip-path-7);
+    }
+
+    .cls-83 {
+        fill: white;
+    }
+
+    .cls-84 {
+        fill: white;
+    }
+
+    .cls-85 {
+        fill: url(#linear-gradient-3);
+    }
+
+    .cls-86 {
+        fill: url(#linear-gradient-4);
+    }
+
+    .cls-87 {
+        fill: url(#linear-gradient-5);
+    }
+
+    .cls-88 {
+        fill: white;
+    }
+
+    .cls-89,.cls-90 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-89 {
+        stroke-width: 0.78px;
+    }
+
+    .cls-90 {
+        stroke-width: 0.91px;
+    }
+
+    .cls-91 {
+        stroke: #8c8c8c;
+        stroke-width: 2.97px;
+    }
+
+    .cls-92 {
+        fill: white;
+    }
+
+    .cls-93 {
+        clip-path: url(#clip-path-8);
+        -webkit-clip-path: url(#clip-path-8);
+    }
+
+    .cls-94 {
+        fill: white;
+    }
+
+    .cls-94,.cls-96 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-96 {
+        stroke-width: 3px;
+    }
+
+    .cls-97 {
+        fill: white;
+    }
+
+    .cls-97,.cls-98 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-101,.cls-97 {
+        stroke-width: 0.37px;
+    }
+
+    .cls-98 {
+        fill: white;
+    }
+
+    .cls-98,.cls-99 {
+        stroke-width: 0.38px;
+    }
+
+    .cls-99 {
+        stroke: #8c8c8c;
+    }
+
+    .cls-100 {
+        fill: white;
+    }
+
+    .cls-101 {
+        fill: white;
+    }
+}

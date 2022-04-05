@@ -1,0 +1,48 @@
+.table-section {
+    font-size: 1.3rem;
+    font-weight: bold;
+    background-color: #d8e0e8;
+
+    th {
+        padding: 0 !important;
+        height: auto !important;
+        font-weight: 600;
+    }
+}
+
+.tcell-sortable {
+    &__column-header {
+        display: flex;
+        height: 100%;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+
+    &:hover {
+        background-color: #e0e0e0;
+    }
+}
+
+%tcell-template {
+    @extend .icon;
+
+    display: block;
+    padding: 0 0 0 5px;
+    flex: 0 0 10px;
+}
+
+.tcell-sort {
+    @extend %tcell-template;
+    @extend .icon-sort;
+}
+
+.tcell-asc {
+    @extend %tcell-template;
+    @extend .icon-sort-asc;
+}
+
+.tcell-desc {
+    @extend %tcell-template;
+    @extend .icon-sort-desc;
+}

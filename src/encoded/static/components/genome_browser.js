@@ -256,7 +256,7 @@ export function filterForVisualizableFiles(fileList) {
 }
 
 // Fetch gene coordinate file
-export function getCoordinateData(geneLink, fetch) {
+export function fetchData(geneLink, fetch) {
     return fetch(geneLink, {
         method: 'GET',
         headers: {
@@ -615,7 +615,7 @@ class GenomeBrowser extends React.Component {
         this.setState({ showAutoSuggest: false });
         const hrefForSuggestion = `https://encodeproject.org/suggest/?genome=${this.state.genome}&q=${this.state.searchTerm}`;
 
-        getCoordinateData(hrefForSuggestion, this.context.fetch).then((response) => {
+        fetchData(hrefForSuggestion, this.context.fetch).then((response) => {
             // Find the response line that matches the search
             const responseIndex = response['@graph'].findIndex(responseLine => responseLine.text === this.state.searchTerm);
 
