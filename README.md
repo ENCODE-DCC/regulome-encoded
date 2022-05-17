@@ -36,7 +36,7 @@
 
 ## Creating a demo machine
 
-- Install denpendency boto3 first then deploy:
+- Install dependency boto3 first then deploy:
 
   ```bash
   pip3 install boto3
@@ -61,7 +61,7 @@ npm install -g eslint
 npm install -g eslint-plugin-react
 ```
 
->:warning: _Note_: You don't have to use Sublime Text 3 but you _must_ insure that linting in your editor behaves as it does in Sublime Text 3.
+>:warning: _Note_: You don't have to use Sublime Text 3 but you _must_ ensure that linting in your editor behaves as it does in Sublime Text 3.
 
 ### Sublime Text 3
 
