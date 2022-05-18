@@ -26,4 +26,4 @@ RUN pip3 install -U zc.buildout setuptools==43
 WORKDIR /app
 COPY . .
 RUN buildout bootstrap
-RUN bin/buildout
+RUN git config --global url."https://github.com/".insteadOf git@github.com: && git config --global url."https://".insteadOf git:// && bin/buildout
