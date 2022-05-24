@@ -10,9 +10,9 @@ $heterochromatin: #8A91D0;
 $bivalentpoisedtss: #DD9292;
 $flankingbivalenttssenh: #F0BAA8;
 $bivalentenhancer: #BDB76B;
-$repressedpolycomb: #848884;
-$weakrepressedpolycomb: #C0C0C0;
-$quiescentlow: #E5E4E2;
+$repressedpolycomb: #424242;
+$weakrepressedpolycomb: #616161;
+$quiescentlow: #757575;
 
 $statestroke: #7D6167;
 
@@ -185,29 +185,29 @@ $statestroke: #7D6167;
             }
         }
         &.repressedpolycomb {
-            fill: #C2C2C2;
+            fill: #9E9E9E;
             stroke: #1F1F1F;
 
             &.active, &.highlight {
-                fill: #848884;
+                fill: #424242;
                 stroke-width: 2px;
             }
         }
         &.weakrepressedpolycomb {
             fill: #D6D6D6;
-            stroke: #292929;
+            stroke: #BDBDBD;
 
             &.active, &.highlight {
-                fill: #C0C0C0;
+                fill: #616161;
                 stroke-width: 2px;
             }
         }
         &.quiescentlow {
-            fill: #EBEBEB;
+            fill: #E0E0E0;
             stroke: #292929;
 
             &.active, &.highlight {
-                fill: #E5E4E2;
+                fill: #757575;
                 stroke-width: 2px;
             }
         }

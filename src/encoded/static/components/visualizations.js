@@ -58,9 +58,9 @@ const colorChromatinState = {
     'Bivalent/Poised TSS': '#DD9292',
     'Flanking Bivalent TSS/Enh': '#F0BAA8',
     'Bivalent Enhancer': '#BDB76B',
-    'Repressed PolyComb': '#848884',
-    'Weak Repressed PolyComb': '#C0C0C0',
-    'Quiescent/Low': '#E5E4E2',
+    'Repressed PolyComb': '#424242',
+    'Weak Repressed PolyComb': '#616161',
+    'Quiescent/Low': '#757575',
 };
 
 const lookupColorChromatinState = chrom => colorChromatinState[chrom];
