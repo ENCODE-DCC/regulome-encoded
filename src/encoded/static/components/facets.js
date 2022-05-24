@@ -279,7 +279,7 @@ export const Facet = (props) => {
 Facet.propTypes = {
     facetTitle: PropTypes.string.isRequired,
     facetName: PropTypes.string.isRequired,
-    facetArray: PropTypes.array.isRequired,
+    facetArray: PropTypes.object.isRequired,
     addGenomeFilter: PropTypes.func.isRequired,
     selectedFacets: PropTypes.array.isRequired,
 };
@@ -324,7 +324,7 @@ const TypeaheadFacet = (props) => {
 TypeaheadFacet.propTypes = {
     facetTitle: PropTypes.string.isRequired,
     facetName: PropTypes.string.isRequired,
-    facetArray: PropTypes.array.isRequired,
+    facetArray: PropTypes.object.isRequired,
     handleSearch: PropTypes.func.isRequired,
     addGenomeFilter: PropTypes.func.isRequired,
     selectedFacets: PropTypes.array.isRequired,
@@ -442,6 +442,7 @@ export class FacetList extends React.Component {
                                 const fsplit = f.split('AND');
                                 return (
                                     <FilterButton
+                                        key={f}
                                         buttonLabel={fsplit[0]}
                                         facetLabel={fsplit[1]}
                                         facetKey={f}
