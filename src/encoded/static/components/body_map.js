@@ -466,14 +466,17 @@ export class BodyMap extends React.Component {
                 }
             });
 
+            // There can be the case where the user is selecting the skeleton element and "bone element" is available but not "skeleton" is disabled, and this handles that case
+            const newOrgansCombined = [newOrgan, ...multipleAssociations].filter(organ => this.state.organFacets.includes(organ));
+
             // Set state to be new organ and any other matches
             // We need to check if there is a new organ found because there are a very very few shapes that do not have corresponding organ_slims and in that case we do not want to add an undefined value to the state / try to navigate to undefined url
             // For example, the uterine walls and vas deferens shapes do not correspond to any organ slim
-            if (newOrgan) {
+            if (newOrgansCombined.length > 0) {
                 // If there is no "currentOrgan" in state, we add the new organ and its associated terms
                 if (this.state.currentOrgan === []) {
                     this.setState({
-                        selectedOrgan: [newOrgan, ...multipleAssociations],
+                        selectedOrgan: newOrgansCombined,
                     }, () => {
                         this.props.handleFilters(this.state.selectedOrgan);
                     });
@@ -481,7 +484,7 @@ export class BodyMap extends React.Component {
                 } else if (this.state.selectedOrgan.includes(newOrgan)) {
                     if (typeof this.state.selectedOrgan !== 'string') {
                         this.setState(prevState => ({
-                            selectedOrgan: prevState.selectedOrgan.filter(organ => organ !== newOrgan && !(multipleAssociations.includes(organ))) || [],
+                            selectedOrgan: prevState.selectedOrgan.filter(organ => !(newOrgansCombined.includes(organ))) || [],
                         }), () => {
                             this.props.handleFilters(this.state.selectedOrgan);
                         });
@@ -496,9 +499,9 @@ export class BodyMap extends React.Component {
                 } else {
                     let newState;
                     if (typeof this.state.selectedOrgan !== 'string') {
-                        newState = [...this.state.selectedOrgan, ...multipleAssociations, newOrgan];
+                        newState = [...this.state.selectedOrgan, ...newOrgansCombined];
                     } else {
-                        newState = [this.state.selectedOrgan, ...multipleAssociations, newOrgan];
+                        newState = [this.state.selectedOrgan, ...newOrgansCombined];
                     }
                     this.setState({
                         selectedOrgan: [...new Set(newState)],
@@ -609,6 +612,7 @@ export const ClickableThumbnail = (props) => {
         <React.Fragment>
             <div
                 // type="button"
+                role="button"
                 className="body-image-thumbnail"
                 onClick={() => toggleThumbnail()}
             >
