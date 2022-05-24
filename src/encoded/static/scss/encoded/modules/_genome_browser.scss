@@ -375,11 +375,12 @@ a {
     .tooltip-container__trigger {
         margin-left: auto;
         margin-right: 0;
-    }
-}
 
-.legend-block {
-    margin-left: 20px;
+        .legend-swatch {
+            margin-right: 0;
+            flex: 0 1 10px;
+        }
+    }
 }
 
 .legend-element {
