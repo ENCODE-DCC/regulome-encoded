@@ -194,14 +194,15 @@ $statestroke: #7D6167;
             }
         }
         &.weakrepressedpolycomb {
-            fill: #D6D6D6;
-            stroke: #BDBDBD;
+            fill: #BDBDBD;
+            stroke: #292929;
 
             &.active, &.highlight {
                 fill: #616161;
                 stroke-width: 2px;
             }
         }
+
         &.quiescentlow {
             fill: #E0E0E0;
             stroke: #292929;
