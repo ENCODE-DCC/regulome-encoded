@@ -611,10 +611,11 @@ export const ClickableThumbnail = (props) => {
     return (
         <React.Fragment>
             <div
-                // type="button"
                 role="button"
+                tabIndex={0}
                 className="body-image-thumbnail"
                 onClick={() => toggleThumbnail()}
+                onKeyDown={() => toggleThumbnail()}
             >
                 <div className="body-map-expander">Filter results by body diagram</div>
                 {svgIcon('expandArrows')}
