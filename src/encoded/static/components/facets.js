@@ -125,6 +125,11 @@ export const createFacets = (files, filteredFiles, facetList, searchTerms) => {
     return newFacetObject;
 };
 
+// Generates a facet structure as follows:
+// The files structure contains results with various properties and we are aggregating counts of one of those properties in "facetObject"
+// facetObject.associatedStates stores the most active state associated with each possible value of the property of interest
+// facetObject.[property of interest] stores how many results with matching properties correspond to each chromatin state (so, how many results with biosample "B cell" match each chromatin state) along with a total of how many results have that matching property overall (how many results have a biosample "B cell")
+// "param" refers to the property of interest and this function will need to be updated for other desired parameters to confirm that the slims are correctly aggregated
 export const complexFacets = (files, filteredFiles, param) => {
     // initialize facet object
     const facetObject = [];
@@ -133,17 +138,11 @@ export const complexFacets = (files, filteredFiles, param) => {
 
     const chromatinHierarchy = Object.keys(initializedChromatinObject);
 
-    // compile term names for each facet from possible results
+    // use all possible results (files) to generate an empty facet structure (associated states as null and totals as 0) with entries corresponding to all possible values for a given property
     files.forEach((file) => {
         let slims = [];
-        if (file[param]) {
-            if (param === 'biosample' || param === 'state') {
-                slims = [file[param]];
-            } else if (file[param].length > 1) {
-                slims = [...file[param]];
-            } else {
-                slims = file[param];
-            }
+        if (file[param] && (param === 'biosample' || param === 'state')) {
+            slims = [file[param]];
         }
         slims.forEach((slim) => {
             if (!facetObject[param][slim]) {
@@ -154,17 +153,11 @@ export const complexFacets = (files, filteredFiles, param) => {
         });
     });
 
-    // compile term names for each facet from possible results
+    // use filtered results (filteredFiles) to fill in the empty facet structure
     filteredFiles.forEach((file) => {
         let slims = [];
-        if (file[param]) {
-            if (param === 'biosample' || param === 'state') {
-                slims = [file[param]];
-            } else if (file[param].length > 1) {
-                slims = [...file[param]];
-            } else {
-                slims = file[param];
-            }
+        if (file[param] && (param === 'biosample' || param === 'state')) {
+            slims = [file[param]];
         }
         slims.forEach((slim) => {
             facetObject[param][slim].total += 1;
@@ -181,6 +174,12 @@ export const complexFacets = (files, filteredFiles, param) => {
     return facetObject;
 };
 
+// Generates a facet structure as follows:
+// The files structure contains results with various properties and we are aggregating counts of one of those properties in "facetObject"
+// facetObject.associatedStates stores the most active state associated with each possible value of the property of interest
+// facetObject.[property of interest] aggregates counts of possible values of the property of interest
+// "param" refers to the property of interest which at this time should only be "organ_slims"
+// Note: unlike "complexFacet", this structure does not include counts for each chromatin state per property value under facetObject.[property of interest] - it only includes total counts for each value corresponding to a given property
 export const createOrganFacets = (files, filteredFiles, param) => {
     // initialize facet object
     const facetObject = [];
@@ -189,7 +188,7 @@ export const createOrganFacets = (files, filteredFiles, param) => {
 
     const chromatinHierarchy = Object.keys(initializedChromatinObject);
 
-    // compile term names for each facet from possible results
+    // use all possible results (files) to generate an empty facet structure (associated states as null and counts as 0) with entries corresponding to all possible values for a given property
     files.forEach((file) => {
         let slims = [];
         if (file[param]) {
@@ -203,7 +202,7 @@ export const createOrganFacets = (files, filteredFiles, param) => {
         });
     });
 
-    // compile term names for each facet from possible results
+    // use filtered results (filteredFiles) to fill in the empty facet structure
     filteredFiles.forEach((file) => {
         let slims = [];
         if (file[param]) {

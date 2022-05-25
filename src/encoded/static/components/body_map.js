@@ -128,7 +128,7 @@ export const addingClass = (changedClass, matchingString, removeFlag = false) =>
 // checkClass is used to set an active class on buttons or images based on whether or not they are selected
 const checkClass = (selectedOrgan, organ) => selectedOrgan.includes(organ);
 
-// Set body map diagram colors based on url, when component mounts
+// Set initialized body map diagram colors
 export const initializeBodyMap = (terms, BodyList, associatedStates) => {
     if (terms.length > 0) {
         terms.forEach((term) => {
