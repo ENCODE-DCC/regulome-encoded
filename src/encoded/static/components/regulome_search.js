@@ -989,26 +989,31 @@ export class RegulomeSearch extends React.Component {
                                         </div>
                                     </React.Fragment>
                                 : null}
-                                {Object.keys(hitSnps).map(rsid =>
-                                    <div className="notification-line" key={rsid}>
-                                        <div className="notification-label">{rsid}</div>
-                                        <div className="notification">
-                                            <div>
-                                                {sortedPopulations[rsid].slice(0, 3).map(
-                                                    population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
-                                                )}
-                                            </div>
-                                            {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
-                                                <div>
-                                                    {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
-                                                        population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
-                                                    )}
+                                {Object.keys(hitSnps).map((rsid) => {
+                                    if (sortedPopulations[rsid].length > 0) {
+                                        return (
+                                            <div className="notification-line" key={rsid}>
+                                                <div className="notification-label">{rsid}</div>
+                                                <div className="notification">
+                                                    <div>
+                                                        {sortedPopulations[rsid].slice(0, 3).map(
+                                                            population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                        )}
+                                                    </div>
+                                                    {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
+                                                        <div>
+                                                            {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
+                                                                population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                            )}
+                                                        </div>
+                                                    : null}
+                                                    {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'fewer' : 'more'}</button> : null}
                                                 </div>
-                                            : null}
-                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'fewer' : 'more'}</button> : null}
-                                        </div>
-                                    </div>
-                                )}
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })};
                             </div>
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
