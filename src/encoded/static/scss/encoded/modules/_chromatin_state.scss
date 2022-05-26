@@ -10,9 +10,9 @@ $heterochromatin: #8A91D0;
 $bivalentpoisedtss: #DD9292;
 $flankingbivalenttssenh: #F0BAA8;
 $bivalentenhancer: #BDB76B;
-$repressedpolycomb: #424242;
-$weakrepressedpolycomb: #616161;
-$quiescentlow: #757575;
+$repressedpolycomb: #7F6265;
+$weakrepressedpolycomb: #968A88;
+$quiescentlow: #C2C2C2;
 
 $statestroke: #7D6167;
 
@@ -34,34 +34,30 @@ $statestroke: #7D6167;
 }
 
 // for "skin of body" (cls-5), entire body map should not turn light purple on hover, just the outline
-// .homo-sapiens {
-//     .cls-5 {
-//         &:hover {
-//             stroke: lighten($Homo-sapiens, 20%);
-//             cursor: pointer;
-//         }
-//
-//         &.highlight {
-//             stroke: lighten($Homo-sapiens, 20%);
-//             cursor: pointer;
-//         }
-//     }
-// }
+.homo-sapiens {
+    .cls-5 {
+        &:hover {
+            cursor: pointer;
+        }
+
+        &.highlight {
+            cursor: pointer;
+        }
+    }
+}
 
 // We need a couple special cases for highlighting specific elements on the body map
 // For "skin of body" (cls-5), entire body map should not turn light purple on hover so it is excluded from highlight styles
 // However, we do want the outline to be highlighted and we need it to appear clickable
-// .cls-5 {
-//     &:hover {
-//         stroke: lighten($Homo-sapiens, 20%);
-//         cursor: pointer;
-//     }
-//
-//     &.highlight {
-//         stroke: lighten($Homo-sapiens, 20%);
-//         cursor: pointer;
-//     }
-// }
+.cls-5 {
+    &:hover {
+        cursor: pointer;
+    }
+
+    &.highlight {
+        cursor: pointer;
+    }
+}
 // Similarly, "cls-nervebackground" should not turn light purple on hover so it is excluded from highlight styles
 // However, we do want it to appear clickable
 .cls-nervebackground {
@@ -185,20 +181,20 @@ $statestroke: #7D6167;
             }
         }
         &.repressedpolycomb {
-            fill: #9E9E9E;
-            stroke: #1F1F1F;
+            fill: #A68C8E;
+            stroke: #2F2324;
 
             &.active, &.highlight {
-                fill: #424242;
+                fill: #7F6265;
                 stroke-width: 2px;
             }
         }
         &.weakrepressedpolycomb {
-            fill: #BDBDBD;
+            fill: #A99F9E;
             stroke: #292929;
 
             &.active, &.highlight {
-                fill: #616161;
+                fill: #968A88;
                 stroke-width: 2px;
             }
         }
@@ -208,7 +204,7 @@ $statestroke: #7D6167;
             stroke: #292929;
 
             &.active, &.highlight {
-                fill: #757575;
+                fill: #C2C2C2;
                 stroke-width: 2px;
             }
         }
@@ -337,7 +333,7 @@ $statestroke: #7D6167;
             }
 
             .sub-text {
-                height: 37px;
+                height: 30px;
                 font-size: 1rem;
                 font-style: italic;
                 line-height: 1;
