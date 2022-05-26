@@ -264,6 +264,7 @@ export class ChromatinView extends React.Component {
                                 <div className="chromatin-hed">
                                     <i className="icon icon-filter" />
                                     Filter by organ
+                                    <div className="sub-text">Colored by most active chromatin state</div>
                                 </div>
                                 <BodyMapThumbnailAndModal
                                     facet={this.state.bodyMapFacet}
@@ -291,6 +292,7 @@ export class ChromatinView extends React.Component {
                                 <div className="chromatin-hed">
                                     <i className="icon icon-filter" />
                                     Filter by biosample
+                                    <div className="sub-text">Grouped by organs</div>
                                 </div>
                                 <ChartTable
                                     key={(this.state.stateFilters.length + this.state.bodyMapFilters.length + this.state.biosampleFilters.length + 3)}
@@ -325,6 +327,7 @@ export class ChromatinView extends React.Component {
                                 <div className="chromatin-hed">
                                     <i className="icon icon-filter" />
                                     Filter by chromatin state
+                                    <div className="sub-text">Ordered by most actively transcribed gene regions</div>
                                 </div>
                                 <ChartTable
                                     key={(this.state.stateFilters.length + this.state.bodyMapFilters.length + this.state.biosampleFilters.length)}
