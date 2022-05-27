@@ -943,6 +943,7 @@ export class RegulomeSearch extends React.Component {
                 }
             });
         }
+        const showPopulation = Object.values(sortedPopulations).reduce((out, inp) => out + inp.length, 0);
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
@@ -957,11 +958,8 @@ export class RegulomeSearch extends React.Component {
                     </React.Fragment>
                 : (context.total > 0) ?
                     <React.Fragment>
-                        <div className="lead-logo">
-                            <a href="/">
-                                <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
-                                <div className="version-tag">2.0.3</div>
-                            </a>
+                        <div className="rsid-title">
+                            {context.variants[0].rsids.map(rsid => <span>{rsid}</span>)}
                         </div>
                         <React.Fragment>
                             <div className="search-information">
@@ -989,31 +987,40 @@ export class RegulomeSearch extends React.Component {
                                         </div>
                                     </React.Fragment>
                                 : null}
-                                {Object.keys(hitSnps).map((rsid) => {
-                                    if (sortedPopulations[rsid].length > 0) {
-                                        return (
-                                            <div className="notification-line" key={rsid}>
-                                                <div className="notification-label">{rsid}</div>
-                                                <div className="notification">
-                                                    <div>
-                                                        {sortedPopulations[rsid].slice(0, 3).map(
-                                                            population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
-                                                        )}
-                                                    </div>
-                                                    {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
-                                                        <div>
-                                                            {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
-                                                                population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
-                                                            )}
+                                {showPopulation ?
+                                    <React.Fragment>
+                                        {Object.keys(hitSnps).map((rsid) => {
+                                            if (sortedPopulations[rsid].length > 0) {
+                                                return (
+                                                    <div className="notification-line" key={rsid}>
+                                                        <div className="notification-label">Frequency</div>
+                                                        <div className="notification">
+                                                            <div>
+                                                                {sortedPopulations[rsid].slice(0, 3).map(
+                                                                    population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                                )}
+                                                            </div>
+                                                            {sortedPopulations[rsid].length > 3 && this.state.showMoreFreqs ?
+                                                                <div>
+                                                                    {sortedPopulations[rsid].slice(3, hitSnps[rsid].length).map(
+                                                                        population => <div key={population}>{`${hitSnps[rsid][population]} (${population})`}</div>
+                                                                    )}
+                                                                </div>
+                                                            : null}
+                                                            {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'fewer' : 'more'}</button> : null}
                                                         </div>
-                                                    : null}
-                                                    {sortedPopulations[rsid].length > defaultDisplayCount ? <button onClick={toggleFreqsShow}>{sortedPopulations[rsid].length - 3} {this.state.showMoreFreqs ? 'fewer' : 'more'}</button> : null}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })};
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })}
+                                    </React.Fragment>
+                                :
+                                    <div className="notification-line">
+                                        <div className="notification-label">Frequency</div>
+                                        <div className="notification">None</div>
+                                    </div>
+                                }
                             </div>
                             {context.nearby_snps && context.nearby_snps.length > 0 ?
                                 <NearbySNPsDrawing {...this.props} />
