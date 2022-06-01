@@ -661,7 +661,7 @@ export const BodyMapModal = (props) => {
 
     useEffect(() => {
         setFacet(props.facet);
-    });
+    }, [props.facet]);
 
     return (
         <div className="modal" style={{ display: 'block' }}>
@@ -726,7 +726,7 @@ export const BodyMapThumbnailAndModal = (props) => {
         setFacet(props.facet);
         // Highlight body map selections
         initializeBodyMap(props.originalFilters, BodyList, props.facet.associatedStates);
-    });
+    }, [props.facet, props.originalFilters]);
 
     return (
         <div className="body-map-thumbnail-and-modal">

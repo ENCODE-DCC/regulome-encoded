@@ -792,162 +792,130 @@ HeatMap.propTypes = {
 };
 
 // Display information on page as JSON formatted data
-export class ChartTable extends React.Component {
-    constructor(props, context) {
-        super(props, context);
+export const ChartTable = (props) => {
+    const chartKeys = props.sortedKeys || Object.keys(props.chartData);
+    const chartArray = chartKeys.map(key => props.chartData[key].total);
+    const chartMax = Math.max(...chartArray);
 
-        const chartKeys = props.sortedKeys || Object.keys(props.chartData);
-        const chartArray = chartKeys.map(key => props.chartData[key].total);
-        const chartMax = Math.max(...chartArray);
+    const handleClick = props.handleChartFilters;
 
-        let leftMargin = 0;
-        Object.keys(props.chartData).forEach((d) => {
-            const numLen = d.replace(/\D/g, '').length > 0 ? 30 : 0;
-            const stringLen = d.length;
-            if (this.props.fullData) {
-                leftMargin = Math.max((stringLen * 7) + 60, leftMargin);
-            } else {
-                leftMargin = Math.max(((stringLen * 7) - numLen), leftMargin);
-            }
-        });
-        // add in some extra margin for white space and caret icon
-        leftMargin += 38;
-        if (props.chartWidth > 0 && props.chartWidth <= leftMargin) {
-            leftMargin = props.chartWidth - 40;
+    let leftMargin = 0;
+    Object.keys(props.chartData).forEach((d) => {
+        const numLen = d.replace(/\D/g, '').length > 0 ? 30 : 0;
+        const stringLen = d.length;
+        if (props.fullData) {
+            leftMargin = Math.max((stringLen * 7) + 60, leftMargin);
+        } else {
+            leftMargin = Math.max(((stringLen * 7) - numLen), leftMargin);
         }
-
-        this.state = {
-            chartMax,
-            leftMargin,
-            chartData: props.chartData,
-            chartKeys: props.sortedKeys || Object.keys(props.chartData).sort(),
-        };
-
-        this.handleClick = this.handleClick.bind(this);
+    });
+    // add in some extra margin for white space and caret icon
+    leftMargin += 38;
+    if (props.chartWidth > 0 && props.chartWidth <= leftMargin) {
+        leftMargin = props.chartWidth - 40;
     }
 
-    componentDidUpdate(prevProps) {
-        if (!(_.isEqual(prevProps.sortedKeys, this.props.sortedKeys)) && this.props.sortedKeys) {
-            this.setState({
-                chartKeys: this.props.sortedKeys,
-            });
-        }
-        if (prevProps.chartWidth !== this.props.chartWidth) {
-            if (this.props.chartWidth <= this.state.leftMargin) {
-                this.setState({
-                    leftMargin: (this.props.chartWidth - 40),
-                });
-            }
-        }
-    }
+    return (
+        <div className={`bar-chart-container bar-chart-chromatin ${props.additionalClass}`}>
+            <div className="bar-chart-bars">
+                {chartKeys.map((d, dIdx) => {
+                    const dKey = sanitizedString(d);
+                    let barWidth = ((props.chartWidth - leftMargin) / chartMax) * props.chartData[d].total;
+                    const remainderWidth = props.chartWidth - barWidth - leftMargin;
 
-    handleClick(clickID) {
-        this.props.handleChartFilters(clickID);
-    }
+                    if (leftMargin === (props.chartWidth - 40)) {
+                        barWidth = (leftMargin / chartMax) * props.chartData[d].total;
+                    }
 
-    render() {
-        return (
-            <div className={`bar-chart-container bar-chart-chromatin ${this.props.additionalClass}`}>
-                <div className="bar-chart-bars">
-                    {this.state.chartKeys.map((d, dIdx) => {
-                        const dKey = sanitizedString(d);
-                        let barWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d].total;
-                        const remainderWidth = this.props.chartWidth - barWidth - this.state.leftMargin;
+                    let fullResultOrgan = '';
+                    if (props.fullData) {
+                        const fullResult = props.fullData.find(d2 => d2.biosample_ontology.term_name === d);
+                        fullResultOrgan = (fullResult && fullResult.biosample_ontology) ? fullResult.biosample_ontology.organ_slims.join(', ') : '';
+                    }
 
-                        if (this.state.leftMargin === (this.props.chartWidth - 40)) {
-                            barWidth = (this.state.leftMargin / this.state.chartMax) * this.state.chartData[d].total;
-                        }
-
-                        let fullResultOrgan = '';
-                        if (this.props.fullData) {
-                            const fullResult = this.props.fullData.find(d2 => d2.biosample_ontology.term_name === d);
-                            fullResultOrgan = (fullResult && fullResult.biosample_ontology) ? fullResult.biosample_ontology.organ_slims.join(', ') : '';
-                        }
-
-                        if (this.state.chartData[d].total > 0) {
-                            const stateKeys = Object.keys(this.state.chartData[d]).sort(sortChromatin);
-                            return (
-                                <div
-                                    className={`biosample-table table${dKey} display-table`}
-                                    key={`table${dKey}-${dIdx}`}
-                                >
-                                    <div className="bar-row" key={this.state.chartData[d].total}>
-                                        <button
-                                            className={`bar-label ${(this.props.selectedStates.includes(dKey) || this.props.selectedStates.includes(classString(dKey))) ? 'active' : ''}`}
-                                            style={{
-                                                width: `${this.state.leftMargin}px`,
-                                            }}
-                                            onClick={() => this.handleClick(dKey)}
-                                            id={`barchart-button-${dKey}`}
-                                        >
-                                            {shortenedLabel(d)}
-                                            {fullResultOrgan ?
-                                                <span className="organ-label">{fullResultOrgan}</span>
-                                            : null}
-                                        </button>
-                                        <div
-                                            className="bar-container"
-                                            style={{
-                                                width: !this.props.fixedBars ? `${barWidth}px` : '30px',
-                                                marginRight: !this.props.fixedBars ? `${remainderWidth}px` : '0px',
-                                            }}
-                                        >
-                                            {stateKeys && !this.props.fixedBars ?
-                                                <React.Fragment>
-                                                    {stateKeys.map((state) => {
-                                                        let stateWidth = ((this.props.chartWidth - this.state.leftMargin) / this.state.chartMax) * this.state.chartData[d][state];
-                                                        if (this.state.leftMargin === (this.props.chartWidth - 40)) {
-                                                            stateWidth = (this.state.leftMargin / this.state.chartMax) * this.state.chartData[d][state];
-                                                        }
-                                                        if (state !== 'total') {
-                                                            return (
-                                                                <div
-                                                                    key={`bar${state}`}
-                                                                    className="bar"
-                                                                    style={{
-                                                                        backgroundColor: lookupColorChromatinState(state) || defaultColor,
-                                                                        width: `${stateWidth}px`,
-                                                                        height: `${extraTallLabels.includes(shortenedLabel(d)) ? '39px' : '24px'}`,
-                                                                        marginTop: `${extraTallLabels.includes(shortenedLabel(d)) ? '-15px' : '0px'}`,
-                                                                    }}
-                                                                />
-                                                            );
-                                                        }
-                                                        return null;
-                                                    })}
-                                                </React.Fragment>
-                                            :
-                                                <div
-                                                    className="bar"
-                                                    style={{
-                                                        backgroundColor: lookupColorChromatinState(stateKeys[1]) || defaultColor,
-                                                        width: '30px',
-                                                    }}
-                                                />
-                                            }
-                                            {!this.props.fixedBars ?
-                                                <div
-                                                    className="bar-annotation"
-                                                    style={{
-                                                        color: 'black',
-                                                        right: `${barWidth > 20 ? '5px' : '-12px'}`,
-                                                    }}
-                                                >
-                                                    {this.state.chartData[d].total}
-                                                </div>
-                                            : null}
-                                        </div>
+                    if (props.chartData[d].total > 0) {
+                        const stateKeys = Object.keys(props.chartData[d]).sort(sortChromatin);
+                        return (
+                            <div
+                                className={`biosample-table table${dKey} display-table`}
+                                key={`table${dKey}-${dIdx}`}
+                            >
+                                <div className="bar-row" key={props.chartData[d].total}>
+                                    <button
+                                        className={`bar-label ${(props.selectedStates.includes(dKey) || props.selectedStates.includes(classString(dKey))) ? 'active' : ''}`}
+                                        style={{
+                                            width: `${leftMargin}px`,
+                                        }}
+                                        onClick={() => handleClick(dKey)}
+                                        id={`barchart-button-${dKey}`}
+                                    >
+                                        {shortenedLabel(d)}
+                                        {fullResultOrgan ?
+                                            <span className="organ-label">{fullResultOrgan}</span>
+                                        : null}
+                                    </button>
+                                    <div
+                                        className="bar-container"
+                                        style={{
+                                            width: !props.fixedBars ? `${barWidth}px` : '30px',
+                                            marginRight: !props.fixedBars ? `${remainderWidth}px` : '0px',
+                                        }}
+                                    >
+                                        {stateKeys && !props.fixedBars ?
+                                            <React.Fragment>
+                                                {stateKeys.map((state) => {
+                                                    let stateWidth = ((props.chartWidth - leftMargin) / chartMax) * props.chartData[d][state];
+                                                    if (leftMargin === (props.chartWidth - 40)) {
+                                                        stateWidth = (leftMargin / chartMax) * props.chartData[d][state];
+                                                    }
+                                                    if (state !== 'total') {
+                                                        return (
+                                                            <div
+                                                                key={`bar${state}`}
+                                                                className="bar"
+                                                                style={{
+                                                                    backgroundColor: lookupColorChromatinState(state) || defaultColor,
+                                                                    width: `${stateWidth}px`,
+                                                                    height: `${extraTallLabels.includes(shortenedLabel(d)) ? '39px' : '24px'}`,
+                                                                    marginTop: `${extraTallLabels.includes(shortenedLabel(d)) ? '-15px' : '0px'}`,
+                                                                }}
+                                                            />
+                                                        );
+                                                    }
+                                                    return null;
+                                                })}
+                                            </React.Fragment>
+                                        :
+                                            <div
+                                                className="bar"
+                                                style={{
+                                                    backgroundColor: lookupColorChromatinState(stateKeys[1]) || defaultColor,
+                                                    width: '30px',
+                                                }}
+                                            />
+                                        }
+                                        {!props.fixedBars ?
+                                            <div
+                                                className="bar-annotation"
+                                                style={{
+                                                    color: 'black',
+                                                    right: `${barWidth > 20 ? '5px' : '-12px'}`,
+                                                }}
+                                            >
+                                                {props.chartData[d].total}
+                                            </div>
+                                        : null}
                                     </div>
                                 </div>
-                            );
-                        }
-                        return null;
-                    })}
-                </div>
+                            </div>
+                        );
+                    }
+                    return null;
+                })}
             </div>
-        );
-    }
-}
+        </div>
+    );
+};
 
 ChartTable.propTypes = {
     chartData: PropTypes.object.isRequired,
@@ -970,7 +938,6 @@ ChartTable.defaultProps = {
 export default {
     BarChart,
     ChartList,
-    ChartTable,
     HeatMap,
     lookupChromatinNames,
 };

@@ -7,6 +7,14 @@ import { initializedChromatinObject } from './chromatin_view';
 // Number of terms to show, the rest will be viewable on scroll
 const displayedTermsCount = 14;
 
+// Add method to filter objects based on value
+Object.filter = (obj, predicate) =>
+    Object.keys(obj)
+        .filter(key => predicate(obj[key]))
+        .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {});
+
+// Handles filter selections for genome browser filters
+// Genome browser filters have the format "B cellANDorgan" where "B cell" is the term and "organ" is the facet
 export const filterByAllSelectedFilters = (files, facets, facetList) => {
     let newFiles = files;
     facetList.forEach((facetName) => {
@@ -29,38 +37,38 @@ export const filterByAllSelectedFilters = (files, facets, facetList) => {
     return newFiles;
 };
 
-const placeZerosAtEnd = (arr) => {
-    Object.filter = (obj, predicate) =>
-        Object.keys(obj)
-            .filter(key => predicate(obj[key]))
-            .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {});
+// Arrange facet entries for genome browser view
+// Entries with 0 corresponding results are separated from results with results
+// Entries in each group are sorted, and then the groups are re-combined
+const placeZerosAtEnd = (unorderedObject) => {
+    const entriesWithResults = Object.filter(unorderedObject, val => val > 0);
+    const entriesWithoutResults = Object.filter(unorderedObject, val => val === 0);
 
-    const isntZero = Object.filter(arr, val => val > 0);
-    const isZero = Object.filter(arr, val => val === 0);
-
-    const sortedIsntZero = Object.keys(isntZero).sort().reduce((obj, key) => {
-        obj[key] = isntZero[key];
+    const sortedEntriesWithResults = Object.keys(entriesWithResults).sort().reduce((obj, key) => {
+        obj[key] = entriesWithResults[key];
         return obj;
     }, {});
 
-    const sortedIsZero = Object.keys(isZero).sort().reduce((obj, key) => {
-        obj[key] = isZero[key];
+    const sortedEntriesWithoutResults = Object.keys(entriesWithoutResults).sort().reduce((obj, key) => {
+        obj[key] = entriesWithoutResults[key];
         return obj;
     }, {});
 
-    return { ...sortedIsntZero, ...sortedIsZero };
+    return { ...sortedEntriesWithResults, ...sortedEntriesWithoutResults };
 };
 
-export const createFacets = (files, filteredFiles, facetList, searchTerms) => {
+// Generate facets for the genome browser view
+export const createFacets = (files, filteredFiles, facetParameters, searchTerms) => {
     // initialize facet object
-    const facetObject = [];
-    facetList.forEach((facet) => {
-        facetObject[facet] = [];
+    const facetObject = {};
+    facetParameters.forEach((facet) => {
+        facetObject[facet.type] = [];
     });
 
     // compile term names for each facet from possible results
     files.forEach((file) => {
-        facetList.forEach((facet) => {
+        facetParameters.forEach((param) => {
+            const facet = param.type;
             // generating facets based on file parameters
             // for every facet except organ, each file matches exactly 1 facet term
             // for the organ facet, each file can have multiple organ slims and we are listing them individually
@@ -92,7 +100,8 @@ export const createFacets = (files, filteredFiles, facetList, searchTerms) => {
 
     // compile term names for each facet from possible results
     filteredFiles.forEach((file) => {
-        facetList.forEach((facet) => {
+        facetParameters.forEach((param) => {
+            const facet = param.type;
             // generating facets based on file parameters
             // for every facet except organ, each file matches exactly 1 facet term
             // for the organ facet, each file can have multiple organ slims and we are listing them individually
@@ -116,11 +125,10 @@ export const createFacets = (files, filteredFiles, facetList, searchTerms) => {
             });
         });
     });
-
     const newFacetObject = {};
     // sort facet term names by counts with zeros at the end
-    facetList.forEach((facet) => {
-        newFacetObject[facet] = placeZerosAtEnd(facetObject[facet]);
+    facetParameters.forEach((facet) => {
+        newFacetObject[facet.type] = placeZerosAtEnd(facetObject[facet.type]);
     });
     return newFacetObject;
 };
@@ -158,50 +166,22 @@ FacetButton.propTypes = {
 };
 
 export const Facet = (props) => {
-    const { facetTitle, facetName, facetArray, addGenomeFilter, selectedFacets } = props;
+    const { typeahead, facetTitle, facetName, facetArray, addGenomeFilter, selectedFacets, handleSearch, unsanitizedSearchTerm } = props;
     return (
         <div className="facet">
             <h4>{facetTitle}</h4>
-            <div className="facet-scrollable">
-                {Object.keys(facetArray).map((d) => {
-                    if (d === '') {
-                        return <hr />;
-                    }
-                    return <FacetButton
-                        selectedFacets={selectedFacets}
-                        buttonLabel={`${d} (${facetArray[d]})`}
-                        buttonName={d}
-                        facetLabel={facetName}
-                        addGenomeFilter={addGenomeFilter}
-                        key={d}
-                    />;
-                })}
-            </div>
-        </div>
-    );
-};
-
-Facet.propTypes = {
-    facetTitle: PropTypes.string.isRequired,
-    facetName: PropTypes.string.isRequired,
-    facetArray: PropTypes.object.isRequired,
-    addGenomeFilter: PropTypes.func.isRequired,
-    selectedFacets: PropTypes.array.isRequired,
-};
-
-const TypeaheadFacet = (props) => {
-    const { facetTitle, facetName, facetArray, handleSearch, addGenomeFilter, selectedFacets, unsanitizedSearchTerm } = props;
-    return (
-        <div className="facet">
-            <h4>{facetTitle}</h4>
-            <div className="typeahead-entry" role="search">
-                <i className="icon icon-search" />
-                <div className="searchform">
-                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
+            {typeahead ?
+                <div className="typeahead-entry" role="search">
+                    <i className="icon icon-search" />
+                    <div className="searchform">
+                        <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
+                    </div>
                 </div>
-            </div>
+            : null}
             <div className="facet-scrollable">
-                <div className="top-shading hide-shading" />
+                {typeahead ?
+                    <div className="top-shading hide-shading" />
+                : null}
                 <div
                     className="term-list"
                     onScroll={shadeOverflowOnScroll}
@@ -220,23 +200,27 @@ const TypeaheadFacet = (props) => {
                         />;
                     })}
                 </div>
-                <div className={`shading ${(facetArray.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
             </div>
+            {typeahead ?
+                <div className={`shading ${(facetArray.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
+            : null}
         </div>
     );
 };
 
-TypeaheadFacet.propTypes = {
+Facet.propTypes = {
+    typeahead: PropTypes.bool.isRequired,
     facetTitle: PropTypes.string.isRequired,
     facetName: PropTypes.string.isRequired,
     facetArray: PropTypes.object.isRequired,
-    handleSearch: PropTypes.func.isRequired,
     addGenomeFilter: PropTypes.func.isRequired,
     selectedFacets: PropTypes.array.isRequired,
+    handleSearch: PropTypes.func,
     unsanitizedSearchTerm: PropTypes.string,
 };
 
-TypeaheadFacet.defaultProps = {
+Facet.defaultProps = {
+    handleSearch: null,
     unsanitizedSearchTerm: '',
 };
 
@@ -282,7 +266,6 @@ export class FacetList extends React.Component {
         this.state = {
             selectedFacets: [],
             unsanitizedSearchTerms: {},
-            searchTerms: {},
         };
         this.addGenomeFilter = this.addGenomeFilter.bind(this);
         this.toggleFacetDisplay = this.toggleFacetDisplay.bind(this);
@@ -324,22 +307,24 @@ export class FacetList extends React.Component {
     }
 
     handleSearch(e, typeaheadIdentifier) {
-        const filterVal = String(globals.sanitizedString(e.target.value));
         const targetValue = e.target.value;
         this.setState((prevState) => {
             const unsanitizedSearchTerms = { ...prevState.unsanitizedSearchTerms };
-            const searchTerms = { ...prevState.searchTerms };
             unsanitizedSearchTerms[typeaheadIdentifier] = targetValue;
-            searchTerms[typeaheadIdentifier] = filterVal;
             return {
-                searchTerms,
                 unsanitizedSearchTerms,
             };
         });
     }
 
     render() {
-        const facetObject = createFacets(this.props.files, this.props.filteredFiles, this.props.facetList, this.state.searchTerms);
+        // Generate sanitized search terms
+        const searchTerms = {};
+        Object.keys(this.state.unsanitizedSearchTerms).forEach((facet) => {
+            searchTerms[facet] = String(globals.sanitizedString(this.state.unsanitizedSearchTerms[facet]));
+        });
+        // Create facet object filtered by appropriate search terms
+        const facetObject = createFacets(this.props.files, this.props.filteredFiles, this.props.facetParameters, searchTerms);
 
         return (
             <React.Fragment>
@@ -377,27 +362,29 @@ export class FacetList extends React.Component {
                 <button className={`browser-selections ${this.state.facetDisplay ? 'facets-without-border' : ''}`} onClick={this.toggleFacetDisplay}><i className={`icon ${this.state.facetDisplay ? 'icon-caret-down' : 'icon-caret-right'}`} /><span className="selection-header">Refine your search</span></button>
                 {this.state.facetDisplay ?
                     <div className="browser-facet-container">
-                        {this.props.facetList.map((facet, facetIndex) => {
-                            if (this.props.typeaheadFacetList[facetIndex]) {
+                        {this.props.facetParameters.map((facet, facetIndex) => {
+                            if (facet.typeahead) {
                                 return (
-                                    <TypeaheadFacet
+                                    <Facet
+                                        typeahead
                                         key={facetIndex}
-                                        facetTitle={this.props.facetTitleList[facetIndex]}
-                                        facetName={facet}
-                                        facetArray={facetObject[facet]}
+                                        facetTitle={facet.title}
+                                        facetName={facet.type}
+                                        facetArray={facetObject[facet.type]}
                                         handleSearch={this.handleSearch}
                                         addGenomeFilter={this.addGenomeFilter}
                                         selectedFacets={this.state.selectedFacets}
-                                        unsanitizedSearchTerm={this.state.unsanitizedSearchTerms[facet]}
+                                        unsanitizedSearchTerm={this.state.unsanitizedSearchTerms[facet.type]}
                                     />
                                 );
                             }
                             return (
                                 <Facet
+                                    typeahead={false}
                                     key={facetIndex}
-                                    facetTitle={this.props.facetTitleList[facetIndex]}
-                                    facetName={facet}
-                                    facetArray={facetObject[facet]}
+                                    facetTitle={facet.title}
+                                    facetName={facet.type}
+                                    facetArray={facetObject[facet.type]}
                                     addGenomeFilter={this.addGenomeFilter}
                                     selectedFacets={this.state.selectedFacets}
                                 />
@@ -415,9 +402,7 @@ FacetList.propTypes = {
     handleFacetList: PropTypes.func.isRequired,
     filteredFiles: PropTypes.array.isRequired,
     selectedFilters: PropTypes.array.isRequired,
-    facetList: PropTypes.array.isRequired,
-    facetTitleList: PropTypes.array.isRequired,
-    typeaheadFacetList: PropTypes.array.isRequired,
+    facetParameters: PropTypes.array.isRequired,
 };
 
 

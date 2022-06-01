@@ -15,10 +15,34 @@ import { ChromatinView } from './chromatin_view';
 const screenMediumMax = 787;
 const screenSmallMax = 483;
 
-// Define facets (probably this should be in a schema really)
-const facetList = ['file_format', 'organ', 'biosample', 'assay', 'target'];
-const facetTitleList = ['File format', 'Organ / cell type', 'Biosample', 'Method', 'Target'];
-const typeaheadFacetList = [false, true, true, false, true];
+// Define facets parameters
+const facetParameters = [
+    {
+        type: 'file_format',
+        title: 'File format',
+        typeahead: false,
+    },
+    {
+        type: 'organ',
+        title: 'Organ / cell type',
+        typeahead: true,
+    },
+    {
+        type: 'biosample',
+        title: 'Biosample',
+        typeahead: true,
+    },
+    {
+        type: 'assay',
+        title: 'Method',
+        typeahead: false,
+    },
+    {
+        type: 'target',
+        title: 'Target',
+        typeahead: true,
+    },
+];
 
 // Fetch data from href
 function fetchData(href, fetch) {
@@ -741,7 +765,7 @@ export class RegulomeSearch extends React.Component {
     }
 
     handleFacetList(selectedFilters) {
-        const filteredFiles = filterByAllSelectedFilters(this.state.allFiles, selectedFilters, facetList);
+        const filteredFiles = filterByAllSelectedFilters(this.state.allFiles, selectedFilters, facetParameters);
         // if there are more filtered files than we want to display on one page, we will paginate
         const browserTotalPages = Math.ceil(filteredFiles.length / displaySize);
         if (filteredFiles.length > displaySize) {
@@ -1135,9 +1159,7 @@ export class RegulomeSearch extends React.Component {
                                                 handleFacetList={this.handleFacetList}
                                                 filteredFiles={this.state.filteredFiles}
                                                 selectedFilters={this.state.selectedFilters}
-                                                facetList={facetList}
-                                                facetTitleList={facetTitleList}
-                                                typeaheadFacetList={typeaheadFacetList}
+                                                facetParameters={facetParameters}
                                             />
                                             <GenomeBrowser
                                                 fixedHeight={this.state.multipleBrowserPages}

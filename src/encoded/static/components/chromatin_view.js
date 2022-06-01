@@ -59,14 +59,11 @@ const applyFilters = (data, stateFilters, bodyMapFilters, biosampleFilters) => {
         });
     }
 
-    const files = [];
-    filteredData.forEach((d) => {
-        files.push({
-            organ_slims: d.biosample_ontology.organ_slims,
-            biosample: d.biosample_ontology.term_name,
-            state: lookupChromatinNames(d.value),
-        });
-    });
+    const files = filteredData.map(d => ({
+        organ_slims: d.biosample_ontology.organ_slims,
+        biosample: d.biosample_ontology.term_name,
+        state: lookupChromatinNames(d.value),
+    }));
 
     return [
         filteredData,
@@ -110,7 +107,7 @@ const Selections = (props) => {
 
 Selections.propTypes = {
     filters: PropTypes.array.isRequired,
-    filterType: PropTypes.string.isRequired,
+    filterType: PropTypes.string.isRequired, // filterType can be "bodymap", "biosample", or "state"
     clearFilterFunc: PropTypes.func.isRequired,
     keyArray: PropTypes.array,
 };
@@ -123,14 +120,11 @@ export class ChromatinView extends React.Component {
     constructor(props) {
         super(props);
 
-        const files = [];
-        this.props.data.forEach((d) => {
-            files.push({
-                organ_slims: d.biosample_ontology.organ_slims,
-                biosample: d.biosample_ontology.term_name,
-                state: lookupChromatinNames(d.value),
-            });
-        });
+        const files = this.props.data.map(d => ({
+            organ_slims: d.biosample_ontology.organ_slims,
+            biosample: d.biosample_ontology.term_name,
+            state: lookupChromatinNames(d.value),
+        }));
         const filteredFiles = files;
 
         // generate facet data
