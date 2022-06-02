@@ -13,12 +13,32 @@ Object.filter = (obj, predicate) =>
         .filter(key => predicate(obj[key]))
         .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {});
 
+// Compute how many results correspond to one filter
+const filterByOneFilter = (files, facet) => {
+    const facetFilter = facet.split('AND')[0];
+    const facetName = facet.split('AND')[1];
+    let newFiles;
+    if (facetName === 'organ') {
+        newFiles = files.filter((d) => {
+            if (d[facetName] && (d[facetName].indexOf(',') > -1)) {
+                return d[facetName].split(', ').some(f => facetFilter.includes(f));
+            }
+            return null;
+        });
+    // for non-organ facets, just check if the term matches the facet
+    } else {
+        newFiles = files.filter(d => facetFilter === d[facetName]);
+    }
+    return newFiles;
+};
+
 // Handles filter selections for genome browser filters
 // Genome browser filters have the format "B cellANDorgan" where "B cell" is the term and "organ" is the facet
-export const filterByAllSelectedFilters = (files, facets, facetList) => {
+export const filterByAllSelectedFilters = (files, facets, facetParameters) => {
     let newFiles = files;
-    facetList.forEach((facetName) => {
-        const facetFilters = facets.filter(d => d.includes(`AND${facetName}`)).map(d => d.split('AND')[0].split(' (')[0]);
+    facetParameters.forEach((param) => {
+        const facetName = param.type;
+        const facetFilters = facets.filter(d => d.includes(`AND${facetName}`)).map(d => d.split('AND')[0]);
         if (facetFilters.length > 0) {
             // for organ facet, need to check if any of the listed organ terms match any of the organ filters
             if (facetName === 'organ') {
@@ -44,12 +64,12 @@ const placeZerosAtEnd = (unorderedObject) => {
     const entriesWithResults = Object.filter(unorderedObject, val => val > 0);
     const entriesWithoutResults = Object.filter(unorderedObject, val => val === 0);
 
-    const sortedEntriesWithResults = Object.keys(entriesWithResults).sort().reduce((obj, key) => {
+    const sortedEntriesWithResults = Object.keys(entriesWithResults).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).reduce((obj, key) => {
         obj[key] = entriesWithResults[key];
         return obj;
     }, {});
 
-    const sortedEntriesWithoutResults = Object.keys(entriesWithoutResults).sort().reduce((obj, key) => {
+    const sortedEntriesWithoutResults = Object.keys(entriesWithoutResults).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).reduce((obj, key) => {
         obj[key] = entriesWithoutResults[key];
         return obj;
     }, {});
@@ -57,8 +77,31 @@ const placeZerosAtEnd = (unorderedObject) => {
     return { ...sortedEntriesWithResults, ...sortedEntriesWithoutResults };
 };
 
+// Compute how many results would correspond to a facet term given current filter selections
+const lookupFilterCount = (filter, category, selectedFacets, files, filteredFiles, facetParameters) => {
+    const fakeFilter = `${filter}AND${category}`;
+    // for filters that are not selected, we want to display how many new results would be added if that filter were selected
+    if (!selectedFacets.includes(fakeFilter)) {
+        // if we add this filter to our selected filters, we need to know how many results there will be
+        const fakeFacets = [...selectedFacets, fakeFilter];
+        const fakeFilteredFiles = filterByAllSelectedFilters(files, fakeFacets, facetParameters);
+        // if a filter has already been selected in this category, we do not want to include results for those in our count
+        if ((selectedFacets.filter(d => d.includes(category)).length > 0)) {
+            if (category === 'organ') {
+                const alreadyMatchingFiles = filterByOneFilter(filteredFiles, fakeFilter);
+                return ((fakeFilteredFiles.length - filteredFiles.length) + alreadyMatchingFiles.length);
+            }
+            return (fakeFilteredFiles.length - filteredFiles.length);
+        }
+        return fakeFilteredFiles.length;
+    }
+    // for filters that are already selected, we want to display how many results that are displayed match this filter
+    const matchingFiles = filterByOneFilter(filteredFiles, fakeFilter);
+    return matchingFiles.length;
+};
+
 // Generate facets for the genome browser view
-export const createFacets = (files, filteredFiles, facetParameters, searchTerms) => {
+export const createFacets = (files, filteredFiles, facetParameters, searchTerms, selectedFilters) => {
     // initialize facet object
     const facetObject = {};
     facetParameters.forEach((facet) => {
@@ -98,33 +141,12 @@ export const createFacets = (files, filteredFiles, facetParameters, searchTerms)
         });
     });
 
-    // compile term names for each facet from possible results
-    filteredFiles.forEach((file) => {
-        facetParameters.forEach((param) => {
-            const facet = param.type;
-            // generating facets based on file parameters
-            // for every facet except organ, each file matches exactly 1 facet term
-            // for the organ facet, each file can have multiple organ slims and we are listing them individually
-            // so each file can match multiple organ facet terms whereas for other facets, each file matches exactly 1 term
-            // we will probably keep it but we are not sure if it is confusing (the counts don't add up to the number of results for the organ facet) so this may change in a future update
-            let slims = [];
-            if (facet === 'organ' && file[facet] && (file[facet].indexOf(',') > -1)) {
-                slims = file[facet].split(', ');
-            } else if (facet === 'organ_slims' && file[facet]) {
-                slims = [...file[facet]];
-            } else if (file[facet] && facet !== 'organ') {
-                slims = [file[facet]];
-            }
-            slims.forEach((slim) => {
-                // if the facet has a typeahead, check that term matches typed search, if so, add if the term is not already present in facet list
-                if (searchTerms[facet] && ((searchTerms[facet] === '') || globals.sanitizedString(slim).match(searchTerms[facet]))) {
-                    facetObject[facet][slim] += 1;
-                }
-                // if the file has a term, add term to facet object if it does not exist yet
-                facetObject[facet][slim] += 1;
-            });
+    Object.keys(facetObject).forEach((f) => {
+        Object.keys(facetObject[f]).forEach((p) => {
+            facetObject[f][p] = lookupFilterCount(p, f, selectedFilters, files, filteredFiles, facetParameters);
         });
     });
+
     const newFacetObject = {};
     // sort facet term names by counts with zeros at the end
     facetParameters.forEach((facet) => {
@@ -324,7 +346,7 @@ export class FacetList extends React.Component {
             searchTerms[facet] = String(globals.sanitizedString(this.state.unsanitizedSearchTerms[facet]));
         });
         // Create facet object filtered by appropriate search terms
-        const facetObject = createFacets(this.props.files, this.props.filteredFiles, this.props.facetParameters, searchTerms);
+        const facetObject = createFacets(this.props.files, this.props.filteredFiles, this.props.facetParameters, searchTerms, this.state.selectedFacets);
 
         return (
             <React.Fragment>
