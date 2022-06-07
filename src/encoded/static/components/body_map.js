@@ -415,7 +415,8 @@ export class BodyMap extends React.Component {
             // Selection of an organ is a toggle
             let active = true;
             // If the svg class contains "active", then we are de-selecting the organ
-            if (svgClass.indexOf('active') > -1) {
+            const classArray = svgClass.split(' ');
+            if (classArray.indexOf('active') > -1) {
                 svgClass = svgClass.replace(' active', '');
                 active = false;
             // If not, we are selecting the organ, an append an active class to it
