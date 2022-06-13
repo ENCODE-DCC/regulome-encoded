@@ -97,6 +97,35 @@ $chromatinstates:
             stroke-width: 2px;
 
             &.active, &.highlight {
+                fill: #ffc44d;
+                stroke: #896656;
+            }
+        }
+
+        &.bivalentenhancer {
+            fill: #dcd9b2;
+            stroke: #8D883F;
+
+            &.active, &.highlight {
+                fill: #BDB76B;
+            }
+        }
+
+        &.genicenhancer {
+            fill: #E5F386;
+            stroke: #A2B331;
+
+            &.active, &.highlight {
+                fill: #C8DD41;
+            }
+        }
+
+        &.weakenhancer {
+            fill: #fdfdad;
+            stroke: #e3e319;
+            stroke-width: 2px;
+
+            &.active, &.highlight {
                 fill: $activeenhancer;
                 stroke: #896656;
             }
@@ -488,4 +517,109 @@ $chromatinstates:
         opacity: 0.2;
         border-radius: 50%;
     }
+}
+
+.activeenhancer .overlay {
+    background: $activeenhancer;
+    border: 2px solid $activeenhancer;
+}
+
+.bivalentenhancer .overlay {
+    background: $bivalentenhancer;
+    border: 2px solid $bivalentenhancer;
+}
+
+.genicenhancer .overlay {
+    background: $genicenhancer;
+    border: 2px solid $genicenhancer;
+}
+
+.weakenhancer .overlay {
+    background: $weakenhancer;
+    border: 2px solid $weakenhancer;
+}
+
+.heterochromatin .overlay {
+    background: $heterochromatin;
+    border: 2px solid $heterochromatin;
+}
+
+.quiescentlow .overlay {
+    background: $quiescentlow;
+    border: 2px solid $quiescentlow;
+}
+
+.repressedpolycomb .overlay {
+    background: $repressedpolycomb;
+    border: 2px solid $repressedpolycomb;
+}
+
+.weakrepressedpolycomb .overlay {
+    background: $weakrepressedpolycomb;
+    border: 2px solid $weakrepressedpolycomb;
+}
+
+.activetss .overlay {
+    background: $activetss;
+    border: 2px solid $activetss;
+}
+
+.bivalentpoisedtss .overlay {
+    background: $bivalentpoisedtss;
+    border: 2px solid $bivalentpoisedtss;
+}
+
+.flankingtss .overlay {
+    background: $flankingtss;
+    border: 2px solid $flankingtss;
+}
+
+.flankingtssdownstream .overlay {
+    background: $flankingtssdownstream;
+    border: 2px solid $flankingtssdownstream;
+}
+
+.flankingtssupstream .overlay {
+    background: $flankingtssupstream;
+    border: 2px solid $flankingtssupstream;
+}
+
+.strongtranscription .overlay {
+    background: $strongtranscription;
+    border: 2px solid $strongtranscription;
+}
+
+.weaktranscription .overlay {
+    background: $weaktranscription;
+    border: 2px solid $weaktranscription;
+}
+
+.znfgenesrepeats .overlay {
+    background: $znfgenesrepeats;
+    border: 2px solid $znfgenesrepeats;
+}
+
+.enhancers .overlay {
+    background: $enhancers;
+    border: 2px solid $enhancers;
+}
+
+.flankingbivalenttssenh .overlay {
+    background: $flankingbivalenttssenh;
+    border: 2px solid $flankingbivalenttssenh;
+}
+
+.flankingactivetss .overlay {
+    background: $flankingactivetss;
+    border: 2px solid $flankingactivetss;
+}
+
+.transcratgeneand .overlay {
+    background: $transcratgeneand;
+    border: 2px solid $transcratgeneand;
+}
+
+.genicenhancers .overlay {
+    background: $genicenhancers;
+    border: 2px solid $genicenhancers;
 }

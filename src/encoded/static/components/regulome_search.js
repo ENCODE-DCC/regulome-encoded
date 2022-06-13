@@ -751,9 +751,10 @@ export class RegulomeSearch extends React.Component {
             // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
             // FAIRE → peaks, signal
             // we start by collecting all files that satisfy these conditions
-            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&biological_replicates=1&limit=all&${fieldsToSave}`;
-            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2&limit=all&${fieldsToSave}`;
-            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all&${fieldsToSave}`;
+            const fieldsToSave = '&field=cloud_metadata.url&field=title&field=href&field=path&field=file_format_type&field=dataset&field=biosample_ontology.term_name&field=target&field=file_format&field=biosample_ontology.organ_slims&field=biosample_ontology.cell_slims&field=assay_term_name';
+            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&biological_replicates=1&limit=all&${fieldsToSave}`;
+            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
+            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&status!=revoked&status!=deleted&limit=all&${fieldsToSave}`;
             // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
             // we construct an array of Promises for all the queries
             const chipPromises = chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
@@ -773,63 +774,25 @@ export class RegulomeSearch extends React.Component {
                             d.target = targetMap[fileDataset];
                             d.organ = organMap[fileDataset];
                         });
-                        // once all the data has been retrieved, narrow down full set of files to 2 per dataset
-                        const trimmedFiles0 = sortedFiles.filter((file) => {
-                            const DatasetFiles0 = sortedFiles.filter(f2 => f2.dataset === file.dataset);
-                            if (DatasetFiles0.length > 2) {
-                                // if there are more than 2 files for a ChIP-seq dataset, we prefer rep 1,2 to rep 1
-                                if (file.assay_term_name === 'ChIP-seq') {
-                                    if (file.biological_replicates.length === 1) {
-                                        return false;
-                                    }
-                                    return true;
-                                // if there are more than 2 files for a DNase-seq dataset, we prefer rep 1
-                                } else if (file.assay_term_name === 'DNase-seq') {
-                                    if (file.biological_replicates.length === 1) {
-                                        return true;
-                                    }
-                                    return false;
-                                // if there are more than 2 files for a FAIRE-seq dataset, we prefer multiple replicates
-                                } else if (file.assay_term_name === 'FAIRE-seq') {
-                                    if (file.biological_replicates.length === 0) {
-                                        return false;
-                                    }
-                                    return true;
-                                }
-                                return true;
-                            }
-                            return true;
-                        });
-                        // it is still possible to have multiple files per dataset
-                        // in those cases, we will filter for only "released" files
-                        const trimmedFiles = trimmedFiles0.filter((file) => {
-                            const datasetFiles = trimmedFiles0.filter(f2 => f2.dataset === file.dataset);
-                            // only filter by file status if there are still more than 2 files for the dataset
-                            if (datasetFiles.length > 2) {
-                                if (file.status === 'released') {
-                                    return true;
-                                }
-                                return false;
-                            }
-                            return true;
-                        });
                         // if there are more filtered files than we want to display on one page, we will paginate
-                        if (trimmedFiles.length > displaySize) {
-                            const includedFiles = trimmedFiles.slice(0, displaySize);
-                            const browserTotalPages = Math.ceil(trimmedFiles.length / displaySize);
+                        if (sortedFiles.length > displaySize) {
+                            const includedFiles = sortedFiles.slice(0, displaySize);
+                            const browserTotalPages = Math.ceil(sortedFiles.length / displaySize);
                             this.setState({
-                                allFiles: trimmedFiles,
+                                allFiles: sortedFiles,
                                 includedFiles,
-                                filteredFiles: trimmedFiles,
+                                filteredFiles: sortedFiles,
                                 multipleBrowserPages: true,
                                 browserTotalPages,
                                 browserCurrentPage: 1,
                             });
                         } else {
                             this.setState({
-                                allFiles: trimmedFiles,
-                                filteredFiles: trimmedFiles,
-                                includedFiles: trimmedFiles,
+                                allFiles: sortedFiles,
+                                filteredFiles: sortedFiles,
+                                includedFiles: sortedFiles,
+                            }, () => {
+                                this.updateThumbnail(chosen);
                             });
                         }
                     });
