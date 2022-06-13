@@ -111,10 +111,10 @@ def human_single_annotation(r):
                 + ':' + str(response['start']) \
                 + '-' + str(response['end'])
             ann = get_annotation()
-            ann['assembly_name'] = 'GRCh37'
+            ann['assembly_name'] = 'hg19'
             ann['chromosome'], ann['start'], ann['end'] = \
                 assembly_mapper(location, response['species'],
-                                'GRCh38', 'GRCh37')
+                                'GRCh38', 'hg19')
             doc['annotations'].append(ann)
         annotations.append({
             "index": {
