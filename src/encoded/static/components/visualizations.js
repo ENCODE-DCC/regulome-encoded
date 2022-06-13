@@ -10,6 +10,8 @@ const classString = globals.classString;
 
 const defaultColor = '#276A8E';
 
+export const isLetter = c => c.toLowerCase() !== c.toUpperCase();
+
 export const chromatinHierarchy = Object.keys(initializedChromatinObject);
 
 export const sortChromatin = (a, b) => chromatinHierarchy.indexOf(a) - chromatinHierarchy.indexOf(b);
@@ -28,46 +30,67 @@ const shortenedLabel = name => name.replace('activated', 'ϟ')
     .replace('-negative', '-');
 
 export const mapChromatinNames = {
-    TssAFlnk: 'Flanking Active TSS',
-    TssA: 'Active TSS',
-    TxFlnk: "Transcr. at gene 5' and 3'",
-    TxWk: 'Weak transcription',
-    Tx: 'Strong transcription',
-    EnhG: 'Genic enhancers',
+    EnhA1: 'Active enhancer 1',
+    EnhA2: 'Active enhancer 2',
     EnhBiv: 'Bivalent Enhancer',
-    Enh: 'Enhancers',
-    ZNFRpts: 'ZNF genes & repeats',
+    EnhG1: 'Genic enhancer 1',
+    EnhG2: 'Genic enhancer 2',
+    EnhWk: 'Weak enhancer',
     Het: 'Heterochromatin',
-    TssBiv: 'Bivalent/Poised TSS',
-    BivFlnk: 'Flanking Bivalent TSS/Enh',
-    ReprPCWk: 'Weak Repressed PolyComb',
-    ReprPC: 'Repressed PolyComb',
     Quies: 'Quiescent/Low',
+    ReprPC: 'Repressed PolyComb',
+    ReprPCWk: 'Weak Repressed PolyComb',
+    TssA: 'Active TSS',
+    TssBiv: 'Bivalent/Poised TSS',
+    TssFlnk: 'Flanking TSS',
+    TssFlnkD: 'Flanking TSS downstream',
+    TssFlnkU: 'Flanking TSS upstream',
+    Tx: 'Strong transcription',
+    TxWk: 'Weak transcription',
+    'ZNF/Rpts': 'ZNF genes & repeats',
+
+    Enh: 'Enhancers',
+    BivFlnk: 'Flanking Bivalent TSS/Enh',
+    TssAFlnk: 'Flanking Active TSS',
+    TxFlnk: "Transcr. at gene 5' and 3'",
+    EnhG: 'Genic enhancers',
 };
 
 const colorChromatinState = {
-    'Active TSS': '#B85151',
-    'Flanking Active TSS': '#E68363',
-    "Transcr. at gene 5' and 3'": '#A7DAA7',
-    'Strong transcription': '#6c9f6d',
-    'Weak transcription': '#88BF89',
-    'Genic enhancers': '#C8DD41',
-    Enhancers: '#f4f400',
-    'ZNF genes & repeats': '#66CDAA',
-    Heterochromatin: '#8A91D0',
-    'Bivalent/Poised TSS': '#DD9292',
-    'Flanking Bivalent TSS/Enh': '#F0BAA8',
+    'Active enhancer 1': '#f4f400',
+    'Active enhancer 2': '#f4f400',
     'Bivalent Enhancer': '#BDB76B',
+    'Genic enhancer 1': '#C8DD41',
+    'Genic enhancer 2': '#C8DD41',
+    'Weak enhancer': '#f4f400',
+    Heterochromatin: '#8A91D0',
+    'Quiescent/Low': '#C2C2C2',
     'Repressed PolyComb': '#7F6265',
     'Weak Repressed PolyComb': '#968A88',
-    'Quiescent/Low': '#C2C2C2',
+    'Active TSS': '#B85151',
+    'Bivalent/Poised TSS': '#DD9292',
+    'Flanking TSS': '#E68363',
+    'Flanking TSS downstream': '#E68363',
+    'Flanking TSS upstream': '#E68363',
+    'Strong transcription': '#6c9f6d',
+    'Weak transcription': '#88BF89',
+    'ZNF genes & repeats': '#66CDAA',
+
+    Enhancers: '#f4f400',
+    'Flanking Bivalent TSS/Enh': '#F0BAA8',
+    'Flanking Active TSS': '#E68363',
+    "Transcr. at gene 5' and 3'": '#A7DAA7',
+    'Genic enhancers': '#C8DD41',
 };
 
 const lookupColorChromatinState = chrom => colorChromatinState[chrom];
 
 export const lookupChromatinNames = (chrom) => {
     let result;
-    const newChrom = chrom.replace(/[^A-Za-z]+/g, '');
+    let newChrom = chrom;
+    if (!isLetter(chrom[0])) {
+        newChrom = chrom.replace(/[^A-Za-z]+/g, '');
+    }
     Object.keys(mapChromatinNames).forEach((m) => {
         if (newChrom === m) {
             result = mapChromatinNames[m];

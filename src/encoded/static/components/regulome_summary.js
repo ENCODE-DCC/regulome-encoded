@@ -3,64 +3,15 @@ import PropTypes from 'prop-types';
 import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 
-const snpsColumns = {
-    chrom: {
-        title: 'Chromosome location',
-        display: (item) => {
-            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
-        },
-    },
-    rsids: {
-        title: 'dbSNP IDs',
-        display: (item) => {
-            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            if (item.rsids.length > 0) {
-                return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
-            }
-            return <a href={hrefScore}>---</a>;
-        },
-    },
-    ranking: {
-        title: 'Rank',
-        display: (item) => {
-            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            if (item.regulome_score.ranking) {
-                return <a href={hrefScore}>{item.regulome_score.ranking}</a>;
-            }
-            return <a href={hrefScore}>See related experiments</a>;
-        },
-        getValue: item => item.regulome_score.ranking,
-    },
-    probability: {
-        title: 'Score',
-        display: (item) => {
-            const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=GRCh37`;
-            if (item.regulome_score.probability) {
-                return <a href={hrefScore}>{item.regulome_score.probability}</a>;
-            }
-            return <a href={hrefScore}>See related experiments</a>;
-        },
-        getValue: item => +item.regulome_score.probability,
-        sorter: (a, b) => {
-            if (a < b) {
-                return -1;
-            } else if (a > b) {
-                return 1;
-            }
-            return 0;
-        },
-    },
-};
-
 export const SNPSummary = props => (
     <SortTablePanel title="Summary of SNP analysis">
-        <SortTable list={props.snps} columns={snpsColumns} sortColumn="ranking" />
+        <SortTable list={props.snps} columns={props.snpsColumns} sortColumn="ranking" />
     </SortTablePanel>
 );
 
 SNPSummary.propTypes = {
     snps: PropTypes.array.isRequired,
+    snpsColumns: PropTypes.object.isRequired,
 };
 
 const RegulomeSummary = (props) => {
@@ -68,6 +19,57 @@ const RegulomeSummary = (props) => {
     const variants = context.variants || [];
     // Notifications is an object having solely failure messages
     const notifications = Object.entries(context.notifications);
+
+    const snpsColumns = {
+        chrom: {
+            title: 'Chromosome location',
+            display: (item) => {
+                console.log(item);
+                const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=${context.assembly}`;
+                return <a href={hrefScore}>{`${item.chrom}:${item.start}..${item.end}`}</a>;
+            },
+        },
+        rsids: {
+            title: 'dbSNP IDs',
+            display: (item) => {
+                const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=${context.assembly}`;
+                if (item.rsids.length > 0) {
+                    return <a href={hrefScore}>{item.rsids.join(', ')}</a>;
+                }
+                return <a href={hrefScore}>---</a>;
+            },
+        },
+        ranking: {
+            title: 'Rank',
+            display: (item) => {
+                const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=${context.assembly}`;
+                if (item.regulome_score.ranking) {
+                    return <a href={hrefScore}>{item.regulome_score.ranking}</a>;
+                }
+                return <a href={hrefScore}>See related experiments</a>;
+            },
+            getValue: item => item.regulome_score.ranking,
+        },
+        probability: {
+            title: 'Score',
+            display: (item) => {
+                const hrefScore = `../regulome-search/?regions=${item.chrom}:${item.start}-${item.end}&genome=${context.assembly}`;
+                if (item.regulome_score.probability) {
+                    return <a href={hrefScore}>{item.regulome_score.probability}</a>;
+                }
+                return <a href={hrefScore}>See related experiments</a>;
+            },
+            getValue: item => +item.regulome_score.probability,
+            sorter: (a, b) => {
+                if (a < b) {
+                    return -1;
+                } else if (a > b) {
+                    return 1;
+                }
+                return 0;
+            },
+        },
+    };
 
     return (
         <React.Fragment>
@@ -96,7 +98,7 @@ const RegulomeSummary = (props) => {
             </div>
             {variants.length > 0 ?
                 <div className="summary-table-hoverable">
-                    <SNPSummary snps={props.context.variants} />
+                    <SNPSummary snps={props.context.variants} assembly={context.assembly} snpsColumns={snpsColumns} />
                 </div>
             :
                 <div className="notification-label-centered">Try another search to see results.</div>

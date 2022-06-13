@@ -79,7 +79,7 @@ const dataTypeStrings = [
 const exampleEntries = [
     {
         label: 'multiple dbSNPs',
-        input: 'rs3768324\nrs75982468\nrs10117931\nrs11749731\nrs11160830\nrs2808110\nrs2839467\nrs147375898\nrs111686660\nrs11145227\nrs190318542\nrs148232663\nrs74792881\nrs3087079\nrs2166521\nrs62319725',
+        input: 'rs75982468\nrs10117931\nrs11749731\nrs11160830\nrs2808110\nrs2839467\nrs147375898\nrs111686660\nrs11145227\nrs190318542\nrs148232663\nrs74792881\nrs3087079\nrs2166521\nrs62319725',
     },
     {
         label: 'coordinates ranges',
@@ -258,11 +258,11 @@ ExampleEntry.propTypes = {
 };
 
 class AdvSearch extends React.Component {
-    constructor() {
-        super();
+    constructor(context) {
+        super(context);
 
         this.state = {
-            genome: 'GRCh37',
+            genome: context.assembly,
             searchInput: '',
             maf: 0.01,
             modal: null,
@@ -652,8 +652,8 @@ const chunkingDataset = (requests, startIdxWrapper, endIdxWrapper, datasets, bas
 };
 
 export class RegulomeSearch extends React.Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
         this.applicationRef = null;
         this.state = {
@@ -672,6 +672,7 @@ export class RegulomeSearch extends React.Component {
 
         // Bind this to non-React methods.
         this.requests = [];
+        this.assembly = (props.context['@id'].indexOf('&genome=') > -1) ? props.context['@id'].split('&genome=')[1].split('/')[0] : '';
         this.onFilter = this.onFilter.bind(this);
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
@@ -793,7 +794,6 @@ export class RegulomeSearch extends React.Component {
     chooseThumbnail(chosen) {
         if (chosen === 'valis' && this.state.filteredFiles.length < 1) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
-            const assembly = 'hg19';
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
             const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
             // for some reason we are getting duplicates here so we need to filter those out
@@ -824,9 +824,9 @@ export class RegulomeSearch extends React.Component {
             // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
             // FAIRE → peaks, signal
             // we start by collecting all files that satisfy these conditions
-            const chipBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&biological_replicates=1&limit=all`;
-            const dnaseBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2&limit=all`;
-            const faireBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all`;
+            const chipBaseQuery = `type=File&assembly=${this.assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&biological_replicates=1&limit=all`;
+            const dnaseBaseQuery = `type=File&assembly=${this.assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2&limit=all`;
+            const faireBaseQuery = `type=File&assembly=${this.assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all`;
             // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
             // we construct an array of Promises for all the queries
             const chipPromises = chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
@@ -1165,7 +1165,7 @@ export class RegulomeSearch extends React.Component {
                                                 fixedHeight={this.state.multipleBrowserPages}
                                                 files={this.state.includedFiles}
                                                 expanded
-                                                assembly={'hg19'}
+                                                assembly={this.assembly}
                                                 coordinates={coordinates}
                                                 selectedFilters={this.state.selectedFilters}
                                             />

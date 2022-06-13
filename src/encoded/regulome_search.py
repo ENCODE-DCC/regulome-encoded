@@ -21,7 +21,8 @@ def includeme(config):
 
 def genomic_data_service_fetch(endpoint,  request, page_title):
     data_service_url = request.registry.settings['genomic_data_service_url']
-    query_string     = request.query_string
+
+    query_string = request.query_string.split('/')[0]
 
     url = data_service_url + "/" + endpoint + "/?" + query_string
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from './globals';
-import { ChartTable, lookupChromatinNames, sortChromatin } from './visualizations';
+import { ChartTable, lookupChromatinNames, sortChromatin, isLetter } from './visualizations';
 import { createOrganFacets, complexFacets } from './facets';
 import { BodyMapThumbnailAndModal, addingClass, HumanList } from './body_map';
 import { ResultsTable } from './regulome_search';
@@ -31,7 +31,7 @@ const applyFilters = (data, stateFilters, bodyMapFilters, biosampleFilters) => {
     let filteredData = data;
     if (stateFilters.length > 0 || bodyMapFilters.length > 0 || biosampleFilters.length > 0) {
         filteredData = filteredData.filter((d) => {
-            const chromatinValue = classString(sanitizedString(lookupChromatinNames(d.value)));
+            const chromatinValue = sanitizedString(lookupChromatinNames(d.value));
             if (stateFilters.length > 0) {
                 return stateFilters.includes(chromatinValue);
             }
@@ -260,7 +260,10 @@ export class ChromatinView extends React.Component {
 
     // Handle chromatin state selections
     handleChromatinFilters(clickID) {
-        const chromatinFilter = classString(clickID);
+        let chromatinFilter = clickID;
+        if (!isLetter(clickID[0])) {
+            chromatinFilter = classString(clickID);
+        }
         // update state filters
         let modifiedSelectedStates;
         if (this.state.stateFilters.includes(chromatinFilter)) {
