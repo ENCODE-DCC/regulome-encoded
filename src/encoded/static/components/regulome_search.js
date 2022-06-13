@@ -8,6 +8,7 @@ import { Motifs } from './motifs';
 import { BarChart, ChartList, lookupChromatinNames } from './visualizations';
 import { requestSearch } from './objectutils';
 import GenomeBrowser from './genome_browser';
+import NearbySNPsDrawing from './snps_diagram';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/modal';
 import { FacetList, filterByAllSelectedFilters } from './facets';
 import { ChromatinView } from './chromatin_view';
@@ -79,11 +80,11 @@ const dataTypeStrings = [
 const exampleEntries = [
     {
         label: 'multiple dbSNPs',
-        input: 'rs3768324\nrs75982468\nrs10117931\nrs11749731\nrs11160830\nrs2808110\nrs2839467\nrs147375898\nrs111686660\nrs11145227\nrs190318542\nrs148232663\nrs74792881\nrs3087079\nrs2166521\nrs62319725',
+        input: 'rs75982468\nrs10117931\nrs11749731\nrs11160830\nrs2808110\nrs2839467\nrs147375898\nrs111686660\nrs11145227\nrs190318542\nrs148232663\nrs74792881\nrs3087079\nrs2166521\nrs62319725',
     },
     {
         label: 'coordinates ranges',
-        input: 'chr12:69754011-69754012\nchr10:5894499-5894500\nchr10:11741180-11741181\nchr1:39492462-39492463\nchr1:110268827-110268828',
+        input: 'chr12:69360231-69360232\nchr10:5852536-5852537\nchr10:11699181-11699182\nchr1:39026790-39026791\nchr1:109726205-109726206',
     },
 ];
 
@@ -257,21 +258,42 @@ ExampleEntry.propTypes = {
     handleExample: PropTypes.func.isRequired,
 };
 
+const AssemblySelector = props => (
+    <div className="assembly-switch">
+        <div className={`switch-label ${props.selection === 'GRCh38' ? 'active' : ''}`}>GRCh38</div>
+        <label className="switch" id="assembly-switch">
+            <input
+                type="checkbox"
+                onChange={() => { props.onSelection(props.selection); }}
+                checked={props.selection === 'hg19'}
+            />
+            <span className="slider round" />
+        </label>
+        <div className={`switch-label ${props.selection === 'hg19' ? 'active' : ''}`}>hg19</div>
+    </div>
+);
+
+AssemblySelector.propTypes = {
+    selection: PropTypes.string.isRequired,
+    onSelection: PropTypes.func.isRequired,
+};
+
 class AdvSearch extends React.Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
         this.state = {
-            genome: 'GRCh37',
             searchInput: '',
             maf: 0.01,
             modal: null,
+            genome: props.genome,
         };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleOnFocus = this.handleOnFocus.bind(this);
         this.handleExample = this.handleExample.bind(this);
         this.hideModal = this.hideModal.bind(this);
+        this.handleSelection = this.handleSelection.bind(this);
     }
 
     handleChange(e) {
@@ -284,6 +306,15 @@ class AdvSearch extends React.Component {
         this.setState({
             searchInput: exampleInput,
         });
+    }
+
+    handleSelection(input) {
+        this.props.toggleGenome(input);
+        if (input === 'GRCh38') {
+            this.setState({ genome: 'hg19' });
+        } else {
+            this.setState({ genome: 'GRCh38' });
+        }
     }
 
     handleOnFocus() {
@@ -323,7 +354,11 @@ class AdvSearch extends React.Component {
                 <div id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
                     <div className="form-group">
                         <label htmlFor="annotation">
-                            <i className="icon icon-search" />Search by dbSNP ID or coordinate range (hg19)
+                            <i className="icon icon-search" />Search by dbSNP ID or coordinate range: <AssemblySelector
+                                selection={this.state.genome}
+                                onSelection={this.handleSelection}
+                                key={this.state.genome}
+                            />
                         </label>
                         <div className="input-group input-group-region-input">
                             <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />
@@ -376,170 +411,14 @@ class AdvSearch extends React.Component {
 
 AdvSearch.propTypes = {
     context: PropTypes.object.isRequired,
+    genome: PropTypes.string.isRequired,
+    toggleGenome: PropTypes.func.isRequired,
 };
 
 AdvSearch.contextTypes = {
     location_href: PropTypes.string,
     navigate: PropTypes.func,
     fetch: PropTypes.func,
-};
-
-const NearbySNPsDrawing = (props) => {
-    const context = props.context;
-
-    let startNearbySnps = 0;
-    let endNearbySnps = 0;
-    let coordinate = 0;
-    let coordinateX = 0;
-
-    const coordinateXEven = [-100];
-    const coordinateXOdd = [-100];
-    const coordinateYOffset = [];
-    let countEven = 0;
-    let countOdd = 0;
-    if (context.nearby_snps && context.nearby_snps[0] && context.nearby_snps[0].coordinates) {
-        startNearbySnps = +context.nearby_snps[0].coordinates.lt;
-        endNearbySnps = +context.nearby_snps[context.nearby_snps.length - 1].coordinates.lt;
-        coordinate = +context.query_coordinates[0].split('-')[1];
-        coordinateX = (920 * ((coordinate - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
-
-        context.nearby_snps.forEach((snp, snpIndex) => {
-            let offset = 0;
-            const tempCoordinate = (920 * ((+snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
-            if (snpIndex % 2 === 0) {
-                countEven += 1;
-                coordinateXEven[countEven] = tempCoordinate;
-                // check if coordinate was close to last even coordinate
-                if ((coordinateXEven[countEven] - coordinateXEven[countEven - 1]) < 90) {
-                    // check if last coordinate was also offset
-                    if (coordinateYOffset[snpIndex - 2] !== 0) {
-                        // if last coordinate was also offset, check if this coordinate was also too close to that one
-                        if (coordinateXEven[countEven] - coordinateXEven[countEven - 1] < 90) {
-                            offset = coordinateYOffset[snpIndex - 2] + 20;
-                        } else {
-                            offset = 20;
-                        }
-                    } else {
-                        offset = 20;
-                    }
-                }
-            } else {
-                countOdd += 1;
-                coordinateXOdd[countOdd] = tempCoordinate;
-                // check if coordinate was close to last odd coordinate
-                if ((coordinateXOdd[countOdd] - coordinateXOdd[countOdd - 1]) < 90) {
-                    // check if last coordinate was also offset
-                    if (coordinateYOffset[snpIndex - 2] !== 0) {
-                        // if last coordinate was also offset, check if this coordinate was also too close to that one
-                        if (coordinateXOdd[countOdd] - coordinateXOdd[countOdd - 1] < 90) {
-                            offset = coordinateYOffset[snpIndex - 2] + 20;
-                        } else {
-                            offset = 20;
-                        }
-                    } else {
-                        offset = 20;
-                    }
-                }
-            }
-            coordinateYOffset.push(offset);
-        });
-    }
-
-    return (
-        <div className="svg-container">
-            <div className="svg-title top-title">Chromosome {context.nearby_snps[0].chrom.split('chr')[1]}</div>
-            <div className="svg-title">SNPs matching searched coordinates and nearby SNPs</div>
-            <svg className="nearby-snps" viewBox="0 -30 1000 220" preserveAspectRatio="xMidYMid meet" aria-labelledby="diagram-of-nearby-snps" role="img">
-                <title id="diagram-of-nearby-snps">Diagram of nearby SNPs</title>
-                <defs>
-                    <marker
-                        id="arrow"
-                        viewBox="0 0 10 10"
-                        refX="5"
-                        refY="5"
-                        markerWidth="5"
-                        markerHeight="6"
-                        orient="auto-start-reverse"
-                    >
-                        <path d="M 0 0 L 10 5 L 0 10 z" />
-                    </marker>
-                </defs>
-                <g className="grid x-grid" id="xGrid">
-                    <line x1="10" x2="990" y1="75" y2="75" markerEnd="url(#arrow)" markerStart="url(#arrow)" stroke="#7F7F7F" strokeWidth="2" />
-                </g>
-                <g className="labels x-labels">
-                    {context.nearby_snps.map((snp, snpIndex) => {
-                        const snpX = (920 * ((+snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
-                        if (snpIndex % 2 === 0) {
-                            if (snpX === coordinateX) {
-                                return (
-                                    <g key={`tick${snpIndex}`}>
-                                        <line x1={String(snpX)} x2={String(snpX)} y1={60 - coordinateYOffset[snpIndex]} y2="75" stroke="#c13b42" strokeWidth="2" />
-                                    </g>
-                                );
-                            }
-                            return (
-                                <g key={`tick${snpIndex}`}>
-                                    <line x1={String(snpX)} x2={String(snpX)} y1={60 - coordinateYOffset[snpIndex]} y2="75" stroke="#7F7F7F" strokeWidth="2" />
-                                </g>
-                            );
-                        }
-                        if (snpX === coordinateX) {
-                            return (
-                                <g key={`tick${snpIndex}`}>
-                                    <line x1={String(snpX)} x2={String(snpX)} y1={90 + coordinateYOffset[snpIndex]} y2="75" stroke="#c13b42" strokeWidth="2" />
-                                </g>
-                            );
-                        }
-                        return (
-                            <g key={`tick${snpIndex}`}>
-                                <line x1={String(snpX)} x2={String(snpX)} y1={90 + coordinateYOffset[snpIndex]} y2="75" stroke="#7F7F7F" strokeWidth="2" />
-                            </g>
-                        );
-                    })}
-                    {context.nearby_snps.map((snp, snpIndex) => {
-                        const snpX = (920 * ((snp.coordinates.lt - startNearbySnps) / (endNearbySnps - startNearbySnps))) + 40;
-                        const labelX = snpX - 40;
-                        const labelWidth = snp.rsid.length * 9;
-                        if (snpIndex % 2 === 0) {
-                            if (snpX === coordinateX) {
-                                return (
-                                    <g key={`snp${snpIndex}`}>
-                                        <rect x={labelX - 8} y={42 - coordinateYOffset[snpIndex]} height="18" width={labelWidth} fill="#c13b42" opacity="1.0" rx="2px" />
-                                        <text x={labelX} y={55 - coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
-                                    </g>
-                                );
-                            }
-                            return (
-                                <g key={`snp${snpIndex}`}>
-                                    <rect x={labelX - 8} y={43 - coordinateYOffset[snpIndex]} height="15" width={labelWidth} fill="white" opacity="0.6" />
-                                    <text x={labelX} y={55 - coordinateYOffset[snpIndex]}>{snp.rsid}</text>
-                                </g>
-                            );
-                        }
-                        if (snpX === coordinateX) {
-                            return (
-                                <g key={`snp${snpIndex}`}>
-                                    <rect x={labelX - 8} y={87 + coordinateYOffset[snpIndex]} height="22" width={labelWidth} fill="#c13b42" opacity="1.0" />
-                                    <text x={labelX} y={105 + coordinateYOffset[snpIndex]} className="bold-label">{snp.rsid}</text>
-                                </g>
-                            );
-                        }
-                        return (
-                            <g key={`snp${snpIndex}`}>
-                                <rect x={labelX - 8} y={89 + coordinateYOffset[snpIndex]} height="20" width={labelWidth} fill="white" opacity="0.6" />
-                                <text x={labelX} y={105 + coordinateYOffset[snpIndex]}>{snp.rsid}</text>
-                            </g>
-                        );
-                    })}
-                </g>
-            </svg>
-        </div>
-    );
-};
-
-NearbySNPsDrawing.propTypes = {
-    context: PropTypes.object.isRequired,
 };
 
 export const ResultsTable = (props) => {
@@ -559,11 +438,16 @@ export const ResultsTable = (props) => {
     }
     const colCount = Object.keys(dataColumns).length;
 
+    let maxRows = 0;
+    if (props.shortened) {
+        maxRows = 10;
+    }
+
     return (
         <React.Fragment>
             {data.length > 0 ?
                 <SortTablePanel title="Results">
-                    <SortTable list={data} columns={dataColumns} />
+                    <SortTable list={data} columns={dataColumns} maxRows={maxRows} />
                 </SortTablePanel>
             :
                 <table className="table table-sortable table-panel">
@@ -652,8 +536,8 @@ const chunkingDataset = (requests, startIdxWrapper, endIdxWrapper, datasets, bas
 };
 
 export class RegulomeSearch extends React.Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
         this.applicationRef = null;
         this.state = {
@@ -668,6 +552,7 @@ export class RegulomeSearch extends React.Component {
             selectedFilters: [],
             facetDisplay: false,
             showMoreFreqs: false,
+            genome: props.context.genome || props.context.assembly || 'GRCh38',
         };
 
         // Bind this to non-React methods.
@@ -677,6 +562,7 @@ export class RegulomeSearch extends React.Component {
         this.updateDimensions = this.updateDimensions.bind(this);
         this.handlePagination = this.handlePagination.bind(this);
         this.handleFacetList = this.handleFacetList.bind(this);
+        this.toggleGenome = this.toggleGenome.bind(this);
     }
 
     componentDidMount() {
@@ -790,10 +676,17 @@ export class RegulomeSearch extends React.Component {
         }
     }
 
+    toggleGenome(select) {
+        if (select === 'GRCh38') {
+            this.setState({ genome: 'hg19' });
+        } else {
+            this.setState({ genome: 'GRCh38' });
+        }
+    }
+
     chooseThumbnail(chosen) {
         if (chosen === 'valis' && this.state.filteredFiles.length < 1) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
-            const assembly = 'hg19';
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
             const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
             // for some reason we are getting duplicates here so we need to filter those out
@@ -824,9 +717,11 @@ export class RegulomeSearch extends React.Component {
             // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
             // FAIRE → peaks, signal
             // we start by collecting all files that satisfy these conditions
-            const chipBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&biological_replicates=1&limit=all`;
-            const dnaseBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2&limit=all`;
-            const faireBaseQuery = `type=File&assembly=${assembly}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all`;
+            const fieldsToSave = '&field=cloud_metadata.url&field=title&field=href&field=path&field=file_format_type&field=dataset&field=biosample_ontology.term_name&field=target&field=file_format&field=biosample_ontology.organ_slims&field=biosample_ontology.cell_slims&field=assay_term_name';
+            // const fieldsToSave = '&frame=embedded';
+            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
+            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
+            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&status!=revoked&status!=deleted&limit=all&${fieldsToSave}`;
             // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
             // we construct an array of Promises for all the queries
             const chipPromises = chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
@@ -846,54 +741,14 @@ export class RegulomeSearch extends React.Component {
                             d.target = targetMap[fileDataset];
                             d.organ = organMap[fileDataset];
                         });
-                        // once all the data has been retrieved, narrow down full set of files to 2 per dataset
-                        const trimmedFiles0 = sortedFiles.filter((file) => {
-                            const DatasetFiles0 = sortedFiles.filter(f2 => f2.dataset === file.dataset);
-                            if (DatasetFiles0.length > 2) {
-                                // if there are more than 2 files for a ChIP-seq dataset, we prefer rep 1,2 to rep 1
-                                if (file.assay_term_name === 'ChIP-seq') {
-                                    if (file.biological_replicates.length === 1) {
-                                        return false;
-                                    }
-                                    return true;
-                                // if there are more than 2 files for a DNase-seq dataset, we prefer rep 1
-                                } else if (file.assay_term_name === 'DNase-seq') {
-                                    if (file.biological_replicates.length === 1) {
-                                        return true;
-                                    }
-                                    return false;
-                                // if there are more than 2 files for a FAIRE-seq dataset, we prefer multiple replicates
-                                } else if (file.assay_term_name === 'FAIRE-seq') {
-                                    if (file.biological_replicates.length === 0) {
-                                        return false;
-                                    }
-                                    return true;
-                                }
-                                return true;
-                            }
-                            return true;
-                        });
-                        // it is still possible to have multiple files per dataset
-                        // in those cases, we will filter for only "released" files
-                        const trimmedFiles = trimmedFiles0.filter((file) => {
-                            const datasetFiles = trimmedFiles0.filter(f2 => f2.dataset === file.dataset);
-                            // only filter by file status if there are still more than 2 files for the dataset
-                            if (datasetFiles.length > 2) {
-                                if (file.status === 'released') {
-                                    return true;
-                                }
-                                return false;
-                            }
-                            return true;
-                        });
                         // if there are more filtered files than we want to display on one page, we will paginate
-                        if (trimmedFiles.length > displaySize) {
-                            const includedFiles = trimmedFiles.slice(0, displaySize);
-                            const browserTotalPages = Math.ceil(trimmedFiles.length / displaySize);
+                        if (sortedFiles.length > displaySize) {
+                            const includedFiles = sortedFiles.slice(0, displaySize);
+                            const browserTotalPages = Math.ceil(sortedFiles.length / displaySize);
                             this.setState({
-                                allFiles: trimmedFiles,
+                                allFiles: sortedFiles,
                                 includedFiles,
-                                filteredFiles: trimmedFiles,
+                                filteredFiles: sortedFiles,
                                 multipleBrowserPages: true,
                                 browserTotalPages,
                                 browserCurrentPage: 1,
@@ -902,9 +757,9 @@ export class RegulomeSearch extends React.Component {
                             });
                         } else {
                             this.setState({
-                                allFiles: trimmedFiles,
-                                filteredFiles: trimmedFiles,
-                                includedFiles: trimmedFiles,
+                                allFiles: sortedFiles,
+                                filteredFiles: sortedFiles,
+                                includedFiles: sortedFiles,
                             }, () => {
                                 this.updateThumbnail(chosen);
                             });
@@ -1083,7 +938,7 @@ export class RegulomeSearch extends React.Component {
                                                 </div>
                                             </div>
                                             {chromatinData.length > 0 ?
-                                                <BarChart data={chromatinData} dataFilter={'chromatin'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} />
+                                                <BarChart data={chromatinData} dataFilter={'chromatin'} chartWidth={this.state.thumbnailWidth} chartLimit={10} chartOrientation={'horizontal'} assembly={this.state.genome} />
                                             : null}
                                         </React.Fragment>
                                     : null}
@@ -1095,7 +950,7 @@ export class RegulomeSearch extends React.Component {
                                     <h4>Accessibility</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see FAIRE-seq or DNase-seq experiments.
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see DNase-seq experiments.
                                                 <div>
                                                     (<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})
                                                 </div>
@@ -1165,7 +1020,7 @@ export class RegulomeSearch extends React.Component {
                                                 fixedHeight={this.state.multipleBrowserPages}
                                                 files={this.state.includedFiles}
                                                 expanded
-                                                assembly={'hg19'}
+                                                assembly={this.state.genome}
                                                 coordinates={coordinates}
                                                 selectedFilters={this.state.selectedFilters}
                                             />
@@ -1198,7 +1053,7 @@ export class RegulomeSearch extends React.Component {
                                     : (thumbnail === 'dnase') ?
                                         <React.Fragment>
                                             {dnaseData.length > 0 ?
-                                                <ChartList data={dnaseData} displayTitle={'FAIRE-seq and DNase-seq experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={thumbnail} />
+                                                <ChartList data={dnaseData} displayTitle={'DNA accessibility experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={thumbnail} />
                                             :
                                                 <React.Fragment>
                                                     <h4>FAIRE-seq and DNase-seq experiments</h4>
@@ -1212,6 +1067,7 @@ export class RegulomeSearch extends React.Component {
                                           <ChromatinView
                                               data={chromatinData}
                                               chartWidth={this.state.screenWidth}
+                                              assembly={this.state.genome}
                                           />
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
@@ -1231,7 +1087,11 @@ export class RegulomeSearch extends React.Component {
                                 <div className="version-tag">2.0.3</div>
                             </a>
                         </div>
-                        <AdvSearch {...this.props} />
+                        <AdvSearch
+                            {...this.props}
+                            genome={this.state.genome}
+                            toggleGenome={this.toggleGenome}
+                        />
                         <div className="data-types">
                             <div className="data-types-instructions"><h4>Use RegulomeDB to identify DNA features and regulatory elements in non-coding regions of the human genome by entering ...</h4></div>
                             <div className="data-types-block">

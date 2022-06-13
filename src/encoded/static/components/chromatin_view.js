@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from './globals';
-import { ChartTable, lookupChromatinNames, sortChromatin } from './visualizations';
+import { ChartTable, lookupChromatinNames, isLetter } from './visualizations';
 import { createOrganFacets, complexFacets } from './facets';
 import { BodyMapThumbnailAndModal, addingClass, HumanList } from './body_map';
 import { ResultsTable } from './regulome_search';
@@ -9,21 +9,42 @@ import { ResultsTable } from './regulome_search';
 const sanitizedString = globals.sanitizedString;
 const classString = globals.classString;
 
-export const initializedChromatinObject = {
+export const initializedChromatinObjectHg19 = {
     'Active TSS': 0,
     'Flanking Active TSS': 0,
+    'Genic enhancers': 0,
+    Enhancers: 0,
     "Transcr. at gene 5' and 3'": 0,
     'Strong transcription': 0,
     'Weak transcription': 0,
-    'Genic enhancers': 0,
-    Enhancers: 0,
-    'ZNF genes & repeats': 0,
-    Heterochromatin: 0,
     'Bivalent/Poised TSS': 0,
     'Flanking Bivalent TSS/Enh': 0,
     'Bivalent Enhancer': 0,
+    'ZNF genes & repeats': 0,
     'Repressed PolyComb': 0,
     'Weak Repressed PolyComb': 0,
+    Heterochromatin: 0,
+    'Quiescent/Low': 0,
+};
+
+export const initializedChromatinObjectGRCh38 = {
+    'Active TSS': 0,
+    'Flanking TSS': 0,
+    'Flanking TSS downstream': 0,
+    'Flanking TSS upstream': 0,
+    'Active enhancer 1': 0,
+    'Active enhancer 2': 0,
+    'Weak enhancer': 0,
+    'Genic enhancer 1': 0,
+    'Genic enhancer 2': 0,
+    'Strong transcription': 0,
+    'Weak transcription': 0,
+    'Bivalent/Poised TSS': 0,
+    'Bivalent enhancer': 0,
+    'ZNF genes & repeats': 0,
+    'Weak Repressed PolyComb': 0,
+    'Repressed PolyComb': 0,
+    Heterochromatin: 0,
     'Quiescent/Low': 0,
 };
 
@@ -31,7 +52,7 @@ const applyFilters = (data, stateFilters, bodyMapFilters, biosampleFilters) => {
     let filteredData = data;
     if (stateFilters.length > 0 || bodyMapFilters.length > 0 || biosampleFilters.length > 0) {
         filteredData = filteredData.filter((d) => {
-            const chromatinValue = classString(sanitizedString(lookupChromatinNames(d.value)));
+            const chromatinValue = sanitizedString(lookupChromatinNames(d.value));
             if (stateFilters.length > 0) {
                 return stateFilters.includes(chromatinValue);
             }
@@ -82,7 +103,7 @@ const Selections = (props) => {
                 if (filterType === 'biosample') {
                     label = keyArray.find(k => sanitizedString(k) === f);
                 } else if (filterType === 'state') {
-                    label = keyArray.find(k => classString(sanitizedString(k)) === f);
+                    label = keyArray.find(k => (!isLetter(k[0]) ? (classString(sanitizedString(k)) === f) : (sanitizedString(k) === f)));
                 }
                 let clearInput = f;
                 if (filterType === 'biosample') {
@@ -128,9 +149,17 @@ export class ChromatinView extends React.Component {
         const filteredFiles = files;
 
         // generate facet data
-        const bodyMapFacet = createOrganFacets(files, filteredFiles, 'organ_slims');
-        const biosampleFacet = complexFacets(files, filteredFiles, 'biosample');
-        const chromatinFacet = complexFacets(files, filteredFiles, 'state');
+        const bodyMapFacet = createOrganFacets(files, filteredFiles, 'organ_slims', this.props.assembly);
+        const biosampleFacet = complexFacets(files, filteredFiles, 'biosample', this.props.assembly);
+        const chromatinFacet = complexFacets(files, filteredFiles, 'state', this.props.assembly);
+
+        let chromatinHierarchy = [];
+        if (this.props.assembly === 'hg19') {
+            chromatinHierarchy = Object.keys(initializedChromatinObjectHg19);
+        } else {
+            chromatinHierarchy = Object.keys(initializedChromatinObjectGRCh38);
+        }
+        const sortChromatin = (a, b) => chromatinHierarchy.indexOf(a) - chromatinHierarchy.indexOf(b);
 
         this.state = {
             allFiles: files,
@@ -145,6 +174,8 @@ export class ChromatinView extends React.Component {
             biosampleKeys: Object.keys(biosampleFacet.biosample),
             chromatinKeys: Object.keys(chromatinFacet.state).sort(sortChromatin),
         };
+
+        this.sortChromatin = sortChromatin;
 
         this.handleFacetList = this.handleFacetList.bind(this);
         this.handleChromatinFilters = this.handleChromatinFilters.bind(this);
@@ -172,9 +203,9 @@ export class ChromatinView extends React.Component {
     }
 
     resetFilters() {
-        const bodyMapFacet = createOrganFacets(this.state.allFiles, this.state.allFiles, 'organ_slims');
-        const biosampleFacet = complexFacets(this.state.allFiles, this.state.allFiles, 'biosample');
-        const chromatinFacet = complexFacets(this.state.allFiles, this.state.allFiles, 'state');
+        const bodyMapFacet = createOrganFacets(this.state.allFiles, this.state.allFiles, 'organ_slims', this.props.assembly);
+        const biosampleFacet = complexFacets(this.state.allFiles, this.state.allFiles, 'biosample', this.props.assembly);
+        const chromatinFacet = complexFacets(this.state.allFiles, this.state.allFiles, 'state', this.props.assembly);
 
         this.setState({
             filteredData: this.state.allData,
@@ -183,7 +214,7 @@ export class ChromatinView extends React.Component {
             biosampleFilters: [],
             bodyMapFacet,
             chromatinFacet: chromatinFacet.state,
-            chromatinKeys: Object.keys(chromatinFacet.state).sort(sortChromatin),
+            chromatinKeys: Object.keys(chromatinFacet.state).sort(this.sortChromatin),
             biosampleFacet: biosampleFacet.biosample,
             biosampleKeys: Object.keys(biosampleFacet.biosample).sort(this.sortByOrgan),
         });
@@ -203,12 +234,12 @@ export class ChromatinView extends React.Component {
     handleFacetList(selectedFilters) {
         // chromatin state facet should be filtered for body map selections and biosample selections
         const filteredForOrganAndBiosample = applyFilters(this.state.allData, [], selectedFilters, this.state.biosampleFilters);
-        const chromatinFacet = complexFacets(this.state.allFiles, filteredForOrganAndBiosample[1], 'state');
-        const chromatinKeys = Object.keys(chromatinFacet.state).sort(sortChromatin);
+        const chromatinFacet = complexFacets(this.state.allFiles, filteredForOrganAndBiosample[1], 'state', this.props.assembly);
+        const chromatinKeys = Object.keys(chromatinFacet.state).sort(this.sortChromatin);
 
         // biosample facet should be filtered for body map and state selections
         const filteredForOrganAndState = applyFilters(this.state.allData, this.state.stateFilters, selectedFilters, []);
-        const biosampleFacet = complexFacets(this.state.allFiles, filteredForOrganAndState[1], 'biosample');
+        const biosampleFacet = complexFacets(this.state.allFiles, filteredForOrganAndState[1], 'biosample', this.props.assembly);
         const biosampleKeys = Object.keys(biosampleFacet.biosample).sort(this.sortByOrgan);
 
         // table data must be filtered by all filters
@@ -238,12 +269,12 @@ export class ChromatinView extends React.Component {
 
         // chromatin facet should be filtered for body map and biosample
         const filteredByOrganAndBiosample = applyFilters(this.state.allData, [], this.state.bodyMapFilters, modifiedSelectedBiosamples);
-        const chromatinFacet = complexFacets(this.state.allFiles, filteredByOrganAndBiosample[1], 'state');
-        const chromatinKeys = Object.keys(chromatinFacet.state).sort(sortChromatin);
+        const chromatinFacet = complexFacets(this.state.allFiles, filteredByOrganAndBiosample[1], 'state', this.props.assembly);
+        const chromatinKeys = Object.keys(chromatinFacet.state).sort(this.sortChromatin);
 
         // body map facet should be filtered by chromatin state and biosample
         const filteredByStateAndBiosample = applyFilters(this.state.allData, this.state.stateFilters, [], modifiedSelectedBiosamples);
-        const bodyMapFacet = createOrganFacets(this.state.allFiles, filteredByStateAndBiosample[1], 'organ_slims');
+        const bodyMapFacet = createOrganFacets(this.state.allFiles, filteredByStateAndBiosample[1], 'organ_slims', this.props.assembly);
 
         // table data must be filtered by all filters
         const filtered = applyFilters(this.state.allData, this.state.stateFilters, this.state.bodyMapFilters, modifiedSelectedBiosamples);
@@ -260,7 +291,10 @@ export class ChromatinView extends React.Component {
 
     // Handle chromatin state selections
     handleChromatinFilters(clickID) {
-        const chromatinFilter = classString(clickID);
+        let chromatinFilter = clickID;
+        if (!isLetter(clickID[0])) {
+            chromatinFilter = classString(clickID);
+        }
         // update state filters
         let modifiedSelectedStates;
         if (this.state.stateFilters.includes(chromatinFilter)) {
@@ -272,11 +306,11 @@ export class ChromatinView extends React.Component {
 
         // body map facet should be filtered by state and biosample filters
         const filteredByStateAndBiosample = applyFilters(this.state.allData, modifiedSelectedStates, [], this.state.biosampleFilters);
-        const bodyMapFacet = createOrganFacets(this.state.allFiles, filteredByStateAndBiosample[1], 'organ_slims');
+        const bodyMapFacet = createOrganFacets(this.state.allFiles, filteredByStateAndBiosample[1], 'organ_slims', this.props.assembly);
 
         // biosample facet should be filtered by state and organ
         const filteredByStateAndOrgan = applyFilters(this.state.allData, modifiedSelectedStates, this.state.bodyMapFilters, []);
-        const biosampleFacet = complexFacets(this.state.allFiles, filteredByStateAndOrgan[1], 'biosample');
+        const biosampleFacet = complexFacets(this.state.allFiles, filteredByStateAndOrgan[1], 'biosample', this.props.assembly);
         const biosampleKeys = Object.keys(biosampleFacet.biosample).sort(this.sortByOrgan);
 
         // table data must be filtered by all filters
@@ -311,6 +345,7 @@ export class ChromatinView extends React.Component {
                                     organism={'Homo sapiens'}
                                     handleFilters={this.handleFacetList}
                                     originalFilters={this.state.bodyMapFilters}
+                                    assembly={this.props.assembly}
                                 />
                                 {this.state.bodyMapFilters.length > 0 ?
                                     <Selections
@@ -388,6 +423,7 @@ export class ChromatinView extends React.Component {
 ChromatinView.propTypes = {
     data: PropTypes.array.isRequired,
     chartWidth: PropTypes.number.isRequired,
+    assembly: PropTypes.string.isRequired,
 };
 
 export default ChromatinView;

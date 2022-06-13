@@ -12,8 +12,8 @@ const colorChromatinState = {
     'Flanking TSS': '#ff4400',
     'Flanking TSS upstream': '#ff4500',
     'Flanking TSS downstream': '#ff4500',
-    'Strong transcription': '#008000',
-    'Weak transcription': '#006400',
+    'Strong transcription': '#5c8d5d',
+    'Weak transcription': '#7eb37f',
     'Genic enhancer 1': '#c4e105',
     'Genic enhancer 2': '#c4e105',
     'Active enhancer 1': '#ffc44d',
@@ -272,48 +272,62 @@ export function fetchData(geneLink, fetch) {
     });
 }
 
-function mapGenome(inputAssembly) {
-    let genome = inputAssembly.split(' ')[0];
-    if (genome === 'hg19') {
-        genome = 'GRCh37';
-    } else if (genome === 'mm9') {
-        genome = 'GRCm37';
-    } else if (genome === 'mm10') {
-        genome = 'GRCm38';
-    }
-    return genome;
-}
-
 /**
  * Display a label for a file’s track.
  */
-const TrackLabel = ({ file, assembly }) => (
-    <React.Fragment>
-        {(file.name) ?
-            <span>{file.name}</span>
-        : (file.file_format === 'variant' || file.file_format === 'vgenes-dir' || file.title === 'representative DNase hypersensitivity sites' || file.title === 'cCRE, all') ?
-            <span>{file.title}</span>
-        : (file.file_format === 'bigWig') ?
-            <span>
-                {file.target ? `${file.target} - ` : ''}
-                {file.assay_term_name} - {(file.biosample_ontology && file.biosample_ontology.term_name) ? file.biosample_ontology.term_name : ''}
-            </span>
-        : (file.file_format === 'vdna-dir') ?
-            <span>{assembly.split(' ')[0]}</span>
-        :
-            <span>
-                {file.target ? `${file.target} - ` : ''}
-                {file.assay_term_name} - {(file.biosample_ontology && file.biosample_ontology.term_name) ? file.biosample_ontology.term_name : ''}
-            </span>
-        }
-    </React.Fragment>
-);
+const TrackLabel = ({ file, assembly, long }) => {
+    let fileLabel = '';
+    let datasetLabel = '';
+
+    if (file.href) {
+        fileLabel = file.href.split('/@@download/')[0].split('/files/')[1];
+    }
+
+    if (file.dataset) {
+        datasetLabel = file.dataset.split('/')[2];
+    }
+
+    const pinnedFile = file.file_format === 'variant' || file.file_format === 'vgenes-dir' || file.file_format === 'vdna-dir' || file.title === 'representative DNase hypersensitivity sites' || file.title === 'cCRE, all';
+
+    return (
+        <React.Fragment>
+            {(file.name) ?
+                <span>{file.name}</span>
+            : (pinnedFile && file.title) ?
+                <span>{file.title}</span>
+            : (file.file_format === 'bigWig') ?
+                <span>
+                    {file.target ? `${file.target} - ` : ''}
+                    {file.assay_term_name} - {file.biosample_ontology ? file.biosample_ontology.term_name : ''}
+                </span>
+            : (file.file_format === 'vdna-dir') ?
+                <span>{assembly}</span>
+            :
+                <span>
+                    {file.target ? `${file.target} - ` : ''}
+                    {file.assay_term_name} - {file.biosample_ontology.term_name ? file.biosample_ontology.term_name : ''}
+                </span>
+            }
+            {(file.href && !(pinnedFile) && long) ?
+                <div>File: <a href={`http://encodeproject.org${file.href.split('/@@download/')[0]}`}>{fileLabel}</a></div>
+            : null}
+            {(file.dataset && !(pinnedFile) && long) ?
+                <div>Dataset: <a href={`http://encodeproject.org${file.dataset}`}>{datasetLabel}</a></div>
+            : null}
+        </React.Fragment>
+    );
+};
 
 TrackLabel.propTypes = {
     /** File object being displayed in the track */
     file: PropTypes.object.isRequired,
     /** File object being displayed in the track */
     assembly: PropTypes.string.isRequired,
+    long: PropTypes.bool,
+};
+
+TrackLabel.defaultProps = {
+    long: false,
 };
 
 class GenomeBrowser extends React.Component {
@@ -391,19 +405,11 @@ class GenomeBrowser extends React.Component {
 
             if (!(_.isEqual(this.props.files, prevProps.files))) {
                 let newFiles = [];
-                let files = [];
-                let domain = `${window.location.protocol}//${window.location.hostname}`;
-                if (domain.includes('localhost')) {
-                    domain = domainName;
-                    files = [...this.state.pinnedFiles, ...dummyFiles];
-                    newFiles = [...this.state.pinnedFiles, ...dummyFiles];
-                } else {
-                    files = this.props.files;
-                    newFiles = [...this.state.pinnedFiles, ...files];
-                }
+                const files = this.props.files;
+                newFiles = [...this.state.pinnedFiles, ...files];
                 let tracks = [];
                 if (files.length > 0) {
-                    tracks = this.filesToTracks(newFiles, domain);
+                    tracks = this.filesToTracks(newFiles);
                 }
                 this.setState({ trackList: tracks }, () => {
                     if (this.chartdisplay && tracks !== []) {
@@ -415,35 +421,54 @@ class GenomeBrowser extends React.Component {
     }
 
     setBrowserDefaults(assemblyAnnotation, resolve) {
-        const pinnedFiles = [
-            {
-                file_format: 'vdna-dir',
-                href: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19.vdna-dir',
-            },
-            {
-                file_format: 'vgenes-dir',
-                href: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19.vgenes-dir',
-                title: 'GENCODE V29',
-            },
-            {
-                title: 'dbSNP (153)',
-                file_format: 'variant',
-                path: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19-dbSNP153.vvariants-dir',
-            },
-            // We are going to add in "representative DNase hypersensitivity sites" and "cCRE, all" tracks after update to GRCh38
-            // {
-            //     file_format: 'bigBed',
-            //     href: '/files/ENCFF088UEJ/@@download/ENCFF088UEJ.bigBed',
-            //     dataset: '/annotations/ENCSR169HLH/',
-            //     title: 'representative DNase hypersensitivity sites',
-            // },
-            // {
-            //     file_format: 'bigBed',
-            //     href: '/files/ENCFF389ZVZ/@@download/ENCFF389ZVZ.bigBed',
-            //     dataset: '/annotations/ENCSR439EAZ/',
-            //     title: 'cCRE, all',
-            // },
-        ];
+        let pinnedFiles = [];
+        if (assemblyAnnotation === 'GRCh38') {
+            pinnedFiles = [
+                {
+                    file_format: 'vdna-dir',
+                    href: 'https://encoded-build.s3.amazonaws.com/browser/GRCh38/GRCh38.vdna-dir',
+                },
+                {
+                    file_format: 'vgenes-dir',
+                    href: 'https://encoded-build.s3.amazonaws.com/browser/GRCh38/GRCh38.vgenes-dir',
+                    title: 'GENCODE V29',
+                },
+                {
+                    title: 'dbSNP (153)',
+                    file_format: 'variant',
+                    path: 'https://encoded-build.s3.amazonaws.com/browser/GRCh38/GRCh38-dbSNP153.vvariants-dir',
+                },
+                {
+                    file_format: 'bigBed',
+                    path: 'https://encode-public.s3.amazonaws.com/2021/09/08/2f6c22f7-8479-4107-8e1e-e11be8e86da6/ENCFF998GAH.bigBed',
+                    dataset: '/annotations/ENCSR890YQQ/',
+                    title: 'representative DNase hypersensitivity sites',
+                },
+                {
+                    file_format: 'bigBed',
+                    path: 'https://encode-public.s3.amazonaws.com/2021/09/08/67d00c9a-6924-4a86-a592-7bfab4ecb2ad/ENCFF081NFZ.bigBed',
+                    dataset: '/annotations/ENCSR487PRC/',
+                    title: 'cCRE, all',
+                },
+            ];
+        } else {
+            pinnedFiles = [
+                {
+                    file_format: 'vdna-dir',
+                    href: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19.vdna-dir',
+                },
+                {
+                    file_format: 'vgenes-dir',
+                    href: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19.vgenes-dir',
+                    title: 'GENCODE V29',
+                },
+                {
+                    title: 'dbSNP (153)',
+                    file_format: 'variant',
+                    path: 'https://encoded-build.s3.amazonaws.com/browser/hg19/hg19-dbSNP153.vvariants-dir',
+                },
+            ];
+        }
         this.setState({
             pinnedFiles,
         }, () => {
@@ -452,18 +477,16 @@ class GenomeBrowser extends React.Component {
     }
 
     setGenomeAndTracks() {
-        const genome = mapGenome(this.props.assembly);
-        this.setState({ genome });
         // Determine genome and Gencode pinned files for selected assembly
         const genomePromise = new Promise((resolve) => {
-            this.setBrowserDefaults(genome, resolve);
+            this.setBrowserDefaults(this.props.assembly, resolve);
         });
         // Make sure that we have these pinned files before we convert the files to tracks and chart them
         genomePromise.then(() => {
             const domain = `${window.location.protocol}//${window.location.hostname}`;
             const files = this.compileFiles(domain);
             if (files.length > 0) {
-                const tracks = this.filesToTracks(files, domain);
+                const tracks = this.filesToTracks(files);
                 this.setState({ trackList: tracks }, () => {
                     this.drawTracks(this.chartdisplay);
                 });
@@ -487,22 +510,26 @@ class GenomeBrowser extends React.Component {
         return newFiles;
     }
 
-    filesToTracks(files, domain) {
+    filesToTracks(files) {
         const tracks = files.map((file) => {
             if (file.name) {
                 const trackObj = {};
                 trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
+                trackObj.longname = <TrackLabel file={file} assembly={this.props.assembly} long />;
                 trackObj.type = 'signal';
                 trackObj.path = file.href;
                 trackObj.heightPx = 50;
+                trackObj.expandable = true;
                 return trackObj;
             }
             if (file.file_format === 'bigWig') {
                 const trackObj = {};
                 trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
+                trackObj.longname = <TrackLabel file={file} assembly={this.props.assembly} long />;
                 trackObj.type = 'signal';
-                trackObj.path = domain + file.href;
+                trackObj.path = file.cloud_metadata.url;
                 trackObj.heightPx = 50;
+                trackObj.expandable = true;
                 return trackObj;
             }
             if (file.file_format === 'vdna-dir') {
@@ -526,7 +553,7 @@ class GenomeBrowser extends React.Component {
                 const trackObj = {};
                 trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
                 trackObj.type = 'annotation';
-                trackObj.path = file.href;
+                trackObj.path = file.path;
                 trackObj.heightPx = file.title === 'representative DNase hypersensitivity sites' ? 50 : 30;
                 trackObj.expandable = false;
                 trackObj.displayLabels = false;
@@ -545,7 +572,9 @@ class GenomeBrowser extends React.Component {
             const trackObj = {};
             trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
             trackObj.type = 'annotation';
-            trackObj.path = domain + file.href;
+            trackObj.path = file.cloud_metadata.url;
+            trackObj.expandable = true;
+            trackObj.longname = <TrackLabel file={file} assembly={this.props.assembly} long />;
             // bigBed bedRNAElements, bigBed peptideMapping, bigBed bedExonScore, bed12, and bed9 have two tracks and need extra height
             // Convert to lower case in case of inconsistency in the capitalization of the file format in the data
             if (file.file_format_type &&

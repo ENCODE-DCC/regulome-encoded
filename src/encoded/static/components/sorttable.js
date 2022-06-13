@@ -287,7 +287,12 @@ export class SortTable extends React.Component {
         if (list && list.length) {
             // Sort the list according to the requested sorting column. Only do this *after* this
             // component has mounted (ENCD-3459).
-            const sortedList = this.state.mounted ? list.sort(this.sortColumn) : list;
+            let sortedList = this.state.mounted ? list.sort(this.sortColumn) : list;
+
+            // Limit number of rows displayed to specified maximum
+            if (this.props.maxRows) {
+                sortedList = sortedList.slice(0, this.props.maxRows);
+            }
 
             return (
                 <table className="table table-sortable">
@@ -376,6 +381,7 @@ SortTable.propTypes = {
     sortColumn: PropTypes.string, // ID of column to sort by default; first column if not given
     footer: PropTypes.object, // Optional component to display in the footer
     collapsed: PropTypes.bool, // T if only title bar should be displayed
+    maxRows: PropTypes.number, // Limit for number of rows displayed
 };
 
 SortTable.defaultProps = {
@@ -386,4 +392,5 @@ SortTable.defaultProps = {
     sortColumn: '',
     footer: null,
     collapsed: false,
+    maxRows: null,
 };
