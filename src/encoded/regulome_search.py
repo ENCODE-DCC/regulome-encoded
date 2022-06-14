@@ -21,7 +21,8 @@ def includeme(config):
 
 def genomic_data_service_fetch(endpoint,  request, page_title):
     data_service_url = request.registry.settings['genomic_data_service_url']
-    query_string     = request.query_string.split('/')[0]
+
+    query_string = request.query_string.split('/')[0]
 
     url = data_service_url + "/" + endpoint + "/?" + query_string
 
@@ -34,6 +35,7 @@ def genomic_data_service_fetch(endpoint,  request, page_title):
     response['@id'] = response['@id'].replace(endpoint, "regulome-" + endpoint).replace("&format=json", "")
     response['@type'][0] = response['@type'][0].replace(endpoint, "regulome-" + endpoint)
     response['title'] = page_title
+    response['data_service_url'] = data_service_url
 
     return response
 
