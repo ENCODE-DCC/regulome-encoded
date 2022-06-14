@@ -35,7 +35,6 @@ def genomic_data_service_fetch(endpoint,  request, page_title):
     response['@id'] = response['@id'].replace(endpoint, "regulome-" + endpoint).replace("&format=json", "")
     response['@type'][0] = response['@type'][0].replace(endpoint, "regulome-" + endpoint)
     response['title'] = page_title
-    response['data_service_url'] = data_service_url
 
     return response
 
