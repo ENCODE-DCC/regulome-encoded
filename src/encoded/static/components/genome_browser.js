@@ -274,6 +274,7 @@ export function fetchData(geneLink, fetch) {
 
 function mapGenome(inputAssembly) {
     let genome = inputAssembly.split(' ')[0];
+    console.log(genome);
     if (genome === 'hg19') {
         genome = 'GRCh37';
     } else if (genome === 'mm9') {

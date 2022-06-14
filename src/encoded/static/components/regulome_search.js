@@ -262,7 +262,7 @@ class AdvSearch extends React.Component {
         super();
 
         this.state = {
-            genome: 'GRCh37',
+            genome: 'GRCh38',
             searchInput: '',
             maf: 0.01,
             modal: null,
@@ -793,7 +793,7 @@ export class RegulomeSearch extends React.Component {
     chooseThumbnail(chosen) {
         if (chosen === 'valis' && this.state.filteredFiles.length < 1) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
-            const assembly = 'hg19';
+            const assembly = 'GRCh38';
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
             const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
             // for some reason we are getting duplicates here so we need to filter those out
@@ -919,6 +919,8 @@ export class RegulomeSearch extends React.Component {
 
     render() {
         const context = this.props.context;
+        console.log(context);
+        console.log(context.query_coordinates);
         const coordinates = context.query_coordinates[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
@@ -1165,7 +1167,7 @@ export class RegulomeSearch extends React.Component {
                                                 fixedHeight={this.state.multipleBrowserPages}
                                                 files={this.state.includedFiles}
                                                 expanded
-                                                assembly={'hg19'}
+                                                assembly={'GRCh38'}
                                                 coordinates={coordinates}
                                                 selectedFilters={this.state.selectedFilters}
                                             />
