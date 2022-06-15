@@ -70,8 +70,12 @@ $brand-info: #4F689E;
 @import "encoded/modules/regulome_help";
 @import "encoded/modules/navbar";
 @import "encoded/modules/genome_browser";
+@import "encoded/modules/body_map";
+@import "encoded/modules/body_map_facet";
+@import "encoded/modules/chromatin_state";
 @import "encoded/state";
 @import "encoded/theme";
+@import "encoded/modules/tables";
 
 // Utility classes - Bootstrap 3, keep last
 @import "bootstrap/utilities";

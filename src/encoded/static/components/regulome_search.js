@@ -5,16 +5,44 @@ import url from 'url';
 import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
-import { BarChart, ChartList, ChartTable, lookupChromatinNames } from './visualizations';
-import { requestSearch, shadeOverflowOnScroll } from './objectutils';
+import { BarChart, ChartList, lookupChromatinNames } from './visualizations';
+import { requestSearch } from './objectutils';
 import GenomeBrowser from './genome_browser';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/modal';
+import { FacetList, filterByAllSelectedFilters } from './facets';
+import { ChromatinView } from './chromatin_view';
 
 const screenMediumMax = 787;
 const screenSmallMax = 483;
 
-// Number of terms to show, the rest will be viewable on scroll
-const displayedTermsCount = 14;
+// Define facets parameters
+const facetParameters = [
+    {
+        type: 'file_format',
+        title: 'File format',
+        typeahead: false,
+    },
+    {
+        type: 'organ',
+        title: 'Organ / cell type',
+        typeahead: true,
+    },
+    {
+        type: 'biosample',
+        title: 'Biosample',
+        typeahead: true,
+    },
+    {
+        type: 'assay',
+        title: 'Method',
+        typeahead: false,
+    },
+    {
+        type: 'target',
+        title: 'Target',
+        typeahead: true,
+    },
+];
 
 // Fetch data from href
 function fetchData(href, fetch) {
@@ -32,11 +60,6 @@ function fetchData(href, fetch) {
         console.log('OBJECT LOAD ERROR: %s', e);
     });
 }
-
-// Define facets (probably this should be in a schema really)
-const facetList = ['file_format', 'organ', 'biosample', 'assay', 'target'];
-const facetTitleList = ['File format', 'Organ / cell type', 'Biosample', 'Method', 'Target'];
-const typeaheadFacetList = [false, true, true, false, true];
 
 const dataTypeStrings = [
     {
@@ -56,7 +79,7 @@ const dataTypeStrings = [
 const exampleEntries = [
     {
         label: 'multiple dbSNPs',
-        input: 'rs3768324\nrs75982468\nrs10905307\nrs10823321\nrs7745856',
+        input: 'rs3768324\nrs75982468\nrs10117931\nrs11749731\nrs11160830\nrs2808110\nrs2839467\nrs147375898\nrs111686660\nrs11145227\nrs190318542\nrs148232663\nrs74792881\nrs3087079\nrs2166521\nrs62319725',
     },
     {
         label: 'coordinates ranges',
@@ -70,13 +93,13 @@ const dataColumnsChromatin = {
         title: 'Chromatin state',
         display: item => lookupChromatinNames(item.value),
     },
-    peak: {
-        title: 'Chromatin state window',
-        getValue: item => `${item.chrom}:${item.start}..${item.end}`,
-    },
     biosample_term_name: {
         title: 'Biosample',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+    },
+    biosample_classification: {
+        title: 'Classification',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.classification : ''),
     },
     organ_slims: {
         title: 'Organ',
@@ -574,419 +597,6 @@ ResultsTable.defaultProps = {
     shortened: false,
 };
 
-class FacetButton extends React.Component {
-    constructor() {
-        super();
-        this._addGenomeFilter = this._addGenomeFilter.bind(this);
-    }
-
-    _addGenomeFilter() {
-        this.props.addGenomeFilter(this.props.buttonLabel, this.props.facetLabel);
-    }
-
-    render() {
-        const { buttonLabel, lookupFilterCount, selectedFacets, facetLabel } = this.props;
-        const filterCount = lookupFilterCount(buttonLabel, facetLabel);
-        return (
-            <button
-                className={selectedFacets.includes(`${buttonLabel}AND${facetLabel}`) ? 'active' : ''}
-                onClick={this._addGenomeFilter}
-                disabled={(filterCount === ' (0)' && !(selectedFacets.includes(`${buttonLabel}AND${facetLabel}`)))}
-            >
-                {buttonLabel}{filterCount}
-            </button>
-        );
-    }
-}
-
-FacetButton.propTypes = {
-    buttonLabel: PropTypes.string.isRequired,
-    facetLabel: PropTypes.string.isRequired,
-    lookupFilterCount: PropTypes.func.isRequired,
-    selectedFacets: PropTypes.array.isRequired,
-    addGenomeFilter: PropTypes.func.isRequired,
-};
-
-const Facet = (props) => {
-    const { facetTitle, facetName, facetArray, lookupFilterCount, addGenomeFilter, selectedFacets } = props;
-    return (
-        <div className="facet">
-            <h4>{facetTitle}</h4>
-            <div className="facet-scrollable">
-                {facetArray.map((d) => {
-                    if (d === '') {
-                        return <hr />;
-                    }
-                    return <FacetButton
-                        lookupFilterCount={lookupFilterCount}
-                        selectedFacets={selectedFacets}
-                        buttonLabel={d}
-                        facetLabel={facetName}
-                        addGenomeFilter={addGenomeFilter}
-                        key={d}
-                    />;
-                })}
-            </div>
-        </div>
-    );
-};
-
-Facet.propTypes = {
-    facetTitle: PropTypes.string.isRequired,
-    facetName: PropTypes.string.isRequired,
-    facetArray: PropTypes.array.isRequired,
-    lookupFilterCount: PropTypes.func.isRequired,
-    addGenomeFilter: PropTypes.func.isRequired,
-    selectedFacets: PropTypes.array.isRequired,
-};
-
-const TypeaheadFacet = (props) => {
-    const { facetTitle, facetName, facetArray, handleSearch, lookupFilterCount, addGenomeFilter, selectedFacets, unsanitizedSearchTerm } = props;
-    return (
-        <div className="facet">
-            <h4>{facetTitle}</h4>
-            <div className="typeahead-entry" role="search">
-                <i className="icon icon-search" />
-                <div className="searchform">
-                    <input type="search" aria-label={`Search to filter list of terms for ${facetName} facet`} placeholder="Search" value={unsanitizedSearchTerm} onChange={e => handleSearch(e, facetName)} name={`Search ${facetName} facet`} />
-                </div>
-            </div>
-            <div className="facet-scrollable">
-                <div className="top-shading hide-shading" />
-                <div
-                    className="term-list"
-                    onScroll={shadeOverflowOnScroll}
-                >
-                    {facetArray.map((d) => {
-                        if (d === '') {
-                            return <hr />;
-                        }
-                        return <FacetButton
-                            lookupFilterCount={lookupFilterCount}
-                            selectedFacets={selectedFacets}
-                            buttonLabel={d}
-                            facetLabel={facetName}
-                            addGenomeFilter={addGenomeFilter}
-                            key={d}
-                        />;
-                    })}
-                </div>
-                <div className={`shading ${(facetArray.length < displayedTermsCount) ? 'hide-shading' : ''}`} />
-            </div>
-        </div>
-    );
-};
-
-TypeaheadFacet.propTypes = {
-    facetTitle: PropTypes.string.isRequired,
-    facetName: PropTypes.string.isRequired,
-    facetArray: PropTypes.array.isRequired,
-    handleSearch: PropTypes.func.isRequired,
-    lookupFilterCount: PropTypes.func.isRequired,
-    addGenomeFilter: PropTypes.func.isRequired,
-    selectedFacets: PropTypes.array.isRequired,
-    unsanitizedSearchTerm: PropTypes.string.isRequired,
-};
-
-const filterByAllSelectedFilters = (files, facets) => {
-    let newFiles = files;
-    facetList.forEach((facetName) => {
-        const facetFilters = facets.filter(d => d.includes(`AND${facetName}`)).map(d => d.split('AND')[0]);
-        if (facetFilters.length > 0) {
-            // for organ facet, need to check if any of the listed organ terms match any of the organ filters
-            if (facetName === 'organ') {
-                newFiles = newFiles.filter((d) => {
-                    if (d[facetName] && (d[facetName].indexOf(',') > -1)) {
-                        return d[facetName].split(', ').some(f => facetFilters.includes(f));
-                    }
-                    return null;
-                });
-            // for non-organ facets, just check if the term matches any of the facet filters
-            } else {
-                newFiles = newFiles.filter(d => facetFilters.includes(d[facetName]));
-            }
-        }
-    });
-    return newFiles;
-};
-
-const filterByOneFilter = (files, facet) => {
-    const facetFilter = facet.split('AND')[0];
-    const facetName = facet.split('AND')[1];
-    let newFiles;
-    if (facetName === 'organ') {
-        newFiles = files.filter((d) => {
-            if (d[facetName] && (d[facetName].indexOf(',') > -1)) {
-                return d[facetName].split(', ').some(f => facetFilter.includes(f));
-            }
-            return null;
-        });
-    // for non-organ facets, just check if the term matches the facet
-    } else {
-        newFiles = files.filter(d => facetFilter === d[facetName]);
-    }
-    return newFiles;
-};
-
-class FilterButton extends React.Component {
-    constructor() {
-        super();
-        this._addGenomeFilter = this._addGenomeFilter.bind(this);
-    }
-
-    _addGenomeFilter() {
-        this.props.addGenomeFilter(this.props.buttonLabel, this.props.facetLabel);
-    }
-
-    render() {
-        return (
-            <button
-                className="browser-filter"
-                onClick={this._addGenomeFilter}
-                key={this.props.facetKey}
-            >
-                <i className="icon icon-times-circle" />
-                {this.props.buttonLabel}
-            </button>
-        );
-    }
-}
-
-FilterButton.propTypes = {
-    buttonLabel: PropTypes.string.isRequired,
-    facetLabel: PropTypes.string.isRequired,
-    facetKey: PropTypes.string.isRequired,
-    addGenomeFilter: PropTypes.func.isRequired,
-};
-
-class GenomeFacets extends React.Component {
-    constructor() {
-        super();
-        this.state = {
-            selectedFacets: [],
-            unsanitizedSearchTerms: {},
-            searchTerms: {},
-        };
-        this.addGenomeFilter = this.addGenomeFilter.bind(this);
-        this.toggleFacetDisplay = this.toggleFacetDisplay.bind(this);
-        this.clearGenomeFilters = this.clearGenomeFilters.bind(this);
-        this.lookupFilterCount = this.lookupFilterCount.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
-        this.createFacets = this.createFacets.bind(this);
-        this.isntZero = this.isntZero.bind(this);
-        this.isZero = this.isZero.bind(this);
-        this.placeZerosAtEnd = this.placeZerosAtEnd.bind(this);
-    }
-
-    componentDidMount() {
-        this.setState({ selectedFacets: this.props.selectedFilters });
-    }
-
-    addGenomeFilter(item, category) {
-        const itemFacet = `${item}AND${category}`;
-        if (this.state.selectedFacets.includes(itemFacet)) {
-            this.setState(prevState => ({
-                selectedFacets: prevState.selectedFacets.filter(facet => facet !== itemFacet),
-            }), () => {
-                this.props.handleGenomeFacets(this.state.selectedFacets);
-            });
-        } else {
-            this.setState(prevState => ({
-                selectedFacets: [...prevState.selectedFacets, itemFacet],
-            }), () => {
-                this.props.handleGenomeFacets(this.state.selectedFacets);
-            });
-        }
-    }
-
-    clearGenomeFilters() {
-        this.setState({ selectedFacets: [] }, () => {
-            this.props.handleGenomeFacets(this.state.selectedFacets);
-        });
-    }
-
-    toggleFacetDisplay() {
-        this.setState(prevState => ({
-            facetDisplay: !(prevState.facetDisplay),
-        }));
-    }
-
-    handleSearch(e, typeaheadIdentifier) {
-        const filterVal = String(globals.sanitizedString(e.target.value));
-        const targetValue = e.target.value;
-        this.setState((prevState) => {
-            const unsanitizedSearchTerms = { ...prevState.unsanitizedSearchTerms };
-            const searchTerms = { ...prevState.searchTerms };
-            unsanitizedSearchTerms[typeaheadIdentifier] = targetValue;
-            searchTerms[typeaheadIdentifier] = filterVal;
-            return {
-                searchTerms,
-                unsanitizedSearchTerms,
-            };
-        });
-    }
-
-    lookupFilterCount(filter, category) {
-        const fakeFilter = `${filter}AND${category}`;
-        // for filters that are not selected, we want to display how many new results would be added if that filter were selected
-        if (!this.state.selectedFacets.includes(fakeFilter)) {
-            // if we add this filter to our selected filters, we need to know how many results there will be
-            const fakeFacets = [...this.state.selectedFacets, fakeFilter];
-            const fakeFilteredFiles = filterByAllSelectedFilters(this.props.files, fakeFacets);
-            // if a filter has already been selected in this category, we do not want to include results for those in our count
-            if ((this.state.selectedFacets.filter(d => d.includes(category)).length > 0)) {
-                if (category === 'organ') {
-                    const alreadyMatchingFiles = filterByOneFilter(this.props.filteredFiles, fakeFilter);
-                    return ` (${(fakeFilteredFiles.length - this.props.filteredFiles.length) + alreadyMatchingFiles.length})`;
-                }
-                return ` (${fakeFilteredFiles.length - this.props.filteredFiles.length})`;
-            }
-            return ` (${fakeFilteredFiles.length})`;
-        }
-        // for filters that are already selected, we want to display how many results that are displayed match this filter
-        // we have an extra space here so that selected terms do not match the string pattern that other terms do, so that if a selected term has a (0), it will not get filtered out as a zero, it will stay in the top category with non-zero matching terms
-        const matchingFiles = filterByOneFilter(this.props.filteredFiles, fakeFilter);
-        return `  (${matchingFiles.length})`;
-    }
-
-    isntZero(arr, category) {
-        return arr.filter(el => this.lookupFilterCount(el, category) !== ' (0)');
-    }
-
-    isZero(arr, category) {
-        return arr.filter(el => this.lookupFilterCount(el, category) === ' (0)');
-    }
-
-    placeZerosAtEnd(arr, facet) {
-        const arrBegin = this.isntZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        const arrEnd = this.isZero(arr, facet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        if (arrBegin.length > 0 && arrEnd.length > 0) {
-            return [...arrBegin, '', ...arrEnd];
-        }
-        return [...arrBegin, ...arrEnd];
-    }
-
-    createFacets(files) {
-        // initialize facet object
-        const facetObject = {};
-        facetList.forEach((facet) => {
-            facetObject[facet] = [];
-        });
-        // compile term names for each facet from possible results
-        files.forEach((file) => {
-            facetList.forEach((facet) => {
-                // generating facets based on file parameters
-                // for every facet except organ, each file matches exactly 1 facet term
-                // for the organ facet, each file can have multiple organ slims and we are listing them individually
-                // so each file can match multiple organ facet terms whereas for other facets, each file matches exactly 1 term
-                // we will probably keep it but we are not sure if it is confusing (the counts don't add up to the number of results for the organ facet) so this may change in a future update
-                let slims = [];
-                if (facet === 'organ' && file[facet] && (file[facet].indexOf(',') > -1)) {
-                    slims = file[facet].split(', ');
-                } else if (file[facet] && facet !== 'organ') {
-                    slims = [file[facet]];
-                }
-                slims.forEach((slim) => {
-                    // if the facet has a typeahead, check that term matches typed search, if so, add if the term is not already present in facet list
-                    if (this.state.searchTerms[facet]) {
-                        if ((this.state.searchTerms[facet] === '') || globals.sanitizedString(slim).match(this.state.searchTerms[facet])) {
-                            if ((facetObject[facet].indexOf(slim) === -1) && slim) {
-                                facetObject[facet].push(slim);
-                            }
-                        }
-                    // if the file has a term, add term to facet object if it does not exist yet
-                    } else if ((facetObject[facet].indexOf(slim) === -1) && slim) {
-                        facetObject[facet].push(slim);
-                    }
-                });
-            });
-        });
-        const newFacetObject = {};
-        // sort facet term names by counts with zeros at the end
-        facetList.forEach((facet) => {
-            newFacetObject[facet] = this.placeZerosAtEnd(facetObject[facet], facet);
-        });
-        return newFacetObject;
-    }
-
-    render() {
-        const facetObject = this.createFacets(this.props.files);
-
-        return (
-            <React.Fragment>
-                {(this.state.selectedFacets.length > 0) ?
-                    <React.Fragment>
-                        <div className="browser-selected-facets">
-                            <span>Selected filters:</span>
-                            {this.state.selectedFacets.map((f) => {
-                                const fsplit = f.split('AND');
-                                return (
-                                    <FilterButton
-                                        buttonLabel={fsplit[0]}
-                                        facetLabel={fsplit[1]}
-                                        facetKey={f}
-                                        addGenomeFilter={this.addGenomeFilter}
-                                    />
-                                );
-                            })}
-                            <button
-                                className="browser-filter"
-                                onClick={() => this.clearGenomeFilters()}
-                            >
-                                <i className="icon icon-times-circle" />
-                                Clear all filters
-                            </button>
-                        </div>
-                        {(this.props.filteredFiles.length === 0) ?
-                            <div className="browser-selected-facets warning"><i className="icon icon-exclamation-circle" />No files match the selected filters. Try different filters to visualize results.</div>
-                        : null}
-                    </React.Fragment>
-                :
-                    <div className="browser-selected-facets">Selected filters: To select a filter, make a selection from &quot;Refine your search&quot; below.</div>
-                }
-                <button className={`browser-selections ${this.state.facetDisplay ? 'facets-without-border' : ''}`} onClick={this.toggleFacetDisplay}><i className={`icon ${this.state.facetDisplay ? 'icon-caret-down' : 'icon-caret-right'}`} /><span className="selection-header">Refine your search</span></button>
-                {this.state.facetDisplay ?
-                    <div className="browser-facet-container">
-                        {facetList.map((facet, facetIndex) => {
-                            if (typeaheadFacetList[facetIndex]) {
-                                return (
-                                    <TypeaheadFacet
-                                        facetTitle={facetTitleList[facetIndex]}
-                                        facetName={facet}
-                                        facetArray={facetObject[facet]}
-                                        handleSearch={this.handleSearch}
-                                        lookupFilterCount={this.lookupFilterCount}
-                                        addGenomeFilter={this.addGenomeFilter}
-                                        selectedFacets={this.state.selectedFacets}
-                                        unsanitizedSearchTerm={this.state.unsanitizedSearchTerms[facet]}
-                                    />
-                                );
-                            }
-                            return (
-                                <Facet
-                                    facetTitle={facetTitleList[facetIndex]}
-                                    facetName={facet}
-                                    facetArray={facetObject[facet]}
-                                    lookupFilterCount={this.lookupFilterCount}
-                                    addGenomeFilter={this.addGenomeFilter}
-                                    selectedFacets={this.state.selectedFacets}
-                                />
-                            );
-                        })}
-                    </div>
-                : null}
-            </React.Fragment>
-        );
-    }
-}
-
-GenomeFacets.propTypes = {
-    files: PropTypes.array.isRequired,
-    handleGenomeFacets: PropTypes.func.isRequired,
-    filteredFiles: PropTypes.array.isRequired,
-    selectedFilters: PropTypes.array.isRequired,
-};
-
 const appendDatasetsToQuery = (query, chunkDatasets) => {
     let searchQuery = query;
     chunkDatasets.forEach((d) => {
@@ -1066,7 +676,7 @@ export class RegulomeSearch extends React.Component {
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
         this.handlePagination = this.handlePagination.bind(this);
-        this.handleGenomeFacets = this.handleGenomeFacets.bind(this);
+        this.handleFacetList = this.handleFacetList.bind(this);
     }
 
     componentDidMount() {
@@ -1154,8 +764,8 @@ export class RegulomeSearch extends React.Component {
         }
     }
 
-    handleGenomeFacets(selectedFilters) {
-        const filteredFiles = filterByAllSelectedFilters(this.state.allFiles, selectedFilters);
+    handleFacetList(selectedFilters) {
+        const filteredFiles = filterByAllSelectedFilters(this.state.allFiles, selectedFilters, facetParameters);
         // if there are more filtered files than we want to display on one page, we will paginate
         const browserTotalPages = Math.ceil(filteredFiles.length / displaySize);
         if (filteredFiles.length > displaySize) {
@@ -1544,11 +1154,12 @@ export class RegulomeSearch extends React.Component {
                                         <React.Fragment>
                                             <h4>Visualize files for {coordinates}</h4>
                                             <h4>There {this.state.filteredFiles.length === 1 ? 'is' : 'are'} {this.state.filteredFiles.length} result{this.state.filteredFiles.length === 1 ? '' : 's'}.</h4>
-                                            <GenomeFacets
+                                            <FacetList
                                                 files={this.state.allFiles}
-                                                handleGenomeFacets={this.handleGenomeFacets}
+                                                handleFacetList={this.handleFacetList}
                                                 filteredFiles={this.state.filteredFiles}
                                                 selectedFilters={this.state.selectedFilters}
+                                                facetParameters={facetParameters}
                                             />
                                             <GenomeBrowser
                                                 fixedHeight={this.state.multipleBrowserPages}
@@ -1598,11 +1209,10 @@ export class RegulomeSearch extends React.Component {
                                     : (thumbnail === 'qtl') ?
                                         <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
                                     : (thumbnail === 'chromatin') ?
-                                        <React.Fragment>
-                                            {chromatinData.length > 0 ?
-                                                <ChartTable data={chromatinData} displayTitle={'Chromatin state'} chartWidth={Math.min(this.state.screenWidth, 1000)} />
-                                            : null}
-                                        </React.Fragment>
+                                          <ChromatinView
+                                              data={chromatinData}
+                                              chartWidth={this.state.screenWidth}
+                                          />
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
                                             <h4>Genome browser</h4>

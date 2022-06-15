@@ -158,7 +158,9 @@ class ColumnSortDir extends React.Component {
 
         return (
             <th key={columnId} className={thClass} onClick={this.handleClick}>
-                <span>{title}<i className={columnClass} /></span>
+                <div className="tcell-sortable__column-header">
+                    {title}<i className={columnClass} />
+                </div>
             </th>
         );
     }
