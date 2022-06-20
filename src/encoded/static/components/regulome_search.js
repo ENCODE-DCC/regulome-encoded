@@ -262,7 +262,7 @@ class AdvSearch extends React.Component {
         super(context);
 
         this.state = {
-            genome: context.assembly,
+            genome: context.assembly || 'GRCh38',
             searchInput: '',
             maf: 0.01,
             modal: null,
