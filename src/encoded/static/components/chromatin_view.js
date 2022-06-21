@@ -82,7 +82,7 @@ const Selections = (props) => {
                 if (filterType === 'biosample') {
                     label = keyArray.find(k => sanitizedString(k) === f);
                 } else if (filterType === 'state') {
-                    label = keyArray.find(k => classString(sanitizedString(k)) === f);
+                    label = keyArray.find(k => !isLetter(k[0]) ? (classString(sanitizedString(k)) === f) : (sanitizedString(k) === f));
                 }
                 let clearInput = f;
                 if (filterType === 'biosample') {
