@@ -257,12 +257,32 @@ ExampleEntry.propTypes = {
     handleExample: PropTypes.func.isRequired,
 };
 
+const AssemblySelector = (props) => (
+    <div className="assembly-switch">
+        <div className={`switch-label ${props.selection === 'GRCh38' ? 'active' : ''}`}>GRCh38</div>
+        <label className="switch">
+            <input
+                type="checkbox"
+                onChange={() => {props.onSelection(props.selection)}}
+                checked={props.selection === 'GRCh37'}
+            />
+            <span className="slider round"></span>
+        </label>
+        <div className={`switch-label ${props.selection === 'GRCh37' ? 'active' : ''}`}>GRCh37</div>
+    </div>
+);
+
+AssemblySelector.propTypes = {
+    selection: PropTypes.string.isRequired,
+    onSelection: PropTypes.func.isRequired,
+};
+
 class AdvSearch extends React.Component {
-    constructor(context) {
-        super(context);
+    constructor(props) {
+        super(props);
 
         this.state = {
-            genome: context.assembly || 'GRCh38',
+            genome: props.context.assembly || 'GRCh38',
             searchInput: '',
             maf: 0.01,
             modal: null,
@@ -272,6 +292,7 @@ class AdvSearch extends React.Component {
         this.handleOnFocus = this.handleOnFocus.bind(this);
         this.handleExample = this.handleExample.bind(this);
         this.hideModal = this.hideModal.bind(this);
+        this.toggleGenome = this.toggleGenome.bind(this);
     }
 
     handleChange(e) {
@@ -305,6 +326,14 @@ class AdvSearch extends React.Component {
         this.setState({ modal: null });
     }
 
+    toggleGenome(select) {
+        if (select === "GRCh38") {
+            this.setState({ genome: "GRCh37" });
+        } else {
+            this.setState({ genome: "GRCh38" });
+        }
+    }
+
     render() {
         const context = this.props.context;
         const searchBase = url.parse(this.context.location_href).search || '';
@@ -323,7 +352,7 @@ class AdvSearch extends React.Component {
                 <div id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
                     <div className="form-group">
                         <label htmlFor="annotation">
-                            <i className="icon icon-search" />Search by dbSNP ID or coordinate range (hg19)
+                            <i className="icon icon-search" />Search by dbSNP ID or coordinate range: <AssemblySelector selection={this.state.genome} onSelection={this.toggleGenome}/>
                         </label>
                         <div className="input-group input-group-region-input">
                             <textarea className="multiple-entry-input" id="multiple-entry-input" placeholder="Enter search parameters here." onChange={this.handleChange} name="regions" value={this.state.searchInput} />

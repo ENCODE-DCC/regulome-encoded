@@ -16,7 +16,7 @@ export const chromatinHierarchy = Object.keys(initializedChromatinObject);
 
 export const sortChromatin = (a, b) => chromatinHierarchy.indexOf(a) - chromatinHierarchy.indexOf(b);
 
-const extraTallLabels = ['endothelial cell of umbilical vein', 'myoepithelial cell of mammary gland', 'pulmonary artery endothelial cell'];
+const extraTallLabels = ['endothelial cell of umbilical vein', 'myoepithelial cell of mammary gland', 'pulmonary artery endothelial cell', 'fibroblast of pulmonary artery', 'fibroblast of the aortic adventitia'];
 
 const shortenedLabel = name => name.replace('activated', 'ϟ')
     .replace('stimulated', '☆')
