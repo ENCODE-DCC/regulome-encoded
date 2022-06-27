@@ -1260,6 +1260,54 @@ export class RegulomeSearch extends React.Component {
                                 <div className="version-tag">2.0.3</div>
                             </a>
                         </div>
+                        <div className="button-container">
+                            <br />
+                            <div className="igvf-logo"><img src="/static/img/igvf-full-logo.png" /></div>
+                            <div>
+                                <button className="button button-primary">Primary</button>
+                                <button className="button button-secondary">Secondary</button>
+                                <button className="button button-tertiary">Tertiary</button>
+                                <button className="button button-fourth">Fourth</button>
+                                <button className="button button-primary button-border">Primary</button>
+                                <button className="button button-secondary button-border">Secondary</button>
+                                <button className="button button-tertiary button-border">Tertiary</button>
+                                <button className="button button-fourth button-border">Fourth</button>
+                            </div>
+                            <div>
+                                <button className="button button-primary" disabled>Primary</button>
+                                <button className="button button-secondary" disabled>Secondary</button>
+                                <button className="button button-tertiary" disabled>Tertiary</button>
+                                <button className="button button-fourth" disabled>Fourth</button>
+                                <button className="button button-primary button-border" disabled>Primary</button>
+                                <button className="button button-secondary button-border" disabled>Secondary</button>
+                                <button className="button button-tertiary button-border" disabled>Tertiary</button>
+                                <button className="button button-fourth button-border" disabled>Fourth</button>
+                            </div>
+                            <br />
+                            <div>
+                                <button className="button error">Error</button>
+                                <button className="button warning">Warning</button>
+                                <button className="button success">Success</button>
+                                <button className="button info">Info</button>
+                                <button className="button error button-border">Error</button>
+                                <button className="button warning button-border">Warning</button>
+                                <button className="button success button-border">Success</button>
+                                <button className="button info button-border">Info</button>
+                            </div>
+                            <div>
+                                <button className="button error" disabled>Error</button>
+                                <button className="button warning" disabled>Warning</button>
+                                <button className="button success" disabled>Success</button>
+                                <button className="button info" disabled>Info</button>
+                                <button className="button error button-border" disabled>Error</button>
+                                <button className="button warning button-border" disabled>Warning</button>
+                                <button className="button success button-border" disabled>Success</button>
+                                <button className="button info button-border" disabled>Info</button>
+                            </div>
+                            <br />
+                            <br />
+                            <br />
+                        </div>
                         <AdvSearch {...this.props} />
                         <div className="data-types">
                             <div className="data-types-instructions"><h4>Use RegulomeDB to identify DNA features and regulatory elements in non-coding regions of the human genome by entering ...</h4></div>
