@@ -258,20 +258,36 @@ ExampleEntry.propTypes = {
     handleExample: PropTypes.func.isRequired,
 };
 
-const AssemblySelector = props => (
-    <div className="assembly-switch">
-        <div className={`switch-label ${props.selection === 'GRCh38' ? 'active' : ''}`}>GRCh38</div>
-        <label className="switch" id="assembly-switch">
-            <input
-                type="checkbox"
-                onChange={() => { props.onSelection(props.selection); }}
-                checked={props.selection === 'hg19'}
-            />
-            <span className="slider round" />
-        </label>
-        <div className={`switch-label ${props.selection === 'hg19' ? 'active' : ''}`}>hg19</div>
-    </div>
-);
+const AssemblySelector = (props) => {
+    // need to display a focus style on "switch-label" because the input default checkbox is hidden and focus is therefore hidden
+    const [focus, toggleFocus] = React.useState(false);
+
+    return (
+        <div className="assembly-switch">
+            <div className={`switch-label ${props.selection === 'GRCh38' ? 'active' : ''}`}>GRCh38</div>
+            <label
+                className={`switch ${focus ? 'focused' : ''}`}
+                htmlFor="assembly-switch"
+                aria-labelledby={`Assembly is ${props.selection}. Toggle to switch to ${props.selection === 'GRCh38' ? 'hg19' : 'GRCh38'}`}
+            >
+                <input
+                    type="checkbox"
+                    name="assembly-switch"
+                    onChange={() => { props.onSelection(props.selection); }}
+                    onKeyDown={(e) => { props.onSelection(props.selection, e); }}
+                    checked={props.selection === 'hg19'}
+                    id="assembly-switch"
+                    aria-checked="false"
+                    tabIndex="0"
+                    onFocus={() => { toggleFocus(true); }}
+                    onBlur={() => { toggleFocus(false); }}
+                />
+                <span className="slider round" />
+            </label>
+            <div className={`switch-label ${props.selection === 'hg19' ? 'active' : ''}`}>hg19</div>
+        </div>
+    );
+};
 
 AssemblySelector.propTypes = {
     selection: PropTypes.string.isRequired,
@@ -308,12 +324,20 @@ class AdvSearch extends React.Component {
         });
     }
 
-    handleSelection(input) {
-        this.props.toggleGenome(input);
-        if (input === 'GRCh38') {
-            this.setState({ genome: 'hg19' });
-        } else {
-            this.setState({ genome: 'GRCh38' });
+    handleSelection(input, e) {
+        // for accessibility, execute on spacebar click but not other events
+        const spacebarKeyCode = 32;
+        if (e && e.keyCode === spacebarKeyCode) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if ((e && e.keyCode === spacebarKeyCode) || !(e)) {
+            this.props.toggleGenome(input);
+            if (input === 'GRCh38') {
+                this.setState({ genome: 'hg19' });
+            } else {
+                this.setState({ genome: 'GRCh38' });
+            }
         }
     }
 

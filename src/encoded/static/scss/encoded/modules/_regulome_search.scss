@@ -1,5 +1,5 @@
-$switch-height: 20px;
-$switch-width: 40px;
+$switch-height: 24px;
+$switch-width: 44px;
 $inner-switch-height: 13px;
 
 body {
@@ -26,6 +26,12 @@ body {
         width: $switch-width;
         height: $switch-height;
         top: 4px;
+        border: 2px solid white;
+
+        &.focused {
+            border: 2px solid blue;
+            border-radius: 2px;
+        }
     }
 
     .slider.round {
