@@ -1,7 +1,7 @@
 import React from 'react';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
-// import * as logos from '../libs/d3-sequence-logo'; // This is for local development when changes are needed to d3-sequence-logo.
+import * as logos from '../libs/d3-sequence-logo'; // This is for local development when changes are needed to d3-sequence-logo.
 
 // Convert PWM file into JavaScript object
 // Input "str" consists of PWM file
@@ -87,8 +87,8 @@ export class MotifElement extends React.Component {
     componentDidMount() {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
-            // this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
-            this.sequenceLogos = require('d3-sequence-logo');
+            this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+            // this.sequenceLogos = require('d3-sequence-logo');
             const pwmLink = this.generatePWMLink();
             this.mounted = true;
 
@@ -193,7 +193,9 @@ export class MotifElement extends React.Component {
                             {(footprintsLength > 0) ?
                                 <p>
                                     <span className="motif-label">{footprintsLabel}</span>
-                                    {footprintKeysSorted.map((d, dIndex) => <a key={d} href={footprintList[d]}>{d}{dIndex === (footprintsLength - 1) ? '' : ', '}</a>)}
+                                    <div className={`scrollable-list ${footprintsLength > 3 ? 'shading' : ''}`}>
+                                        {footprintKeysSorted.map((d, dIndex) => <div><a key={d} href={footprintList[d]}>{d}</a></div>)}
+                                    </div>
                                 </p>
                             : null}
                             {(pwmsLength > 0) ?
@@ -302,6 +304,9 @@ export const Motifs = (props) => {
                     : null}
                     <div className={`sequence-logo-table ${classList}`}>
                         <div className="sequence-logo">
+                            <div className="reference-sequence">
+                                {props.context.sequence.sequence}
+                            </div>
                             {pwmLinkList.map(d =>
                                 <MotifElement
                                     key={d.pwm}

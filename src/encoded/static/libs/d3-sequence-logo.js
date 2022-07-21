@@ -229,7 +229,7 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
 
     // height including x-axis labels and endpoint markers
     const svgFullHeight = 180;
-    const svgFullHeightWithMargin = 200;
+    const svgFullHeightWithMargin = 180;
 
     // height of just the base letters
     const svgLetterHeight = 150;
@@ -295,7 +295,7 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     y.domain([0, 2]);
     svg.append('g')
         .call(d3.axisLeft(y)
-            .ticks(4));
+            .ticks(1));
 
     // text label for the y axis
     svg.append('text')
@@ -330,15 +330,15 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     * visually it will look fine, but it may be
     * desirable to alter font size as well.
     */
-    const xLabelFontSize = 20;
-    const xLabelTX = (colWidth / 2) + (xLabelFontSize / 3);
-    const xLabelTY = svgLetterHeight + 10;
-
-    group.append('text')
-        .text((d, i) => `${i + 1}`)
-        .style('font-size', xLabelFontSize)
-        .style('text-anchor', 'end')
-        .attr('transform', `translate(${xLabelTX}, ${xLabelTY}) rotate(270)`);
+    // const xLabelFontSize = 20;
+    // const xLabelTX = (colWidth / 2) + (xLabelFontSize / 3);
+    // const xLabelTY = svgLetterHeight + 10;
+    //
+    // group.append('text')
+    //     .text((d, i) => `${i + 1}`)
+    //     .style('font-size', xLabelFontSize)
+    //     .style('text-anchor', 'end')
+    //     .attr('transform', `translate(${xLabelTX}, ${xLabelTY}) rotate(270)`);
 
     /*
     * For each column (group):
@@ -368,7 +368,7 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         .attr('y', '-1px')
         .attr('x', '-1px')
         .attr('width', `${(svgLetterWidth / m)}px`)
-        .attr('height', `${svgFullHeight + 2}px`)
+        .attr('height', `${(svgFullHeight - 20)}px`)
         .attr('stroke', '#c13b42')
         .attr('fill', 'none')
         .attr('stroke-width', '4px')
