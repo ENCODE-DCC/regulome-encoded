@@ -268,7 +268,7 @@ const AssemblySelector = (props) => {
             <label
                 className={`switch ${focus ? 'focused' : ''}`}
                 htmlFor="assembly-switch"
-                aria-labelledby={`Assembly is ${props.selection}. Toggle to switch to ${props.selection === 'GRCh38' ? 'hg19' : 'GRCh38'}`}
+                aria-label={`Assembly is ${props.selection}. Toggle to switch to ${props.selection === 'GRCh38' ? 'hg19' : 'GRCh38'}`}
             >
                 <input
                     type="checkbox"
