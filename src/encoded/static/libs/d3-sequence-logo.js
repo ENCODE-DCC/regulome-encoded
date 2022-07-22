@@ -14,7 +14,7 @@
  *  (3) call entry_point with (1) and (2).
  */
 
-const d3 = require('d3');
+// const d3 = require('d3');
 
 // ordering for positive strand
 const positiveStrandLetterOrder = ['A', 'C', 'G', 'T'];
