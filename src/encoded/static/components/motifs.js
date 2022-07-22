@@ -150,7 +150,7 @@ export class MotifElement extends React.Component {
         }
 
         // Generate the logo from the PWM object
-        this.sequenceLogos.entryPoint(this.chartdisplay, newPWM, this.d3, alignmentCoordinate, this.props.alignedStartCoordinate, this.props.alignedEndCoordinate, strand);
+        this.sequenceLogos.entryPoint(this.chartdisplay, newPWM, this.d3, alignmentCoordinate, this.props.alignedStartCoordinate, this.props.alignedEndCoordinate, strand, false);
     }
 
     render() {
@@ -191,12 +191,12 @@ export class MotifElement extends React.Component {
                     {!(this.props.shortened) ?
                         <React.Fragment>
                             {(footprintsLength > 0) ?
-                                <p>
+                                <div>
                                     <span className="motif-label">{footprintsLabel}</span>
                                     <div className={`scrollable-list ${footprintsLength > 3 ? 'shading' : ''}`}>
-                                        {footprintKeysSorted.map((d, dIndex) => <div><a key={d} href={footprintList[d]}>{d}</a></div>)}
+                                        {footprintKeysSorted.map(d => <div key={d}><a href={footprintList[d]}>{d}</a></div>)}
                                     </div>
-                                </p>
+                                </div>
                             : null}
                             {(pwmsLength > 0) ?
                                 <p>
@@ -240,6 +240,12 @@ MotifElement.contextTypes = {
 };
 
 export const Motifs = (props) => {
+    const [d3lib, setD3Lib] = React.useState(0);
+    const refToReference = React.useRef(null);
+    const refContainer = React.useRef(null);
+    const tableTop = React.useRef(null);
+    const refPlaceholder = React.useRef(null);
+
     const results = props.context['@graph'];
     const limit = +props.limit;
     const classList = props.classList;
@@ -287,6 +293,49 @@ export const Motifs = (props) => {
         alignedEndCoordinate = Math.max(p.end, alignedEndCoordinate);
     });
 
+    // trimming the reference sequence to widest window of pwms
+    const referenceLength = alignedEndCoordinate - alignedStartCoordinate;
+    const referenceStart = alignedStartCoordinate - props.context.sequence.start;
+    const referenceSequence = props.context.sequence.sequence.slice(referenceStart, referenceStart + referenceLength);
+
+    React.useEffect(() => {
+        document.addEventListener('scroll', trackScrolling);
+        // drawing reference sequence as a pwm so it lines up with the others
+        require.ensure(['d3', 'd3-sequence-logo'], (require) => {
+            setD3Lib(require('d3'));
+            const sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+            // this.sequenceLogos = require('d3-sequence-logo');
+
+            const refSeq = referenceSequence.split('');
+            const fakePWM = [];
+
+            refSeq.forEach((nucleotide) => {
+                const maxHeight = 1000;
+                if (nucleotide === 'A') {
+                    fakePWM.push([maxHeight, 0, 0, 0]);
+                } else if (nucleotide === 'C') {
+                    fakePWM.push([0, maxHeight, 0, 0]);
+                } else if (nucleotide === 'G') {
+                    fakePWM.push([0, 0, maxHeight, 0]);
+                } else {
+                    fakePWM.push([0, 0, 0, maxHeight]);
+                }
+            });
+
+            sequenceLogos.entryPoint(refToReference.current, fakePWM, d3lib, referenceStart, referenceStart, referenceStart, '+', true);
+        });
+    });
+
+    const trackScrolling = () => {
+        if (tableTop.current.getBoundingClientRect().top <= 27) {
+            refContainer.current.classList.add('fixed-position');
+            refPlaceholder.current.setAttribute('style', `height:${refContainer.current.getBoundingClientRect().height}px`);
+        } else {
+            refContainer.current.classList.remove('fixed-position');
+            refPlaceholder.current.setAttribute('style', 'width:0px');
+        }
+    };
+
     return (
         <React.Fragment>
             {(pwmLinkList.length === 0) ?
@@ -302,11 +351,13 @@ export const Motifs = (props) => {
                     {(limit > 0) ?
                         <div className="motif-count">(<b>{groupedListMapped.length}</b> results)</div>
                     : null}
-                    <div className={`sequence-logo-table ${classList}`}>
+                    <div className={`sequence-logo-table ${classList}`} ref={tableTop}>
                         <div className="sequence-logo">
-                            <div className="reference-sequence">
-                                {props.context.sequence.sequence}
+                            <div className="reference-sequence element" ref={refContainer} >
+                                <div className="motif-description">Reference sequence</div>
+                                <div ref={refToReference} className="motif-element" />
                             </div>
+                            <div className="placeholder-element" ref={refPlaceholder} />
                             {pwmLinkList.map(d =>
                                 <MotifElement
                                     key={d.pwm}

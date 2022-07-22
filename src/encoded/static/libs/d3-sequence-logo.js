@@ -183,7 +183,7 @@ function calcPathTransform(path, d, yscale, colWidth) {
  * @param {number[]} seqLenBounds
  * @param {number[]} seqNumBounds
  */
-function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate, lastCoordinate, strand) {
+function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate, lastCoordinate, strand, reference) {
     // skipping error checking for now
     // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
     //
@@ -228,11 +228,17 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     const endpointWidth = (svgFullWidth - svgLetterWidth) / 2;
 
     // height including x-axis labels and endpoint markers
-    const svgFullHeight = 180;
-    const svgFullHeightWithMargin = 180;
-
+    let svgFullHeight = 180;
+    let svgFullHeightWithMargin = 180;
     // height of just the base letters
-    const svgLetterHeight = 150;
+    let svgLetterHeight = 150;
+
+    if (reference) {
+    //     // height including x-axis labels and endpoint markers
+        // svgFullHeight = 80;
+    //     svgFullHeightWithMargin = 80;
+        // svgLetterHeight = 60;
+    }
 
     const colorBase = {
         A: '#489655',
@@ -290,22 +296,24 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         .style('font-size', endptFontSize)
         .attr('transform', `translate(${svgFullWidth},${endptTY + 10})`);
 
-    // Add the y axis
-    const y = d3.scaleLinear().range([svgLetterHeight, 0]);
-    y.domain([0, 2]);
-    svg.append('g')
-        .call(d3.axisLeft(y)
-            .ticks(1));
+    if (!reference) {
+        // Add the y axis
+        const y = d3.scaleLinear().range([svgLetterHeight, 0]);
+        y.domain([0, 2]);
+        svg.append('g')
+            .call(d3.axisLeft(y)
+                .ticks(1));
 
-    // text label for the y axis
-    svg.append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', -65)
-        .attr('x', 0 - (svgFullHeight / 2))
-        .attr('dy', '1em')
-        .style('text-anchor', 'middle')
-        .style('font-size', endptFontSize)
-        .text('Bits');
+        // text label for the y axis
+        svg.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', -65)
+            .attr('x', 0 - (svgFullHeight / 2))
+            .attr('dy', '1em')
+            .style('text-anchor', 'middle')
+            .style('font-size', endptFontSize)
+            .text('Bits');
+    }
 
 
     /**
@@ -363,16 +371,18 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         /* eslint-disable func-names */
         .attr('transform', function (d) { return calcPathTransform(this, d, yscale, colWidth); }); // This line cannot be an arrow function or 'this' will be improperly assigned
 
-    // append red box around search coordinate position
-    svg.append('rect')
-        .attr('y', '-1px')
-        .attr('x', '-1px')
-        .attr('width', `${(svgLetterWidth / m)}px`)
-        .attr('height', `${(svgFullHeight - 20)}px`)
-        .attr('stroke', '#c13b42')
-        .attr('fill', 'none')
-        .attr('stroke-width', '4px')
-        .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
+    if (!reference) {
+        // append red box around search coordinate position
+        svg.append('rect')
+            .attr('y', '-1px')
+            .attr('x', '-1px')
+            .attr('width', `${(svgLetterWidth / m)}px`)
+            .attr('height', `${(svgFullHeight - 20)}px`)
+            .attr('stroke', '#c13b42')
+            .attr('fill', 'none')
+            .attr('stroke-width', '4px')
+            .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
+    }
 }
 
 module.exports.entryPoint = entryPoint;
