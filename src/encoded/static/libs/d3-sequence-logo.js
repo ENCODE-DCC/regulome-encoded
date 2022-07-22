@@ -235,9 +235,9 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
 
     if (reference) {
     //     // height including x-axis labels and endpoint markers
-        // svgFullHeight = 80;
-    //     svgFullHeightWithMargin = 80;
-        // svgLetterHeight = 60;
+        svgFullHeight = 90;
+        svgFullHeightWithMargin = 90;
+        svgLetterHeight = 60;
     }
 
     const colorBase = {
