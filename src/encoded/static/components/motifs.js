@@ -363,7 +363,7 @@ export const Motifs = (props) => {
                             {limit === 0 ?
                                 <React.Fragment>
                                     <div className="reference-sequence element" ref={refContainer} >
-                                        <div className="motif-description">Reference sequence</div>
+                                        <div className="motif-description reference-sequence">Reference sequence</div>
                                         <div ref={refToReference} className="motif-element" />
                                     </div>
                                     <div className="placeholder-element" ref={refPlaceholder} />

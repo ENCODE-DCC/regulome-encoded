@@ -1,5 +1,5 @@
 .reference-sequence {
-    background: #d8d8d8;
+    background: #f2f2f2;
 
     &.fixed-position {
         position: fixed;
@@ -29,6 +29,13 @@
             background: linear-gradient(white, 90%, #b5b3b3);
         }
     }
+    &.reference-sequence {
+        .motif-element {
+            svg {
+                max-height: 50px;
+            }
+        }
+    }
     .motif-element {
         flex: 0 0 60%;
         svg {
@@ -52,6 +59,10 @@
         text-align: left;
         @media screen and (max-width: $screen-md-min) {
             overflow-x: scroll;
+        }
+        &.reference-sequence {
+            font-size: 1.2rem;
+            font-weight: bold;
         }
         p {
             margin-bottom: 0;
