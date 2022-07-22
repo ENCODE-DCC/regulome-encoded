@@ -240,7 +240,7 @@ MotifElement.contextTypes = {
 };
 
 export const Motifs = (props) => {
-    const [d3lib, setD3Lib] = React.useState(0);
+    const [d3lib, setD3Lib] = React.useState(null);
     const refToReference = React.useRef(null);
     const refContainer = React.useRef(null);
     const tableTop = React.useRef(null);
@@ -298,8 +298,23 @@ export const Motifs = (props) => {
     const referenceStart = alignedStartCoordinate - props.context.sequence.start;
     const referenceSequence = props.context.sequence.sequence.slice(referenceStart, referenceStart + referenceLength);
 
+    const trackScrolling = () => {
+        if (tableTop && tableTop.current && refContainer && refContainer.current && refPlaceholder && refPlaceholder.current) {
+            if (tableTop.current.getBoundingClientRect().top <= 27) {
+                refContainer.current.classList.add('fixed-position');
+                refPlaceholder.current.setAttribute('style', `height:${refContainer.current.getBoundingClientRect().height}px`);
+            } else {
+                refContainer.current.classList.remove('fixed-position');
+                refPlaceholder.current.setAttribute('style', 'width:0px');
+            }
+        }
+    };
+
     React.useEffect(() => {
-        document.addEventListener('scroll', trackScrolling);
+        if (limit === 0) {
+            document.addEventListener('scroll', trackScrolling);
+        }
+
         // drawing reference sequence as a pwm so it lines up with the others
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             setD3Lib(require('d3'));
@@ -322,19 +337,11 @@ export const Motifs = (props) => {
                 }
             });
 
-            sequenceLogos.entryPoint(refToReference.current, fakePWM, d3lib, referenceStart, referenceStart, referenceStart, '+', true);
+            if (d3lib) {
+                sequenceLogos.entryPoint(refToReference.current, fakePWM, d3lib, referenceStart, referenceStart, referenceStart, '+', true);
+            }
         });
     });
-
-    const trackScrolling = () => {
-        if (tableTop.current.getBoundingClientRect().top <= 27) {
-            refContainer.current.classList.add('fixed-position');
-            refPlaceholder.current.setAttribute('style', `height:${refContainer.current.getBoundingClientRect().height}px`);
-        } else {
-            refContainer.current.classList.remove('fixed-position');
-            refPlaceholder.current.setAttribute('style', 'width:0px');
-        }
-    };
 
     return (
         <React.Fragment>
@@ -353,11 +360,15 @@ export const Motifs = (props) => {
                     : null}
                     <div className={`sequence-logo-table ${classList}`} ref={tableTop}>
                         <div className="sequence-logo">
-                            <div className="reference-sequence element" ref={refContainer} >
-                                <div className="motif-description">Reference sequence</div>
-                                <div ref={refToReference} className="motif-element" />
-                            </div>
-                            <div className="placeholder-element" ref={refPlaceholder} />
+                            {limit === 0 ?
+                                <React.Fragment>
+                                    <div className="reference-sequence element" ref={refContainer} >
+                                        <div className="motif-description">Reference sequence</div>
+                                        <div ref={refToReference} className="motif-element" />
+                                    </div>
+                                    <div className="placeholder-element" ref={refPlaceholder} />
+                                </React.Fragment>
+                            : null}
                             {pwmLinkList.map(d =>
                                 <MotifElement
                                     key={d.pwm}
