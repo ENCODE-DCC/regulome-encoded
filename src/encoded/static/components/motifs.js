@@ -365,7 +365,7 @@ export const Motifs = (props) => {
                                     <div className="reference-sequence element" ref={refContainer} >
                                         <div className="motif-description reference-sequence">
                                             GRCh38 Reference
-                                            <div className="sub-text">{alignedStartCoordinate}-{alignedEndCoordinate}</div>
+                                            <div className="sub-text">{alignedStartCoordinate + 1}-{alignedEndCoordinate}</div>
                                         </div>
                                         <div ref={refToReference} className="motif-element" />
                                     </div>
