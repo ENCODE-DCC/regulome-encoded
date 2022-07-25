@@ -234,7 +234,6 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     let svgLetterHeight = 150;
 
     if (reference) {
-    //     // height including x-axis labels and endpoint markers
         svgFullHeight = 90;
         svgFullHeightWithMargin = 90;
         svgLetterHeight = 60;
@@ -247,7 +246,21 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         T: '#C13B42',
     };
 
+    const mapRefColors = (arrColors) => {
+        if (arrColors[0] === 1000) {
+            return colorBase.A;
+        } else if (arrColors[1] === 1000) {
+            return colorBase.C;
+        } else if (arrColors[2] === 1000) {
+            return colorBase.G;
+        }
+        return colorBase.T;
+    };
+
     const lookupBaseColor = (i) => {
+        if (reference) {
+            return 'white';
+        }
         // if the strand is negative, we want the reverse complement
         if (strand === '-') {
             return colorBase[negativeStrandLetterOrder[i]];
@@ -281,6 +294,20 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     const endptFontSize = 20;
 
     const endptTY = (svgFullHeight + svgLetterHeight) / 2;
+
+    if (reference) {
+        PWM.forEach((p, pIdx) => {
+            // append red box around search coordinate position
+            svg.append('rect')
+                .attr('y', '-1px')
+                .attr('x', '-1px')
+                .attr('width', `${(svgLetterWidth / m) + 2}px`)
+                .attr('height', `${(svgFullHeight - 20)}px`)
+                .attr('fill', mapRefColors(p))
+                .attr('stroke-width', '4px')
+                .attr('transform', `translate(${xscale(pIdx)},0)`);
+        });
+    }
 
     // Attach left endpoint to SVG
     svg.append('text')
@@ -322,12 +349,22 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     *
     * The column is used to neatly handle all x-offsets and labels.
     */
-    const group = svg.selectAll('group')
-        .data(yz)
-        .enter()
-        .append('g')
-        .attr('class', 'column')
-        .attr('transform', (d, i) => `translate(${xscale(i)},0)`);
+    let group;
+    if (reference) {
+        group = svg.selectAll('group')
+            .data(yz)
+            .enter()
+            .append('g')
+            .attr('class', 'column')
+            .attr('transform', (d, i) => `translate(${(xscale(i) + 2)},15) scale (0.6)`);
+    } else {
+        group = svg.selectAll('group')
+            .data(yz)
+            .enter()
+            .append('g')
+            .attr('class', 'column')
+            .attr('transform', (d, i) => `translate(${xscale(i)},0)`);
+    }
 
     /**
     * Attach the number labels to the x-axis.
@@ -369,7 +406,9 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         .attr('d', d => getLetterPath(d[2], strand))
         .style('fill', d => lookupBaseColor(d[2]))
         /* eslint-disable func-names */
-        .attr('transform', function (d) { return calcPathTransform(this, d, yscale, colWidth); }); // This line cannot be an arrow function or 'this' will be improperly assigned
+        .attr('transform', function (d) {
+            return calcPathTransform(this, d, yscale, colWidth);
+        }); // This line cannot be an arrow function or 'this' will be improperly assigned
 
     if (!reference) {
         // append red box around search coordinate position
