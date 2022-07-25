@@ -7,6 +7,26 @@ body {
     background: #fff;
 }
 
+.assembly-badge-container {
+    position: absolute;
+    top: 70px;
+    max-width: 1076px;
+    margin: auto;
+    left: 0;
+    right: 0;
+    text-align: right;
+
+    .assembly-badge {
+        padding: 5px 10px 2px;
+        display: inline-block;
+        border: 2px solid black;
+        border-radius: 6px;
+        font-weight: 700;
+        width: 80px;
+        text-align: center;
+    }
+}
+
 .assembly-switch {
     display: inline-block;
 

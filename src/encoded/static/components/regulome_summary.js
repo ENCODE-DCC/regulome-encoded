@@ -73,6 +73,9 @@ const RegulomeSummary = (props) => {
 
     return (
         <React.Fragment>
+            <div className="assembly-badge-container">
+                <div className="assembly-badge">{assembly}</div>
+            </div>
             <div className="lead-logo">
                 <a href="/">
                     <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />

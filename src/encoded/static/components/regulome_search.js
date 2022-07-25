@@ -16,6 +16,8 @@ import { ChromatinView } from './chromatin_view';
 const screenMediumMax = 787;
 const screenSmallMax = 483;
 
+const fieldsToSave = '&field=cloud_metadata.url&field=title&field=href&field=path&field=file_format_type&field=dataset&field=biosample_ontology.term_name&field=target&field=file_format&field=biosample_ontology.organ_slims&field=biosample_ontology.cell_slims&field=assay_term_name&field=biological_replicates';
+
 // Define facets parameters
 const facetParameters = [
     {
@@ -156,7 +158,7 @@ const dataColumnsQTLShort = {
     },
 };
 
-const dataColumnsOther = {
+const dataColumnsChip = {
     method: {
         title: 'Method',
     },
@@ -186,10 +188,6 @@ const dataColumnsOther = {
     },
     value: {
         title: 'Value',
-    },
-    strand: {
-        title: 'Strand',
-        display: item => <i className={`icon ${item.strand === '+' ? 'icon-plus-circle' : 'icon-minus-circle'}`} />,
     },
 };
 
@@ -457,8 +455,8 @@ export const ResultsTable = (props) => {
         } else {
             dataColumns = dataColumnsQTL;
         }
-    } else {
-        dataColumns = dataColumnsOther;
+    } else if (props.dataFilter === 'chip') {
+        dataColumns = dataColumnsChip;
     }
     const colCount = Object.keys(dataColumns).length;
 
@@ -582,6 +580,8 @@ export class RegulomeSearch extends React.Component {
         // Bind this to non-React methods.
         this.requests = [];
         this.onFilter = this.onFilter.bind(this);
+        this.loadHg19ValisData = this.loadHg19ValisData.bind(this);
+        this.loadGRCh38ValisData = this.loadGRCh38ValisData.bind(this);
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
         this.handlePagination = this.handlePagination.bind(this);
@@ -597,7 +597,14 @@ export class RegulomeSearch extends React.Component {
         if (this.context.location_href.split('/thumbnail=')[1] === 'valis') {
             this.chooseThumbnail('valis');
         }
+
+        if (this.state.genome === 'hg19') {
+            this.loadHg19ValisData();
+        } else {
+            this.loadGRCh38ValisData();
+        }
     }
+
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
         // update for new properties, new href, new page of results, or resizing of screen
@@ -608,7 +615,10 @@ export class RegulomeSearch extends React.Component {
         const facetDisplayUpdate = this.state.facetDisplay !== nextState.facetDisplay;
         const paginationChange = this.state.multipleBrowserPages !== nextState.multipleBrowserPages;
         const showFreqsToggled = this.state.showMoreFreqs !== nextState.showMoreFreqs;
-        return (!_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange || showFreqsToggled);
+        const genomeUpdate = this.state.genome !== nextState.genome;
+        const filesUpdate = this.state.includedFiles.length !== nextState.includedFiles.length;
+        const updateBool = !_.isEqual(this.props, nextProps) || hrefUpdate || screenSizeUpdate || pageUpdate || filtersUpdate || facetDisplayUpdate || paginationChange || showFreqsToggled || genomeUpdate || filesUpdate;
+        return updateBool;
     }
 
     onFilter(e) {
@@ -617,16 +627,6 @@ export class RegulomeSearch extends React.Component {
             this.props.onChange(search);
             e.stopPropagation();
             e.preventDefault();
-        }
-    }
-
-    updateThumbnail(newThumbnail) {
-        // if thumbnail is selected, navigate to link which will trigger a re-rendering
-        const baseUri = this.context.location_href.split('/thumbnail=')[0];
-        if (newThumbnail === null) {
-            this.context.navigate(baseUri);
-        } else {
-            this.context.navigate(`${baseUri}/thumbnail=${newThumbnail}`);
         }
     }
 
@@ -708,8 +708,18 @@ export class RegulomeSearch extends React.Component {
         }
     }
 
-    chooseThumbnail(chosen) {
-        if (chosen === 'valis' && this.state.filteredFiles.length < 1) {
+    chooseThumbnail(newThumbnail) {
+        // if thumbnail is selected, navigate to link which will trigger a re-rendering
+        const baseUri = this.context.location_href.split('/thumbnail=')[0];
+        if (newThumbnail === null) {
+            this.context.navigate(baseUri);
+        } else {
+            this.context.navigate(`${baseUri}/thumbnail=${newThumbnail}`);
+        }
+    }
+
+    loadHg19ValisData() {
+        if (this.state.filteredFiles.length < 1 && this.props.context['@graph']) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
             const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
@@ -741,7 +751,125 @@ export class RegulomeSearch extends React.Component {
             // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
             // FAIRE → peaks, signal
             // we start by collecting all files that satisfy these conditions
-            const fieldsToSave = '&field=cloud_metadata.url&field=title&field=href&field=path&field=file_format_type&field=dataset&field=biosample_ontology.term_name&field=target&field=file_format&field=biosample_ontology.organ_slims&field=biosample_ontology.cell_slims&field=assay_term_name';
+            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks+and+background+as+input+for+IDR&output_type=signal+p-value&sort=dataset&biological_replicates=1&limit=all&${fieldsToSave}`;
+            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=read-depth+normalized+signal&sort=dataset&biological_replicates=1&biological_replicates!=2&limit=all&${fieldsToSave}`;
+            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&limit=all&${fieldsToSave}`;
+            // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
+            // we construct an array of Promises for all the queries
+            const chipPromises = chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
+            const dnasePromises = chunkingDataset(requests, 0, numDnaseChunks, dnaseDatasets, dnaseBaseQuery);
+            const fairePromises = chunkingDataset(requests, 0, numFaireChunks, faireDatasets, faireBaseQuery);
+            const allPromises = [...chipPromises, ...dnasePromises, ...fairePromises];
+
+            Promise.all(allPromises)
+                .then((results) => {
+                    this.setState({ allFiles: results.flat() }, () => {
+                        // sort by dataset
+                        const sortedFiles = _.sortBy(this.state.allFiles, obj => obj.dataset);
+                        sortedFiles.forEach((d) => {
+                            const fileDataset = `https://www.encodeproject.org${d.dataset}`;
+                            d.biosample = biosampleMap[fileDataset];
+                            d.assay = assayMap[fileDataset];
+                            d.target = targetMap[fileDataset];
+                            d.organ = organMap[fileDataset];
+                        });
+                        // once all the data has been retrieved, narrow down full set of files to 2 per dataset
+                        const trimmedFiles0 = sortedFiles.filter((file) => {
+                            const DatasetFiles0 = sortedFiles.filter(f2 => f2.dataset === file.dataset);
+                            if (DatasetFiles0.length > 2) {
+                                // if there are more than 2 files for a ChIP-seq dataset, we prefer rep 1,2 to rep 1
+                                if (file.assay_term_name === 'ChIP-seq') {
+                                    if (file.biological_replicates.length === 1) {
+                                        return false;
+                                    }
+                                    return true;
+                                // if there are more than 2 files for a DNase-seq dataset, we prefer rep 1
+                                } else if (file.assay_term_name === 'DNase-seq') {
+                                    if (file.biological_replicates.length === 1) {
+                                        return true;
+                                    }
+                                    return false;
+                                // if there are more than 2 files for a FAIRE-seq dataset, we prefer multiple replicates
+                                } else if (file.assay_term_name === 'FAIRE-seq') {
+                                    if (file.biological_replicates.length === 0) {
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                                return true;
+                            }
+                            return true;
+                        });
+                        // it is still possible to have multiple files per dataset
+                        // in those cases, we will filter for only "released" files
+                        const trimmedFiles = trimmedFiles0.filter((file) => {
+                            const datasetFiles = trimmedFiles0.filter(f2 => f2.dataset === file.dataset);
+                            // only filter by file status if there are still more than 2 files for the dataset
+                            if (datasetFiles.length > 2) {
+                                if (file.status === 'released') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                            return true;
+                        });
+                        // if there are more filtered files than we want to display on one page, we will paginate
+                        if (trimmedFiles.length > displaySize) {
+                            const includedFiles = trimmedFiles.slice(0, displaySize);
+                            const browserTotalPages = Math.ceil(trimmedFiles.length / displaySize);
+                            this.setState({
+                                allFiles: trimmedFiles,
+                                includedFiles,
+                                filteredFiles: trimmedFiles,
+                                multipleBrowserPages: true,
+                                browserTotalPages,
+                                browserCurrentPage: 1,
+                            });
+                        } else {
+                            this.setState({
+                                allFiles: trimmedFiles,
+                                filteredFiles: trimmedFiles,
+                                includedFiles: trimmedFiles,
+                            });
+                        }
+                    });
+                });
+        }
+    }
+
+    loadGRCh38ValisData() {
+        if (this.state.filteredFiles.length < 1 && this.props.context['@graph']) {
+            // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
+            // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
+            const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
+            // for some reason we are getting duplicates here so we need to filter those out
+            const experimentDatasets = _.uniq(duplicatedExperimentDatasets, d => d.dataset);
+            // each query corresponds to a promise and 'requests' keeps track of whether the query has successfully returned data
+            const requests = [];
+            // in order to append dataset information to file data, we generate lookups for biosample, assay, and target list by dataset
+            const biosampleMap = {};
+            const assayMap = {};
+            const targetMap = {};
+            const organMap = {};
+            experimentDatasets.forEach((dataset) => {
+                biosampleMap[dataset.dataset] = dataset.biosample_ontology.term_name || '';
+                assayMap[dataset.dataset] = dataset.method || '';
+                targetMap[dataset.dataset] = dataset.targets ? dataset.targets.join(', ') : '';
+                organMap[dataset.dataset] = (dataset.biosample_ontology.classification === 'tissue') ? dataset.biosample_ontology.organ_slims.join(', ') : dataset.biosample_ontology.cell_slims.join(', ');
+            });
+            // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
+            const chipDatasets = experimentDatasets.filter(d => d.method === 'ChIP-seq');
+            const dnaseDatasets = experimentDatasets.filter(d => d.method === 'DNase-seq');
+            const faireDatasets = experimentDatasets.filter(d => d.method === 'FAIRE-seq');
+            // how many queries we need to run based on number of datasets per query
+            const numChipChunks = Math.ceil(Object.keys(chipDatasets).length / chunkSize);
+            const numDnaseChunks = Math.ceil(Object.keys(dnaseDatasets).length / chunkSize);
+            const numFaireChunks = Math.ceil(Object.keys(faireDatasets).length / chunkSize);
+            // the goal is to pick 1 each bigWig and bigBed file per experiment, with the following output types and replicate numbers for the different assays:
+            // DNase → peaks, read-depth normalized signal (rep1)
+            // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
+            // FAIRE → peaks, signal
+            // we start by collecting all files that satisfy these conditions
             const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
             const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
             const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&status!=revoked&status!=deleted&limit=all&${fieldsToSave}`;
@@ -775,23 +903,16 @@ export class RegulomeSearch extends React.Component {
                                 multipleBrowserPages: true,
                                 browserTotalPages,
                                 browserCurrentPage: 1,
-                            }, () => {
-                                this.updateThumbnail(chosen);
                             });
                         } else {
                             this.setState({
                                 allFiles: sortedFiles,
                                 filteredFiles: sortedFiles,
                                 includedFiles: sortedFiles,
-                            }, () => {
-                                this.updateThumbnail(chosen);
                             });
                         }
                     });
                 });
-        } else {
-            // all necessary data is already available for all other tabs
-            this.updateThumbnail(chosen);
         }
     }
 
@@ -848,6 +969,9 @@ export class RegulomeSearch extends React.Component {
 
         return (
             <div ref={(ref) => { this.applicationRef = ref; }} >
+                <div className="assembly-badge-container">
+                    <div className="assembly-badge">{this.state.genome}</div>
+                </div>
                 { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total !== 0) ?
                     <React.Fragment>
                         {Object.keys(this.props.context.notifications).map((note, noteIdx) =>
@@ -923,10 +1047,16 @@ export class RegulomeSearch extends React.Component {
                                     <h4>Genome browser</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click here to view results in a genome browser.</div>
-                                            <div className="image-container">
-                                                <img src="/static/img/browser-thumbnail-v2.png" alt="Click to view the genome browser" />
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click here to view tracks in a genome browser.
+                                                <div>
+                                                    (<b>{this.state.filteredFiles.length}</b> track{this.state.filteredFiles.length !== 1 ? 's' : ''})
+                                                </div>
                                             </div>
+                                            {this.state.filteredFiles.length > 0 ?
+                                                <div className="image-container">
+                                                    <img src={`/static/img/browser-thumbnail-${this.state.genome.toLowerCase()}.png`} alt="Click to view the genome browser" />
+                                                </div>
+                                            : null}
                                         </React.Fragment>
                                     : null}
                                 </button>
@@ -973,7 +1103,8 @@ export class RegulomeSearch extends React.Component {
                                     <h4>Accessibility</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see DNase-seq experiments.
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />
+                                                {`Click to see ${this.state.genome === 'hg19' ? 'FAIRE-seq or' : ''} DNase-seq experiments.`}
                                                 <div>
                                                     (<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})
                                                 </div>
@@ -1031,7 +1162,7 @@ export class RegulomeSearch extends React.Component {
                                     : (thumbnail === 'valis') ?
                                         <React.Fragment>
                                             <h4>Visualize files for {coordinates}</h4>
-                                            <h4>There {this.state.filteredFiles.length === 1 ? 'is' : 'are'} {this.state.filteredFiles.length} result{this.state.filteredFiles.length === 1 ? '' : 's'}.</h4>
+                                            <h4>There {this.state.filteredFiles.length === 1 ? 'is' : 'are'} {this.state.filteredFiles.length} track{this.state.filteredFiles.length === 1 ? '' : 's'}.</h4>
                                             <FacetList
                                                 files={this.state.allFiles}
                                                 handleFacetList={this.handleFacetList}
@@ -1040,6 +1171,7 @@ export class RegulomeSearch extends React.Component {
                                                 facetParameters={facetParameters}
                                             />
                                             <GenomeBrowser
+                                                key={this.state.includedFiles.length}
                                                 fixedHeight={this.state.multipleBrowserPages}
                                                 files={this.state.includedFiles}
                                                 expanded
@@ -1079,7 +1211,7 @@ export class RegulomeSearch extends React.Component {
                                                 <ChartList data={dnaseData} displayTitle={'DNA accessibility experiments'} chartWidth={Math.min(this.state.screenWidth, 1000)} dataFilter={thumbnail} />
                                             :
                                                 <React.Fragment>
-                                                    <h4>FAIRE-seq and DNase-seq experiments</h4>
+                                                    <h4>DNA accessibility experiments</h4>
                                                     <div className="error-message">No results available to display, please choose a different SNP.</div>
                                                 </React.Fragment>
                                             }
@@ -1092,11 +1224,6 @@ export class RegulomeSearch extends React.Component {
                                               chartWidth={this.state.screenWidth}
                                               assembly={this.state.genome}
                                           />
-                                    : (thumbnail === 'valis') ?
-                                        <React.Fragment>
-                                            <h4>Genome browser</h4>
-                                            <div className="error-message">This will be added in the next PR!</div>
-                                        </React.Fragment>
                                     : null}
                                 </React.Fragment>
                             : null}

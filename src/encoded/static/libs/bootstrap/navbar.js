@@ -50,7 +50,7 @@ export class Navbar extends React.Component {
     }
 
     render() {
-        const { brand, brandlink, label, navClasses, openDropdown, dropdownClick } = this.props;
+        const { brand, label, navClasses, openDropdown, dropdownClick } = this.props;
 
         // Add openDropdown and dropdownClick props to the child components.
         let children = [];
@@ -70,7 +70,9 @@ export class Navbar extends React.Component {
                         <span className="icon-bar" />
                     </button>
                     {brand ?
-                        <a className="navbar-brand" href="/regulome-search"><img src="/static/img/RegulomeLogoTransparent.gif"></img></a>
+                        <a className="navbar-brand" href="/regulome-search">
+                            <img src="/static/img/RegulomeLogoTransparent.gif" alt="RegulomeDB homepage" />
+                        </a>
                     : null}
                 </div>
 
@@ -87,7 +89,6 @@ Navbar.propTypes = {
         PropTypes.string,
         PropTypes.object,
     ]),
-    brandlink: PropTypes.string, // href for clicking brand
     label: PropTypes.string.isRequired, // id for nav; unique on page
     navClasses: PropTypes.string, // CSS classes for <nav> in addition to "navbar"; default to "navbar-default"
     openDropdown: PropTypes.string.isRequired, // ID of the dropdown currently visible
@@ -97,7 +98,6 @@ Navbar.propTypes = {
 
 Navbar.defaultProps = {
     brand: null,
-    brandlink: '',
     navClasses: '',
     children: null,
 };

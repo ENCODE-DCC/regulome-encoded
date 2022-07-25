@@ -292,7 +292,7 @@ export const Motifs = (props) => {
                     {limit !== 0 ?
                         <div className="motif-count">(<b>0</b> results)</div>
                     :
-                        <div className="error-message">There are no results that include PWM data. Try a different search.</div>
+                        <div className="error-message">There are no results that include PWM or footprint data. Try a different search.</div>
                     }
                 </React.Fragment>
             :

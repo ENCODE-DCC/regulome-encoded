@@ -5,8 +5,6 @@ import { FetchedData, Param } from './fetched';
 import { BrowserFeat } from './browserfeat';
 import Tooltip from '../libs/ui/tooltip';
 
-const domainName = 'https://www.encodeproject.org';
-
 const colorChromatinState = {
     'Active TSS': '#ff0000',
     'Flanking TSS': '#ff4400',
@@ -403,7 +401,7 @@ class GenomeBrowser extends React.Component {
                 setTimeout(this.drawTracksResized, 1000);
             }
 
-            if (!(_.isEqual(this.props.files, prevProps.files))) {
+            if (!(_.isEqual(this.props.files, prevProps.files)) || (this.props.files.length !== prevProps.files.length)) {
                 let newFiles = [];
                 const files = this.props.files;
                 newFiles = [...this.state.pinnedFiles, ...files];
@@ -502,10 +500,7 @@ class GenomeBrowser extends React.Component {
             // Locally we will display some default tracks
             newFiles = [...this.state.pinnedFiles, ...dummyFiles];
         } else {
-            const files = this.props.files;
-            if (files.length > 0) {
-                newFiles = [...this.state.pinnedFiles, ...files];
-            }
+            newFiles = [...this.state.pinnedFiles, ...this.props.files];
         }
         return newFiles;
     }
@@ -678,7 +673,7 @@ class GenomeBrowser extends React.Component {
     render() {
         return (
             <div className={`${this.props.fixedHeight ? 'tall-browser-container' : ''}`}>
-                {(this.state.trackList.length > 0 && this.state.genome !== null && !(this.state.disableBrowserForIE)) ?
+                {(this.state.genome !== null && !(this.state.disableBrowserForIE)) ?
                     <div>
                         { (this.state.geneSearch) ?
                             <div className="gene-search">
@@ -717,9 +712,7 @@ class GenomeBrowser extends React.Component {
                     <div>
                         {(this.state.disableBrowserForIE) ?
                             <div className="browser-error valis-browser">The genome browser does not support Internet Explorer. Please upgrade your browser to Edge to visualize files on ENCODE.</div>
-                        :
-                            <div className="browser-error valis-browser">There are no visualizable results. Please try a different SNP or different search parameters.</div>
-                        }
+                        : null}
                     </div>
                 }
             </div>
