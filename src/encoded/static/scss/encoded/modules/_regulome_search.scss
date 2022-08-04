@@ -1,6 +1,104 @@
+$switch-height: 24px;
+$switch-width: 44px;
+$inner-switch-height: 13px;
+
 body {
     font-family: 'Khula', sans-serif !important;
     background: #fff;
+}
+
+.assembly-badge-container {
+    position: absolute;
+    top: 70px;
+    max-width: 1076px;
+    margin: auto;
+    left: 0;
+    right: 0;
+    text-align: right;
+
+    .assembly-badge {
+        padding: 5px 10px 2px;
+        display: inline-block;
+        border: 2px solid black;
+        border-radius: 6px;
+        font-weight: 700;
+        width: 80px;
+        text-align: center;
+    }
+}
+
+.assembly-switch {
+    display: inline-block;
+
+    .switch-label {
+        display: inline-block;
+        margin: 0 4px;
+        color: #b0b0b0;
+
+        &.active {
+            color: #333;
+        }
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: $switch-width;
+        height: $switch-height;
+        top: 4px;
+        border: 2px solid white;
+
+        &.focused {
+            border: 2px solid blue;
+            border-radius: 2px;
+        }
+    }
+
+    .slider.round {
+        border-radius: $switch-height;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    /* Hide default HTML checkbox */
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    /* The slider */
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: $inner-switch-height;
+        width: $inner-switch-height;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    input:checked + .slider:before {
+        -webkit-transform: translateX(18px);
+        -ms-transform: translateX(18px);
+        transform: translateX(18px);
+    }
 }
 
 .lead-logo {
@@ -1045,8 +1143,6 @@ button {
     margin-top: 4px;
     .bar-label {
         border-bottom: 1px solid #276A8E;
-        padding-right: 5px;
-        padding-bottom: 3px;
         font-size: 1.1rem;
         line-height: 1.1;
         text-align: left;
@@ -1285,17 +1381,16 @@ button {
 .bar-chart-chromatin {
     .bar-row .bar-label {
         border-bottom: none;
-        padding-bottom: 4px;
         font-weight: 700;
         font-size: 1rem;
-        padding: 4px 6px 3px;
+        padding: 4px 3px;
         @media screen and (max-width: $screen-sm-min) {
             padding: 6px 6px 4px;
             font-size: 0.9rem;
         }
         &:hover, &.active {
             text-decoration: underline;
-            font-weight: 800;
+            background: #ECECEC;
         }
         &.active {
             padding: 4px 3px 1px;

@@ -19,7 +19,7 @@ def regulome_help(context, request):
     page= {
         '@context': '/terms/',
         '@id': '/regulome-search',
-        'assembly': 'GRCh37',
+        'assembly': 'GRCh38',
         'query_coordinates': [],
         'format': 'json',
         'notifications': {},

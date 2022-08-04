@@ -271,9 +271,9 @@ def main():
     )
     parser.add_argument(
         '--assembly',
-        help="Select 'GRCh37' or 'GRCh38'. Default: 'GRCh37'.",
-        choices=['GRCh37', 'GRCh38'],
-        default='GRCh37'
+        help="Select 'hg19' or 'GRCh38'. Default: 'GRCh38'.",
+        choices=['hg19', 'GRCh38'],
+        default='GRCh38'
     )
     parser.add_argument(
         '--peaks',

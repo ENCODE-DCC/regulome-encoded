@@ -1,20 +1,58 @@
-$activetss: #B85151;
-$flankingactivetss: #E68363;
-$transcratgeneand: #A7DAA7;
-$strongtranscription: #6c9f6d;
-$weaktranscription: #88BF89;
-$genicenhancers: #C8DD41;
-$enhancers: #f4f400;
-$znfgenesrepeats: #66CDAA;
-$heterochromatin: #8A91D0;
-$bivalentpoisedtss: #DD9292;
-$flankingbivalenttssenh: #F0BAA8;
+$activeenhancer: #ffc44d;
 $bivalentenhancer: #BDB76B;
+$genicenhancer: #C8DD41;
+$weakenhancer: #f4f400;
+$heterochromatin: #8A91D0;
+$quiescentlow: #C2C2C2;
 $repressedpolycomb: #7F6265;
 $weakrepressedpolycomb: #968A88;
-$quiescentlow: #C2C2C2;
+$activetss: #B85151;
+$bivalentpoisedtss: #DD9292;
+$flankingtss: #E68363;
+$flankingtssdownstream: #E68363;
+$flankingtssupstream: #E68363;
+$strongtranscription: #5c8d5d;
+$weaktranscription: #7eb37f;
+$znfgenesrepeats: #66CDAA;
+
+$enhancers: #f4f400;
+$flankingbivalenttssenh: #F0BAA8;
+$flankingactivetss: #E68363;
+$transcratgeneand: #A7DAA7;
+$genicenhancers: #C8DD41;
 
 $statestroke: #7D6167;
+
+$chromatinstates:
+    "activeenhancer" $activeenhancer,
+    "bivalentenhancer" $bivalentenhancer,
+    "genicenhancer" $genicenhancer,
+    "weakenhancer" $weakenhancer,
+    "heterochromatin" $heterochromatin,
+    "quiescentlow" $quiescentlow,
+    "repressedpolycomb" $repressedpolycomb,
+    "weakrepressedpolycomb" $weakrepressedpolycomb,
+    "activetss" $activetss,
+    "bivalentpoisedtss" $bivalentpoisedtss,
+    "flankingtss" $flankingtss,
+    "flankingtssdownstream" $flankingtssdownstream,
+    "flankingtssupstream" $flankingtssupstream,
+    "strongtranscription" $strongtranscription,
+    "weaktranscription" $weaktranscription,
+    "znfgenesrepeats" $znfgenesrepeats,
+    "enhancers" $enhancers,
+    "flankingbivalenttssenh" $flankingbivalenttssenh,
+    "flankingactivetss" $flankingactivetss,
+    "transcratgeneand" $transcratgeneand,
+    "genicenhancers" $genicenhancers;
+
+// chromatin state colors for the inset images on the body map
+@each $state, $color in $chromatinstates {
+  .#{$state} .overlay {
+      background: $color;
+      border: 2px solid $color;
+  }
+}
 
 // "body-image-container" is the wrapper for the body map SVG "BodyMap"
 // Within the body map, we want to highlight all the different SVG shapes
@@ -53,122 +91,52 @@ $statestroke: #7D6167;
             cursor: pointer;
         }
 
-        &.activetss {
-            fill: #C56D6D;
-            stroke: #eecbcb;
-
-            &.active, &.highlight {
-                fill: #B85151;
-                stroke-width: 2px;
-            }
-        }
-        &.flankingactivetss {
-            fill: #F4997B;
-            stroke: #A33814;
-
-            &.active, &.highlight {
-                fill: #E68363;
-            }
-        }
-        &.transcratgeneand {
-            fill: #E1F4E1;
-            stroke: #427342;
-
-            &.active, &.highlight {
-                fill: #A7DAA7;
-            }
-        }
-        &.strongtranscription {
-            fill: #94C595;
-            stroke: #008000;
-
-            &.active, &.highlight {
-                fill: #6c9f6d;
-                stroke-width: 2px;
-            }
-        }
-        &.weaktranscription {
-            fill: #BDDBBE;
-            stroke: #008000;
-
-            &.active, &.highlight {
-                fill: #88BF89;
-            }
-        }
-        &.genicenhancers {
-            fill: #E5F386;
-            stroke: #A2B331;
-
-            &.active, &.highlight {
-                fill: #C8DD41;
-            }
-        }
-        &.enhancers {
-            fill: #fdfdad;
-            stroke: #e3e319;
+        &.activeenhancer {
+            fill: #ffd785;
+            stroke: #d69975;
             stroke-width: 2px;
 
             &.active, &.highlight {
-                fill: #f4f400;
-                stroke: #c3c327;
+                fill: $activeenhancer;
+                stroke: #896656;
             }
         }
-        &.znfgenesrepeats {
-            fill: #A3E1CC;
-            stroke: #1E5C48;
 
-            &.active, &.highlight {
-                fill: #66CDAA;
-            }
-        }
-        &.heterochromatin {
-            fill: #aeb3df;
-            stroke: #666dac;
-
-            &.active, &.highlight {
-                fill: #8A91D0;
-                stroke-width: 2px;
-            }
-        }
-        &.bivalentpoisedtss {
-            fill: #e5aaaa;
-            stroke: #6D2222;
-
-            &.active, &.highlight {
-                fill: #DD9292;
-            }
-        }
-        &.flankingbivalenttssenh {
-            fill: #f7dbd2;
-            stroke: #AF411D;
-
-            &.active, &.highlight {
-                fill: #F0BAA8;
-            }
-        }
         &.bivalentenhancer {
             fill: #dcd9b2;
             stroke: #8D883F;
 
             &.active, &.highlight {
-                fill: #BDB76B;
+                fill: $bivalentenhancer;
             }
         }
-        &.repressedpolycomb {
-            fill: #A68C8E;
-            stroke: #2F2324;
+
+        &.genicenhancer {
+            fill: #E5F386;
+            stroke: #A2B331;
 
             &.active, &.highlight {
-                fill: #7F6265;
-                stroke-width: 2px;
+                fill: $genicenhancer;
             }
         }
-        &.weakrepressedpolycomb {
-            fill: #A99F9E;
-            stroke: #292929;
+
+        &.weakenhancer {
+            fill: #fdfdad;
+            stroke: #e3e319;
+            stroke-width: 2px;
 
             &.active, &.highlight {
-                fill: #968A88;
+                fill: $weakenhancer;
+                stroke: #c3c327;
+            }
+        }
+
+        &.heterochromatin {
+            fill: #aeb3df;
+            stroke: #666dac;
+
+            &.active, &.highlight {
+                fill: $heterochromatin;
                 stroke-width: 2px;
             }
         }
@@ -178,8 +146,150 @@ $statestroke: #7D6167;
             stroke: #292929;
 
             &.active, &.highlight {
-                fill: #C2C2C2;
+                fill: $quiescentlow;
                 stroke-width: 2px;
+            }
+        }
+
+        &.repressedpolycomb {
+            fill: #A68C8E;
+            stroke: #2F2324;
+
+            &.active, &.highlight {
+                fill: $repressedpolycomb;
+                stroke-width: 2px;
+            }
+        }
+
+        &.weakrepressedpolycomb {
+            fill: #A99F9E;
+            stroke: #292929;
+
+            &.active, &.highlight {
+                fill: $weakrepressedpolycomb;
+                stroke-width: 2px;
+            }
+        }
+
+        &.activetss {
+            fill: #C56D6D;
+            stroke: #eecbcb;
+
+            &.active, &.highlight {
+                fill: $activetss;
+                stroke-width: 2px;
+            }
+        }
+
+        &.bivalentpoisedtss {
+            fill: #e5aaaa;
+            stroke: #6D2222;
+
+            &.active, &.highlight {
+                fill: $bivalentpoisedtss;
+            }
+        }
+
+        &.flankingtss {
+            fill: #F4997B;
+            stroke: #A33814;
+
+            &.active, &.highlight {
+                fill: $flankingtss;
+            }
+        }
+
+        &.flankingtssdownstream {
+            fill: #F4997B;
+            stroke: #A33814;
+
+            &.active, &.highlight {
+                fill: $flankingtssdownstream;
+            }
+        }
+
+        &.flankingtssupstream {
+            fill: #F4997B;
+            stroke: #A33814;
+
+            &.active, &.highlight {
+                fill: $flankingtssupstream;
+            }
+        }
+
+        &.strongtranscription {
+            fill: #a3d0a4;
+            stroke: #008000;
+
+            &.active, &.highlight {
+                fill: $strongtranscription;
+                stroke-width: 2px;
+            }
+        }
+
+        &.weaktranscription {
+            fill: #d0e7d0;
+            stroke: #008000;
+
+            &.active, &.highlight {
+                fill: $weaktranscription;
+                stroke: #065e06;
+            }
+        }
+
+        &.znfgenesrepeats {
+            fill: #A3E1CC;
+            stroke: #1E5C48;
+
+            &.active, &.highlight {
+                fill: $znfgenesrepeats;
+            }
+        }
+
+        &.enhancers {
+            fill: #fdfdad;
+            stroke: #e3e319;
+            stroke-width: 2px;
+
+            &.active, &.highlight {
+                fill: $enhancers;
+                stroke: #c3c327;
+            }
+        }
+
+        &.flankingbivalenttssenh {
+            fill: #f7dbd2;
+            stroke: #AF411D;
+
+            &.active, &.highlight {
+                fill: $flankingbivalenttssenh;
+            }
+        }
+
+        &.flankingactivetss {
+            fill: #F4997B;
+            stroke: #A33814;
+
+            &.active, &.highlight {
+                fill: $flankingactivetss;
+            }
+        }
+
+        &.transcratgeneand {
+            fill: #E1F4E1;
+            stroke: #427342;
+
+            &.active, &.highlight {
+                fill: $transcratgeneand;
+            }
+        }
+
+        &.genicenhancers {
+            fill: #E5F386;
+            stroke: #A2B331;
+
+            &.active, &.highlight {
+                fill: $genicenhancers;
             }
         }
     }
@@ -378,79 +488,4 @@ $statestroke: #7D6167;
         opacity: 0.2;
         border-radius: 50%;
     }
-}
-
-.activetss .overlay {
-    background: $activetss;
-    border: 2px solid $activetss;
-}
-
-.flankingactivetss .overlay {
-    background: $flankingactivetss;
-    border: 2px solid $flankingactivetss;
-}
-
-.transcratgeneand .overlay {
-    background: $transcratgeneand;
-    border: 2px solid $transcratgeneand;
-}
-
-.strongtranscription .overlay {
-    background: $strongtranscription;
-    border: 2px solid $strongtranscription;
-}
-
-.weaktranscription .overlay {
-    background: $weaktranscription;
-    border: 2px solid $weaktranscription;
-}
-
-.genicenhancers .overlay {
-    background: $genicenhancers;
-    border: 2px solid $genicenhancers;
-}
-
-.enhancers .overlay {
-    background: $enhancers;
-    border: 2px solid $enhancers;
-}
-
-.znfgenesrepeats .overlay {
-    background: $znfgenesrepeats;
-    border: 2px solid $znfgenesrepeats;
-}
-
-.heterochromatin .overlay {
-    background: $heterochromatin;
-    border: 2px solid $heterochromatin;
-}
-
-.bivalentpoisedtss .overlay {
-    background: $bivalentpoisedtss;
-    border: 2px solid $bivalentpoisedtss;
-}
-
-.flankingbivalenttssenh .overlay {
-    background: $flankingbivalenttssenh;
-    border: 2px solid $flankingbivalenttssenh;
-}
-
-.bivalentenhancer .overlay {
-    background: $bivalentenhancer;
-    border: 2px solid $bivalentenhancer;
-}
-
-.repressedpolycomb .overlay {
-    background: $repressedpolycomb;
-    border: 2px solid $repressedpolycomb;
-}
-
-.weakrepressedpolycomb .overlay {
-    background: $weakrepressedpolycomb;
-    border: 2px solid $weakrepressedpolycomb;
-}
-
-.quiescentlow .overlay {
-    background: $quiescentlow;
-    border: 2px solid $quiescentlow;
 }

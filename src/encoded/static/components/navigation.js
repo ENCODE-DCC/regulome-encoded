@@ -85,7 +85,7 @@ export default class Navigation extends React.Component {
         return (
             <div id="navbar" className="navbar navbar-fixed-top navbar-inverse">
                 <div className="container">
-                    <Navbar brand={portal.portal_title} brandlink="/" label="main" navClasses="navbar-main" openDropdown={this.state.openDropdown} dropdownClick={this.dropdownClick}>
+                    <Navbar brand={portal.portal_title} label="main" navClasses="navbar-main" openDropdown={this.state.openDropdown} dropdownClick={this.dropdownClick}>
                         <GlobalSections />
                         <BatchDownloadModal
                             handleDownloadClick={this.batchDownload}

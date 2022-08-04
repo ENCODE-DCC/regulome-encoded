@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as globals from './globals';
 import { shadeOverflowOnScroll } from './objectutils';
-import { initializedChromatinObject } from './chromatin_view';
+import { initializedChromatinObjectHg19, initializedChromatinObjectGRCh38 } from './chromatin_view';
 
 // Number of terms to show, the rest will be viewable on scroll
 const displayedTermsCount = 14;
@@ -436,13 +436,18 @@ FacetList.propTypes = {
 // facetObject.associatedStates stores the most active state associated with each possible value of the property of interest
 // facetObject.[property of interest] stores how many results with matching properties correspond to each chromatin state (so, how many results with biosample "B cell" match each chromatin state) along with a total of how many results have that matching property overall (how many results have a biosample "B cell")
 // "param" refers to the property of interest and this function will need to be updated for other desired parameters to confirm that the slims are correctly aggregated
-export const complexFacets = (files, filteredFiles, param) => {
+export const complexFacets = (files, filteredFiles, param, assembly) => {
     // initialize facet object
     const facetObject = [];
     facetObject[param] = {};
     facetObject.associatedStates = [];
 
-    const chromatinHierarchy = Object.keys(initializedChromatinObject);
+    let chromatinHierarchy = [];
+    if (assembly === 'hg19') {
+        chromatinHierarchy = Object.keys(initializedChromatinObjectHg19);
+    } else {
+        chromatinHierarchy = Object.keys(initializedChromatinObjectGRCh38);
+    }
 
     // use all possible results (files) to generate an empty facet structure (associated states as null and totals as 0) with entries corresponding to all possible values for a given property
     files.forEach((file) => {
@@ -486,13 +491,18 @@ export const complexFacets = (files, filteredFiles, param) => {
 // facetObject.[property of interest] aggregates counts of possible values of the property of interest
 // "param" refers to the property of interest which at this time should only be "organ_slims"
 // Note: unlike "complexFacet", this structure does not include counts for each chromatin state per property value under facetObject.[property of interest] - it only includes total counts for each value corresponding to a given property
-export const createOrganFacets = (files, filteredFiles, param) => {
+export const createOrganFacets = (files, filteredFiles, param, assembly) => {
     // initialize facet object
     const facetObject = [];
     facetObject[param] = [];
     facetObject.associatedStates = [];
 
-    const chromatinHierarchy = Object.keys(initializedChromatinObject);
+    let chromatinHierarchy = [];
+    if (assembly === 'hg19') {
+        chromatinHierarchy = Object.keys(initializedChromatinObjectHg19);
+    } else {
+        chromatinHierarchy = Object.keys(initializedChromatinObjectGRCh38);
+    }
 
     // use all possible results (files) to generate an empty facet structure (associated states as null and counts as 0) with entries corresponding to all possible values for a given property
     files.forEach((file) => {
