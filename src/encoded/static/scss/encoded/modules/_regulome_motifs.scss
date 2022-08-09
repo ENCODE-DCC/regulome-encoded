@@ -101,3 +101,25 @@
     margin-top: -20px;
     padding-bottom: 20px;
 }
+
+.motif-label-row  {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: stretch;
+    align-items: flex-start;
+}
+
+.motif-label-col {
+    font-weight: 300;
+    font-size: 14px;
+    margin-right: 5px;
+    order: 0;
+    flex: 1 1 33.33%;
+    align-self: auto;
+
+    a {
+        font-weight: 600;
+    }
+}

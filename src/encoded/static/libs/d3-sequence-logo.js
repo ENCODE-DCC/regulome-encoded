@@ -190,27 +190,26 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     // if (!isValid) {
     //   return;
     // }
-
+    
     // number of sequences
     let n = 0;
     PWM.forEach((pwm) => {
         n = Math.max(n, Math.max(...pwm));
     });
-
+    
     // if the strand is negative, we want the reverse complement
     if (strand === '-') {
         PWM.reverse();
     }
-
+    
     // number of nucleotides per sequence
     const m = PWM.length;
-
+    
     // range of letter bounds at each nucleotide index position
     const yz = d3.range(m).map(i => offsets(PWM[i], n));
-
+    
     // find coordinate index
     const alignmentIndex = +alignmentCoordinate - +firstCoordinate;
-
     /**
    * Next, we set local values that govern visual appearance.
    *
@@ -307,6 +306,17 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
                 .attr('stroke-width', '4px')
                 .attr('transform', `translate(${xscale(pIdx)},0)`);
         });
+
+        // append black rectangle around the alignment index box
+        svg.append('rect')
+            .attr('y', '-1px')
+            .attr('x', '-1px')
+            .attr('width', `${(svgLetterWidth / m) + 2}px`)
+            .attr('height', `${(svgFullHeight - 20)}px`)
+            .attr('fill', 'none')
+            .attr('stroke-width', '4px')
+            .attr('stroke', 'black')
+            .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
     }
 
     // Attach left endpoint to SVG
