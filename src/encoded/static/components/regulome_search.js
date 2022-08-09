@@ -580,7 +580,6 @@ export class RegulomeSearch extends React.Component {
         // Bind this to non-React methods.
         this.requests = [];
         this.onFilter = this.onFilter.bind(this);
-        //this.loadHg19ValisData = this.loadHg19ValisData.bind(this);
         this.loadValisData = this.loadValisData.bind(this);
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
