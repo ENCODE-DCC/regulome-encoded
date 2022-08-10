@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import * as globals from './globals';
 import { svgIcon } from '../libs/svg-icons';
 import HumanBodyDiagram from '../img/bodyMap/Deselected_Body';
-import { chromatinHierarchy } from './visualizations';
+import { initializedChromatinObjectHg19, initializedChromatinObjectGRCh38 } from './chromatin_view';
 
 const sanitizedString = globals.sanitizedString;
 const classString = globals.classString;
@@ -129,7 +129,14 @@ export const addingClass = (changedClass, matchingString, removeFlag = false) =>
 const checkClass = (selectedOrgan, organ) => selectedOrgan.includes(organ);
 
 // Set initialized body map diagram colors
-export const initializeBodyMap = (terms, BodyList, associatedStates) => {
+export const initializeBodyMap = (terms, BodyList, associatedStates, assembly) => {
+    let chromatinHierarchy;
+    if (assembly === 'hg19') {
+        chromatinHierarchy = Object.keys(initializedChromatinObjectHg19);
+    } else {
+        chromatinHierarchy = Object.keys(initializedChromatinObjectGRCh38);
+    }
+
     if (terms.length > 0) {
         terms.forEach((term) => {
             if (BodyList[term]) {
@@ -200,7 +207,7 @@ export class BodyMap extends React.Component {
     }
 
     componentDidMount() {
-        initializeBodyMap(this.state.selectedOrgan, this.BodyList, this.props.facet.associatedStates);
+        initializeBodyMap(this.state.selectedOrgan, this.BodyList, this.props.facet.associatedStates, this.props.assembly);
 
         // Add a class to disable pointer events on paths associated with unavailable organ terms
         Object.keys(this.BodyList).forEach((b) => {
@@ -599,6 +606,7 @@ BodyMap.propTypes = {
     organism: PropTypes.string.isRequired,
     handleFilters: PropTypes.func.isRequired,
     originalFilters: PropTypes.array.isRequired,
+    assembly: PropTypes.string.isRequired,
 };
 
 // Clickable thumbnail
@@ -657,7 +665,7 @@ ClickableThumbnail.propTypes = {
 // Displayed when you click on <ClickableThumbnail>
 // Allows you to select organ / system filters
 export const BodyMapModal = (props) => {
-    const { facet, isThumbnailExpanded, toggleThumbnail, organism, handleFilters, originalFilters } = props;
+    const { facet, isThumbnailExpanded, toggleThumbnail, organism, handleFilters, originalFilters, assembly } = props;
     const [mapFacet, setFacet] = useState(facet);
 
     useEffect(() => {
@@ -678,6 +686,7 @@ export const BodyMapModal = (props) => {
                         organism={organism}
                         handleFilters={handleFilters}
                         originalFilters={originalFilters}
+                        assembly={assembly}
                     />
                 </div>
                 <div className="spacer" />
@@ -694,6 +703,7 @@ BodyMapModal.propTypes = {
     organism: PropTypes.string.isRequired,
     handleFilters: PropTypes.func.isRequired,
     originalFilters: PropTypes.array.isRequired,
+    assembly: PropTypes.string.isRequired,
 };
 
 // Combining the body map thumbnail and the body map modal into one component
@@ -710,7 +720,7 @@ export const BodyMapThumbnailAndModal = (props) => {
         });
 
         // Highlight body map selections
-        initializeBodyMap(props.originalFilters, BodyList, props.facet.associatedStates);
+        initializeBodyMap(props.originalFilters, BodyList, props.facet.associatedStates, props.assembly);
         props.originalFilters.forEach((term) => {
             if (CellsList[term] && document.getElementById(term)) {
                 document.getElementById(term).classList.add('active');
@@ -726,7 +736,7 @@ export const BodyMapThumbnailAndModal = (props) => {
     React.useEffect(() => {
         setFacet(props.facet);
         // Highlight body map selections
-        initializeBodyMap(props.originalFilters, BodyList, props.facet.associatedStates);
+        initializeBodyMap(props.originalFilters, BodyList, props.facet.associatedStates, props.assembly);
     }, [props.facet, props.originalFilters]);
 
     return (
@@ -745,6 +755,7 @@ export const BodyMapThumbnailAndModal = (props) => {
                     organism={props.organism}
                     handleFilters={props.handleFilters}
                     originalFilters={props.originalFilters}
+                    assembly={props.assembly}
                 />
             : null}
         </div>
@@ -756,4 +767,5 @@ BodyMapThumbnailAndModal.propTypes = {
     organism: PropTypes.string.isRequired,
     handleFilters: PropTypes.func.isRequired,
     originalFilters: PropTypes.array.isRequired,
+    assembly: PropTypes.string.isRequired,
 };

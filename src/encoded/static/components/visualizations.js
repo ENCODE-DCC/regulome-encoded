@@ -3,18 +3,14 @@ import PropTypes from 'prop-types';
 import _ from 'underscore';
 import * as globals from './globals';
 import { isLight } from './datacolors';
-import { initializedChromatinObject } from './chromatin_view';
+import { initializedChromatinObjectHg19, initializedChromatinObjectGRCh38 } from './chromatin_view';
 
 const sanitizedString = globals.sanitizedString;
 const classString = globals.classString;
 
 const defaultColor = '#276A8E';
 
-export const chromatinHierarchy = Object.keys(initializedChromatinObject);
-
-export const sortChromatin = (a, b) => chromatinHierarchy.indexOf(a) - chromatinHierarchy.indexOf(b);
-
-const extraTallLabels = ['endothelial cell of umbilical vein', 'myoepithelial cell of mammary gland'];
+export const isLetter = c => c.toLowerCase() !== c.toUpperCase();
 
 const shortenedLabel = name => name.replace('activated', 'ϟ')
     .replace('stimulated', '☆')
@@ -28,46 +24,67 @@ const shortenedLabel = name => name.replace('activated', 'ϟ')
     .replace('-negative', '-');
 
 export const mapChromatinNames = {
-    TssAFlnk: 'Flanking Active TSS',
-    TssA: 'Active TSS',
-    TxFlnk: "Transcr. at gene 5' and 3'",
-    TxWk: 'Weak transcription',
-    Tx: 'Strong transcription',
-    EnhG: 'Genic enhancers',
+    EnhA1: 'Active enhancer 1',
+    EnhA2: 'Active enhancer 2',
     EnhBiv: 'Bivalent Enhancer',
-    Enh: 'Enhancers',
-    ZNFRpts: 'ZNF genes & repeats',
+    EnhG1: 'Genic enhancer 1',
+    EnhG2: 'Genic enhancer 2',
+    EnhWk: 'Weak enhancer',
     Het: 'Heterochromatin',
-    TssBiv: 'Bivalent/Poised TSS',
-    BivFlnk: 'Flanking Bivalent TSS/Enh',
-    ReprPCWk: 'Weak Repressed PolyComb',
-    ReprPC: 'Repressed PolyComb',
     Quies: 'Quiescent/Low',
+    ReprPC: 'Repressed PolyComb',
+    ReprPCWk: 'Weak Repressed PolyComb',
+    TssA: 'Active TSS',
+    TssBiv: 'Bivalent/Poised TSS',
+    TssFlnk: 'Flanking TSS',
+    TssFlnkD: 'Flanking TSS downstream',
+    TssFlnkU: 'Flanking TSS upstream',
+    Tx: 'Strong transcription',
+    TxWk: 'Weak transcription',
+    'ZNF/Rpts': 'ZNF genes & repeats',
+
+    Enh: 'Enhancers',
+    BivFlnk: 'Flanking Bivalent TSS/Enh',
+    TssAFlnk: 'Flanking Active TSS',
+    TxFlnk: "Transcr. at gene 5' and 3'",
+    EnhG: 'Genic enhancers',
 };
 
 const colorChromatinState = {
-    'Active TSS': '#B85151',
-    'Flanking Active TSS': '#E68363',
-    "Transcr. at gene 5' and 3'": '#A7DAA7',
-    'Strong transcription': '#6c9f6d',
-    'Weak transcription': '#88BF89',
-    'Genic enhancers': '#C8DD41',
-    Enhancers: '#f4f400',
-    'ZNF genes & repeats': '#66CDAA',
-    Heterochromatin: '#8A91D0',
-    'Bivalent/Poised TSS': '#DD9292',
-    'Flanking Bivalent TSS/Enh': '#F0BAA8',
+    'Active enhancer 1': '#ffc44d',
+    'Active enhancer 2': '#ffc44d',
     'Bivalent Enhancer': '#BDB76B',
+    'Genic enhancer 1': '#C8DD41',
+    'Genic enhancer 2': '#C8DD41',
+    'Weak enhancer': '#f4f400',
+    Heterochromatin: '#8A91D0',
+    'Quiescent/Low': '#C2C2C2',
     'Repressed PolyComb': '#7F6265',
     'Weak Repressed PolyComb': '#968A88',
-    'Quiescent/Low': '#C2C2C2',
+    'Active TSS': '#B85151',
+    'Bivalent/Poised TSS': '#DD9292',
+    'Flanking TSS': '#E68363',
+    'Flanking TSS downstream': '#E68363',
+    'Flanking TSS upstream': '#E68363',
+    'Strong transcription': '#6c9f6d',
+    'Weak transcription': '#88BF89',
+    'ZNF genes & repeats': '#66CDAA',
+
+    Enhancers: '#f4f400',
+    'Flanking Bivalent TSS/Enh': '#F0BAA8',
+    'Flanking Active TSS': '#E68363',
+    "Transcr. at gene 5' and 3'": '#A7DAA7',
+    'Genic enhancers': '#C8DD41',
 };
 
 const lookupColorChromatinState = chrom => colorChromatinState[chrom];
 
 export const lookupChromatinNames = (chrom) => {
     let result;
-    const newChrom = chrom.replace(/[^A-Za-z]+/g, '');
+    let newChrom = chrom;
+    if (!isLetter(chrom[0])) {
+        newChrom = chrom.replace(/[^A-Za-z]+/g, '');
+    }
     Object.keys(mapChromatinNames).forEach((m) => {
         if (newChrom === m) {
             result = mapChromatinNames[m];
@@ -98,15 +115,17 @@ function drawHorizontalChart(d3, svgBars, chartData, fillColor, chartWidth) {
     const chartArray = chartData.map(d => d.value);
     const chartMax = Math.max(...chartArray);
     const tickNum = Math.min(chartMax, 4);
+    const numKeys = Object.keys(chartData).length;
+    const newChartWidth = 50 + (numKeys * 25);
 
     svgBars
-        .attr('width', chartWidth)
+        .attr('width', newChartWidth)
         .attr('height', height)
         .append('g');
 
     const xScale = d3.scaleBand()
         .domain(chartData.map(d => d.key))
-        .range([margin.left, chartWidth - margin.right])
+        .range([margin.left, newChartWidth - margin.right])
         .padding(0.2);
 
     const yScale = d3.scaleLinear()
@@ -209,6 +228,14 @@ export class BarChart extends React.Component {
     constructor(props, context) {
         super(props, context);
 
+        let chromatinObject = [];
+        if (props.assembly && props.assembly === 'hg19') {
+            chromatinObject = initializedChromatinObjectHg19;
+        } else {
+            chromatinObject = initializedChromatinObjectGRCh38;
+        }
+        this.chromatinObject = chromatinObject;
+
         // Bind `this` to non-React methods.
         this.drawCharts = this.drawCharts.bind(this);
         this.bindClickHandlers = this.bindClickHandlers.bind(this);
@@ -283,7 +310,7 @@ export class BarChart extends React.Component {
         // collect chromatin state data into facet
         } else if (this.props.dataFilter === 'chromatin') {
             fillColor = lookupColorChromatinState;
-            fakeFacets = Object.assign({}, initializedChromatinObject);
+            fakeFacets = Object.assign({}, this.chromatinObject);
             data.forEach((d) => {
                 const newName = lookupChromatinNames(d.value);
                 fakeFacets[newName] += 1;
@@ -366,6 +393,11 @@ BarChart.propTypes = {
     chartWidth: PropTypes.number.isRequired,
     chartLimit: PropTypes.number.isRequired, // limit is set to 0 for all the data
     chartOrientation: PropTypes.string.isRequired,
+    assembly: PropTypes.string,
+};
+
+BarChart.defaultProps = {
+    assembly: null,
 };
 
 function filterForKey(element, key, dataFilter) {
@@ -833,8 +865,18 @@ export const ChartTable = (props) => {
                         fullResultOrgan = (fullResult && fullResult.biosample_ontology) ? fullResult.biosample_ontology.organ_slims.join(', ') : '';
                     }
 
+                    let chromatinHierarchy = [];
+                    if (props.assembly && props.assembly === 'hg19') {
+                        chromatinHierarchy = Object.keys(initializedChromatinObjectHg19);
+                    } else {
+                        chromatinHierarchy = Object.keys(initializedChromatinObjectGRCh38);
+                    }
+                    const sortChromatin = (a, b) => chromatinHierarchy.indexOf(a) - chromatinHierarchy.indexOf(b);
+
                     if (props.chartData[d].total > 0) {
                         const stateKeys = Object.keys(props.chartData[d]).sort(sortChromatin);
+                        const labelLength = shortenedLabel(d).length + fullResultOrgan.length;
+                        const extraTallLabel = labelLength > 74;
                         return (
                             <div
                                 className={`biosample-table table${dKey} display-table`}
@@ -876,8 +918,8 @@ export const ChartTable = (props) => {
                                                                 style={{
                                                                     backgroundColor: lookupColorChromatinState(state) || defaultColor,
                                                                     width: `${stateWidth}px`,
-                                                                    height: `${extraTallLabels.includes(shortenedLabel(d)) ? '39px' : '24px'}`,
-                                                                    marginTop: `${extraTallLabels.includes(shortenedLabel(d)) ? '-15px' : '0px'}`,
+                                                                    height: `${extraTallLabel ? '39px' : '24px'}`,
+                                                                    marginTop: `${extraTallLabel ? '-15px' : '0px'}`,
                                                                 }}
                                                             />
                                                         );
@@ -926,6 +968,7 @@ ChartTable.propTypes = {
     fixedBars: PropTypes.bool,
     sortedKeys: PropTypes.array,
     fullData: PropTypes.array,
+    assembly: PropTypes.string,
 };
 
 ChartTable.defaultProps = {
@@ -933,6 +976,7 @@ ChartTable.defaultProps = {
     fixedBars: false,
     sortedKeys: null,
     fullData: null,
+    assembly: null,
 };
 
 export default {
