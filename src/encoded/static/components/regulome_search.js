@@ -531,6 +531,7 @@ const populationOrder = [
     'GoESP',
     'Estonian',
     'PAGE_STUDY',
+    'source unknown',
 ];
 
 const loadData = searchQuery => new Promise(((ok) => {
@@ -939,22 +940,32 @@ export class RegulomeSearch extends React.Component {
                     hitSnps[snp.rsid] = {};
                     const populationAlleles = {};
                     if (snp.ref_allele_freq) {
-                        Object.keys(snp.ref_allele_freq).forEach((allele) => {
-                            Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
-                                populationAlleles[population] = [`${allele}=${snp.ref_allele_freq[allele][population]}`];
+                        const refAlleleTag = Object.keys(snp.ref_allele_freq)[0];
+                        if (Object.keys(snp.ref_allele_freq[refAlleleTag]).length !== 0) {
+                            Object.keys(snp.ref_allele_freq).forEach((allele) => {
+                                Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
+                                    if (!snp.ref_allele_freq[allele][population]) {
+                                        populationAlleles[population] = [`${allele}=N/A`];
+                                    } else {
+                                        populationAlleles[population] = [`${allele}=${snp.ref_allele_freq[allele][population]}`];
+                                    }
+                                });
                             });
-                        });
-                    }
-                    if (snp.alt_allele_freq) {
-                        Object.keys(snp.alt_allele_freq).forEach((allele) => {
-                            Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
-                                if (!populationAlleles[population]) {
-                                    populationAlleles[population] = [`${allele}=${snp.alt_allele_freq[allele][population]}`];
-                                } else {
-                                    populationAlleles[population].push(`${allele}=${snp.alt_allele_freq[allele][population]}`);
-                                }
+                            Object.keys(snp.alt_allele_freq).forEach((allele) => {
+                                Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
+                                    if (!snp.alt_allele_freq[allele][population]) {
+                                        populationAlleles[population].push(`${allele}=N/A`);
+                                    } else {
+                                        populationAlleles[population].push(`${allele}=${snp.alt_allele_freq[allele][population]}`);
+                                    }
+                                });
                             });
-                        });
+                        } else {
+                            populationAlleles['source unknown'] = [`${refAlleleTag}=N/A`];
+                            Object.keys(snp.alt_allele_freq).forEach((allele) => {
+                                populationAlleles['source unknown'].push(`${allele}=N/A`);
+                            });
+                        }
                     }
                     sortedPopulations[snp.rsid] = [];
                     populationOrder.forEach((population) => {
