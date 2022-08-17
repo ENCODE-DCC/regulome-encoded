@@ -939,7 +939,6 @@ export class RegulomeSearch extends React.Component {
                 if (snp.chrom === chrom && snp.coordinates.gte === +start && snp.coordinates.lt === +end) {
                     hitSnps[snp.rsid] = {};
                     const populationAlleles = {};
-
                     if (snp.ref_allele_freq) {
                         const refAlleleTag = Object.keys(snp.ref_allele_freq)[0];
                         if (Object.keys(snp.ref_allele_freq[refAlleleTag]).length !== 0) {
