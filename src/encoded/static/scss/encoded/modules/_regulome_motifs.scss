@@ -16,13 +16,16 @@
     display: flex;
     padding: 10px 0 0px;
     align-items: center;
+    .footprint {
+        display: flex;
+    }
     .scrollable-list {
         max-height: 67px;
-        margin-left: 80px;
+        margin-left: 10px;
         margin-bottom: 10px;
-        margin-top: -20px;
         border: 1px solid #d2d2d2;
         padding: 3px 10px;
+        flex-grow: 1;
 
         &.shading {
             overflow-y: scroll;
@@ -121,5 +124,12 @@
 
     a {
         font-weight: 600;
+    }
+
+    .label-value-pair {
+        display: flex;
+        .value {
+            font-weight: 600;
+        }
     }
 }

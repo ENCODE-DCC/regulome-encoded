@@ -189,14 +189,14 @@ export class MotifElement extends React.Component {
 
         const targetListLabel = (targetList.indexOf(',') !== -1) ? 'Targets' : 'Target';
         const pwmsLabel = (pwmsLength > 1 || pwmsLength === 0) ? 'PWMs' : 'PWM';
-        const footprintsLabel = (footprintsLength > 1 || footprintsLength === 0) ? 'Footprints' : 'Footprint';
+        const footprintsLabel = (footprintsLength > 1 || footprintsLength === 0) ? `Footprints (${footprintsLength})` : 'Footprint';
         
         const targetComponent = (
             <React.Fragment>
             {targetList.length > 0 && (
-                <React.Fragment>
-                    {targetListLabel} {targetList}
-                </React.Fragment>
+                <div className='label-value-pair'>
+                    {targetListLabel} &nbsp; <div className='value'>{targetList}</div>
+                </div>
             )}
             </React.Fragment>
         );
@@ -253,8 +253,8 @@ export class MotifElement extends React.Component {
                     {!(this.props.shortened) ?
                         <React.Fragment>
                             {(footprintsLength > 0) ?
-                                <div>
-                                    <span className="motif-label">{footprintsLabel}</span>
+                                <div className='footprint'>
+                                    <span className='motif-label'>{footprintsLabel}</span>
                                     <div className={`scrollable-list ${footprintsLength > 3 ? 'shading' : ''}`}>
                                         {footprintKeysSorted.map(d => <div key={d}><a href={footprintList[d]}>{d}</a></div>)}
                                     </div>

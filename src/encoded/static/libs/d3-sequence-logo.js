@@ -219,10 +219,10 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
    */
 
     // width including endpoint markers
-    const svgFullWidth = 550;
+    const svgFullWidth = 610;
 
     // width of just the base letters + x-axis labels
-    const svgLetterWidth = 500;
+    const svgLetterWidth = 550;
 
     const endpointWidth = (svgFullWidth - svgLetterWidth) / 2;
 
