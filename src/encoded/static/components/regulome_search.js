@@ -531,6 +531,7 @@ const populationOrder = [
     'GoESP',
     'Estonian',
     'PAGE_STUDY',
+    'source unknown',
 ];
 
 const loadData = searchQuery => new Promise(((ok) => {
@@ -580,8 +581,7 @@ export class RegulomeSearch extends React.Component {
         // Bind this to non-React methods.
         this.requests = [];
         this.onFilter = this.onFilter.bind(this);
-        this.loadHg19ValisData = this.loadHg19ValisData.bind(this);
-        this.loadGRCh38ValisData = this.loadGRCh38ValisData.bind(this);
+        this.loadValisData = this.loadValisData.bind(this);
         this.chooseThumbnail = this.chooseThumbnail.bind(this);
         this.updateDimensions = this.updateDimensions.bind(this);
         this.handlePagination = this.handlePagination.bind(this);
@@ -597,11 +597,21 @@ export class RegulomeSearch extends React.Component {
         if (this.context.location_href.split('/thumbnail=')[1] === 'valis') {
             this.chooseThumbnail('valis');
         }
-
+        // the goal is to pick 1 each bigWig and bigBed file per experiment, with the following output types and replicate numbers for the different assays:
+        // DNase → peaks, read-depth normalized signal (rep1)
+        // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
+        // FAIRE → peaks, signal
+        // we start by collecting all files that satisfy these conditions
         if (this.state.genome === 'hg19') {
-            this.loadHg19ValisData();
+            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&assembly=hg19&preferred_default=true&sort=dataset&limit=all&${fieldsToSave}`;
+            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&assembly=hg19&preferred_default=true&sort=dataset&limit=all&${fieldsToSave}`;
+            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&assembly=hg19&preferred_default=true&sort=dataset&limit=all&${fieldsToSave}`;
+            this.loadValisData(chipBaseQuery, dnaseBaseQuery, faireBaseQuery);
         } else {
-            this.loadGRCh38ValisData();
+            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
+            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
+            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&status!=revoked&status!=deleted&limit=all&${fieldsToSave}`;
+            this.loadValisData(chipBaseQuery, dnaseBaseQuery, faireBaseQuery);
         }
     }
 
@@ -718,7 +728,8 @@ export class RegulomeSearch extends React.Component {
         }
     }
 
-    loadHg19ValisData() {
+ 
+    loadValisData(chipBaseQuery, dnaseBaseQuery, faireBaseQuery) {
         if (this.state.filteredFiles.length < 1 && this.props.context['@graph']) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
@@ -902,22 +913,32 @@ export class RegulomeSearch extends React.Component {
                     hitSnps[snp.rsid] = {};
                     const populationAlleles = {};
                     if (snp.ref_allele_freq) {
-                        Object.keys(snp.ref_allele_freq).forEach((allele) => {
-                            Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
-                                populationAlleles[population] = [`${allele}=${snp.ref_allele_freq[allele][population]}`];
+                        const refAlleleTag = Object.keys(snp.ref_allele_freq)[0];
+                        if (Object.keys(snp.ref_allele_freq[refAlleleTag]).length !== 0) {
+                            Object.keys(snp.ref_allele_freq).forEach((allele) => {
+                                Object.keys(snp.ref_allele_freq[allele]).forEach((population) => {
+                                    if (!snp.ref_allele_freq[allele][population]) {
+                                        populationAlleles[population] = [`${allele}=N/A`];
+                                    } else {
+                                        populationAlleles[population] = [`${allele}=${snp.ref_allele_freq[allele][population]}`];
+                                    }
+                                });
                             });
-                        });
-                    }
-                    if (snp.alt_allele_freq) {
-                        Object.keys(snp.alt_allele_freq).forEach((allele) => {
-                            Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
-                                if (!populationAlleles[population]) {
-                                    populationAlleles[population] = [`${allele}=${snp.alt_allele_freq[allele][population]}`];
-                                } else {
-                                    populationAlleles[population].push(`${allele}=${snp.alt_allele_freq[allele][population]}`);
-                                }
+                            Object.keys(snp.alt_allele_freq).forEach((allele) => {
+                                Object.keys(snp.alt_allele_freq[allele]).forEach((population) => {
+                                    if (!snp.alt_allele_freq[allele][population]) {
+                                        populationAlleles[population].push(`${allele}=N/A`);
+                                    } else {
+                                        populationAlleles[population].push(`${allele}=${snp.alt_allele_freq[allele][population]}`);
+                                    }
+                                });
                             });
-                        });
+                        } else {
+                            populationAlleles['source unknown'] = [`${refAlleleTag}=N/A`];
+                            Object.keys(snp.alt_allele_freq).forEach((allele) => {
+                                populationAlleles['source unknown'].push(`${allele}=N/A`);
+                            });
+                        }
                     }
                     sortedPopulations[snp.rsid] = [];
                     populationOrder.forEach((population) => {
