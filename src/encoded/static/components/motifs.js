@@ -193,11 +193,11 @@ export class MotifElement extends React.Component {
         
         const targetComponent = (
             <React.Fragment>
-            {targetList.length > 0 && (
-                <div className='label-value-pair'>
-                    {targetListLabel} &nbsp; <div className='value'>{targetList}</div>
-                </div>
-            )}
+                {targetList.length > 0 && (
+                    <div className='label-value-air'>
+                        {targetListLabel} &nbsp; <div className='value'>{targetList}</div>
+                    </div>
+                )}
             </React.Fragment>
         );
 
@@ -399,8 +399,12 @@ export const Motifs = (props) => {
             if (d3lib) {
                 sequenceLogos.entryPoint(refToReference.current, fakePWM, d3lib, alignmentCoordinate, alignedStartCoordinate, referenceStart, '+', true);
             }
+
+            return () => {
+                document.removeEventListener("scroll", trackScrolling);
+            }
         });
-    });
+    }, [d3lib, props]);
 
     return (
         <React.Fragment>
