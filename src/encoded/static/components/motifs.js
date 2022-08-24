@@ -88,7 +88,6 @@ export class MotifElement extends React.Component {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
             this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
-            // this.sequenceLogos = require('d3-sequence-logo');
             const pwmLink = this.generatePWMLink();
             this.mounted = true;
 
@@ -378,7 +377,6 @@ export const Motifs = (props) => {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             setD3Lib(require('d3'));
             const sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
-            // this.sequenceLogos = require('d3-sequence-logo');
 
             const refSeq = referenceSequence.split('');
             const fakePWM = [];
@@ -404,7 +402,7 @@ export const Motifs = (props) => {
                 document.removeEventListener("scroll", trackScrolling);
             }
         });
-    }, [d3lib, props]);
+    }, [d3lib, props.limit, props.classList, props.context]);
 
     return (
         <React.Fragment>
