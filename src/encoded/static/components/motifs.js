@@ -87,7 +87,8 @@ export class MotifElement extends React.Component {
     componentDidMount() {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
-            this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+            // this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+            this.sequenceLogos = require('d3-sequence-logo');
             const pwmLink = this.generatePWMLink();
             this.mounted = true;
 
