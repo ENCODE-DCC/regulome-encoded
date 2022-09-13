@@ -21,37 +21,109 @@ function onClick(e) {
 const RegulomeHelp = () => (
     <div className="richtextblock">
         <h1 className="page-title">Help</h1>
-        <p>RegulomeDB is a database that annotates SNPs with known and predicted regulatory elements in the intergenic regions of the <i>H. sapiens</i> genome. Known and predicted regulatory DNA elements include regions of DNase hypersensitivity, binding  sites oftranscription factors, and promoter regions that have been biochemically characterized to regulation transcription. Sources of these data include public datasets from GEO, the ENCODE project, and published literature.</p>
+        <p>RegulomeDB is a database that provides functional context to variants or regions of interest and serves as a tool to prioritize functionally important single nucleotide variants (SNVs) located within the non-coding regions of the human genome. RegulomeDB queries any given variant by intersecting its position with the genomic intervals that were identified to be functionally active regions from the computational analysis outputs of functional genomic assays such as TF ChIP-seq and DNase-seq (from ENCODE database) as well as those overlapping the DNase footprints and QTL data.</p>
+        <p>All the backend data sources used in RegulomeDB v2.1 can be found on the ENCODE website using these two links under the Data button at the top of the page: <a href="https://www.encodeproject.org/search/?type=Experiment&internal_tags=RegulomeDB_2_1">Experiments</a> and <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1">Annotations</a>. RegulomeDB also provides further information about those hits by incorporating them into prediction scores, thereby, providing a way to interpret the probability of these variants to be of real functional significance.</p>
+        <h3>Querying variants with RegulomeDB</h3>
+        <p>Users can submit queries to the RegulomeDB database in the following formats (Note: one can toggle between the hg19 and GRCh38 coordinates using the toggle button above the search box):</p>
+            <ol>
+                <li>Rsids assigned by dbSNP (eg. <a href="https://www.ncbi.nlm.nih.gov/snp/rs190509934">rs190509934</a>).</li>
+                <li>Single nucleotide positions: expressed in BED format, i.e. <b>chrom:chromStart-chromEnd</b>.</li>
+                <li>Chromosomal regions: expressed in BED format, i.e. <b>chrom:chromStart-chromEnd</b>. In this case all the common dbSNPs with a minor allele frequency {'>'}1% in this region will be queried and returned.</li>
+            </ol>
+        <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/query_box.jpg" width="50%"/>
+        </div>
+        <p>After supplying a list of search queries in the search box, and upon clicking the search button below, users are redirected to a summary table representing prediction scores for all the given query variants (see the explanation of scores in <a href="#FAQ">FAQ</a>).</p>
+        <div className="image-align-center">
+        <img src="/static/img/help_page_screenshots/scoring_table.jpg" width="80%"/>
+        </div>
+        <p>Users can download the search result output table using the two download buttons on the top of the page: either in BED file format or a tab separated file format. One may also continue to explore each of the results individually by clicking on one of the outputs in the table. Upon clicking on any variant of interest, the users are redirected to the results page that is further subdivided into six sections as seen in the next screenshots. The data sources for each of the sections are explained in <a href="#FAQ">FAQ</a>.</p>
+        <div className="image-align-center">
+        <img src="/static/img/help_page_screenshots/info_thumbnails.jpg" width="80%"/>
+        </div>
+        <p>The top-most section of any variants page provides a summary of the results on the top, and includes key information such as the rsid of the variant, the number of peaks found intersecting that variant, its prediction rank and score values as well as the allelic frequency of that rsid in different populations as reported in different data sources such as GnomAD, 1000Geomes, TOPMED, and others.</p>
+        <p>Each of the sub-sections can be further expanded by clicking on one of the six sections at a time individually.</p>
+
+        <ul>
+            <li><b>TF binding sites (ChIP-seq):</b> This page provides further information about the TF (transcription factor) ChIP peaks that intersected the variant of interest.</li>
+            <ul>
+                <li>The first section on this page provides the users with a bar plot representation showing the number of peaks that intersected with the variant of interest along with their targets. The peak numbers on each of the bars within the chart represents the number of biosamples where the same TF target was found to be having a peak signal that contained the intersected variant position.</li>
+                <li>Below the bar chart, a user can explore the underlying data on a tabular view that provides further metadata details of all the assays that produced the peak files: such as the intersecting peak location (chromosome start and end), the biosample information (along with the organ) that was used in each of the TF-ChIP assay, the ENCODE file ids (ENCFF ids) that was a source for the the peak information and its’ corresponding dataset ids (ENCSR ids). The ENCODE file accessions and the dataset accessions on this table are hyperlinked to the corresponding file objects and dataset objects on the ENCODE website for further metadata exploration.</li>
+            </ul>
+            <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/section_1_ChIP.jpg"/>
+            </div>
+            
+            <li><b>DNase accessibility:</b> This section provides the users with a bar plot graphical representation showing the number of times the variant was found to be within DNAse-seq peaks assayed using each biosample including different donors and treatment conditions.</li>
+            <ul>
+                <li>Each of the bars on the bar plot can be further expanded to view the underlying data table by clicking on it or by using the drop down array key next to the text.</li>
+                <li>Just like the ChIP data page, users can click on the hyperlinked ENCFF (file ids) or ENCSR (dataset ids) and that leads them to the corresponding ENCODE pages showing further metadata of the file or dataset information.</li>
+            </ul>
+            <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/section_2_DNase.jpg"/>
+            </div>
+            
+            <li><b>TF motifs & DNase footprints:</b> This page provides information regarding the position weighted matrices (PWMs) representing TF motifs and matching with the sequence overlapping the variant of interest, as well as DNase footprints information that intersected with the variant of interest.</li>
+            <ul>
+                <li>We provide a list of biosamples that were the source files for DNAse-seq peak files used in the TRACE pipeline for predicting the footprints. (See how TF motifs and DNase footprints are computed in <a href="#FAQ">FAQ</a>.)</li>
+                <li>The biosamples list is hyperlinked to the corresponding ENCODE annotation filesets that contain the TRACE output files in the bed format. The ENCODE page also provides information about the exact input file used for the TRACE pipeline.</li>
+                <li>Similarly the PWM file (when available) is also listed as a hyperlinked ENCFF id above the biosamples list box and can be further explored on the ENCODE website.</li>
+                <li>The exact genome reference region that overlaps with all the output motifs is represented on the top section along with a “boxed” letter that represents the variant of interest.</li>
+            </ul>
+            <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/section_3_motifs.jpg"/>
+            </div>
+            
+            <li><b>eQTLs & caQTLs (chromatin accessibility QTLs):</b> The tables in this section show the information of eQTL and caQTL studies where the query variant is identified to be associated with gene expression levels and chromatin accessibility. </li>
+            <ul>
+                <li>The caQTL data comes from curated publications and has been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=caQTLs">ENCODE portal</a>.</li>
+                <li>The eQTL data comes from the GTEx project and has also been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=eQTLs">ENCODE portal</a>.</li>
+                <li>The corresponding ENCODE file ids and their corresponding dataset ids are also listed on the table and hyperlinked for further exploration.</li>
+                <li>The biosample information and population ethnicity information (when available)  are also listed on the caQTL table and correspond to the original biosample information used for that study in the publication.</li>
+                <li>Example: <a href="https://beta.regulomedb.org/regulome-search/?regions=chr10:11699181-11699182&genome=GRCh38/thumbnail=qtl">rs75982468</a> has both biosample and population information that comes from the publication listed here: <a href="https://www.encodeproject.org/publications/7be44d09-ae33-43af-9af2-dad1df6b0d1e/">PMID:30650056</a>.</li>
+            </ul>
+            <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/section_4_QTLs.jpg"/>
+            </div>
+
+            <li><b>Chromatin states:</b></li>
+            <ul>
+                <li>This section shows predicted chromatin states from <a href="https://www.encodeproject.org/search/?type=Annotation&annotation_type=chromatin+state&status=released">chromHMM</a>.</li>
+                <li>The variant positions are intersected with those chromatin states and displayed in an elegant way on an interactive human body map as well as in a tabular representation.</li>
+                <li>The body map is colored by the most active state among all biosamples in each organ. Thus, it shows the users a pictorial representation of candidate organs where the query variant is likely to be functional and within different categories of regulatory elements.</li>
+                <li>For example if the variant is within an active enhancer region for that biosample, it might lead to changes in the gene expression that is regulated by that enhancer.</li>
+                <li>Users can use the body map diagram to filter down the search results to display only a few organs of interest. Users can also filter the search results using the list of biosamples or the various chromatin states that are listed on the panels next to the body map.</li>
+                <li>The tabular view below provides further details on the biosample, classification, organ as well as the source ENCODE datasets and files (hyperlinked to ENCODE for further metadata exploration).</li>
+            </ul>
+            <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/section_5_chromatin_states.jpg"/>
+            </div>
+
+            <li><b>Genome browser:</b> Users can explore the nearby genes of the variant (shown as a yellow highlight on the browser tracks). The browser shows the tracks from TF ChIP-seq and DNase-seq assays with overlapping peaks of the variant.</li>
+            <ul>
+                <li>Users can use the “Refine your search” modal located above the browser tracks to further narrow down the list of tracks as needed.</li>
+                <li>This modal allows users to select from a variety of faceting options. For example, users can filter down the browser tracks displayed in the browser using the file types (bigWig or bigBed), dataset types (ChIP-seq or DNAse-seq), organ or cell type, biosamples as well as the targets used in respective ChIP-seq assays.</li>
+                <li>Users can also expand the track information section located on the section using the expand button on the lower right. This expanded view allows the users to see the underlying ENCODE file and ENCODE dataset (both of which are hyperlinked to the respective ENCODE pages).</li>
+            </ul>
+            <div className="image-align-center">
+            <img src="/static/img/help_page_screenshots/section_6_browser.jpg"/>
+            </div>
+        </ul>
+
+        <h3><a id="FAQ">FAQ</a></h3>
         <div className="faq" onClick={onClick}>
             <p className="regulomehelp-question" id="regulomehelp-faq1-question">
-                <strong><i className="icon icon-caret-right" />How do I submit my data?</strong>
+                <strong><i className="icon icon-caret-right" />Which reference genome is used?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq1-answer">
-                <p>Users can submit queries to the RegulomeDB database in the following formats:</p>
-                <ul>
-                    <li>dbSNP IDs</li>
-                    <li>0-based coordinates: As chrom:chromStart-chromEnd in BED format.</li>
-                </ul>
+                <p>You can switch between assemblies GRCh38 and hg19 through the toggle bar above the search box. However, the GRCh38 query contains the most recent datasets and we recommend using the GRCh38 version over the hg19 version.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq2-question">
-                <strong><i className="icon icon-caret-right" />What is displayed on the summary of SNP analysis page?</strong>
+                <strong><i className="icon icon-caret-right" />What does the RegulomeDB ranking score represent?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq2-answer">
-                <p>A summary of the total number of rows analyzed and coordinates searched will be displayed in addition to any errors located in the query. The rest of the page includes the nucleotides entered in the query and the data associated with      thenucleotides. The table contains the following columns of data:</p>
-                <ul>
-                    <li>0-based coordinates: As chrom:chromStart..chromEnd in BED format.</li>
-                    <li>dbSNP IDs: If available, the dbSNP ID for that coordinate is displayed.</li>
-                    <li>Rank: This is the original RegulomeDB score computed based on the integration of multiple high-throughput datasets. Additional details are described in the next question.</li>
-                    <li>Score: This is our new RegulomeDB score generated using our machine learning approach and detailed below.</li>
-                </ul>
-            </div>
-
-            <p className="regulomehelp-question" id="regulomehelp-faq3-question">
-                <strong><i className="icon icon-caret-right" />What does the RegulomeDB rank represent?</strong>
-            </p>
-            <div className="regulomehelp-answer" id="regulomehelp-faq3-answer">
-                <p>The scoring scheme refers to the following available datatypes for a single coordinate.</p>
+                <p>The scoring scheme refers to the following supporting evidence for that particular location or variant id. In general, if more supporting data is available, the higher is its likelihood of being functional and hence receives a higher score (with 1 being higher and 7 being lower score).</p>
                 <table>
                     <tbody>
                         <tr>
@@ -60,27 +132,27 @@ const RegulomeHelp = () => (
                         </tr>
                         <tr>
                             <td>1a</td>
-                            <td>eQTL + TF binding + matched TF motif + matched DNase Footprint + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + matched TF motif + matched DNase Footprint + DNase peak</td>
                         </tr>
                         <tr>
                             <td>1b</td>
-                            <td>eQTL + TF binding + any motif + DNase Footprint + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + any motif + DNase Footprint + DNase peak</td>
                         </tr>
                         <tr>
                             <td>1c</td>
-                            <td>eQTL + TF binding + matched TF motif + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + matched TF motif + DNase peak</td>
                         </tr>
                         <tr>
                             <td>1d</td>
-                            <td>eQTL + TF binding + any motif + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + any motif + DNase peak</td>
                         </tr>
                         <tr>
                             <td>1e</td>
-                            <td>eQTL + TF binding + matched TF motif</td>
+                            <td>eQTL/caQTL + TF binding + matched TF motif</td>
                         </tr>
                         <tr>
                             <td>1f</td>
-                            <td>eQTL + TF binding / DNase peak</td>
+                            <td>eQTL/caQTL + TF binding / DNase peak</td>
                         </tr>
                         <tr>
                             <td>2a</td>
@@ -121,90 +193,59 @@ const RegulomeHelp = () => (
                     </tbody>
                 </table>
             </div>
+            
+            <p className="regulomehelp-question" id="regulomehelp-faq3-question">
+                <strong><i className="icon icon-caret-right" />How to interpret the RegulomeDB probability score?</strong>
+            </p>
+            <div className="regulomehelp-answer" id="regulomehelp-faq3-answer">
+                <p>The RegulomeDB probability score is ranging from 0 to 1, with 1 being most likely to be a regulatory variant. The probabilistic score is calculated from a random forest model, <a href="https://pubmed.ncbi.nlm.nih.gov/34648033/">TURF</a>, trained with allele-specific TF binding SNVs. We used a simplified version here only including binary features from functional genomic evidence as used in the heuristic ranking, as well as numeric features from information content in matched PWMs. We will include the whole feature set in a future release.</p>
+                <p> There is an overall positive correlation between the ranking scores and the probability scores, but there are some exceptions because 1) we added additional features when predicting probability scores. 2) features used in probability scoring were weighted differently from ranking scoring. </p>
+            </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq4-question">
-                <strong><i className="icon icon-caret-right" />Can I download precalculated scores from RegulomeDB?</strong>
+                <strong><i className="icon icon-caret-right" />What data sources does RegulomeDB use for each genomic annotation?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq4-answer">
-                <p>We currently have RegulomeDB rank scores available for common SNVs (Single Nucleotide Variants) in NCBI dbSNP Build 153. The scores were generated including all newly released ENCODE datasets. You can download the file here: <a href="https://regulome-master.demo.encodedcc.org/files/TSTFF344324/@@download/TSTFF344324.tsv">regulomedb_dbsnp153_common_snv.tsv</a>.</p>
-                <p>We are still working on refining our algorithm for probability scores, they will be provided once we have a final version.</p>
+                <p>RegulomeDB currently query variants with genomic annotations from the following data types:</p>
+                <p><em>TF binding sites</em><br /> Peaks from TF (transcription factor) ChIP-seq assays called by uniform pipeline from the latest release of the ENCODE project.</p>
+                <p><em>Chromatin states</em><br /> Chromatin states in 833 biosamples were called from chromHMM in <a href="https://www.nature.com/articles/s41586-020-03145-z">EpiMap</a> and were directly retrieved from the ENCODE portal. </p>
+                <p><em>DNase peaks</em><br /> Peaks from DNase-seq assays called by uniform pipeline from the latest release of the ENCODE project.</p>
+                <p><em>TF motifs</em><br /> PWM matching positions from 746 motifs in <a href="https://jaspar2020.genereg.net/downloads/">JASPAR 2020 CORE collection</a> for vertebrates.</p>
+                <p><em>DNase footprints</em><br /> Footprints were predicted with signals from 642 DNase-seq experiments and 591 TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline.</p>
+                <p><em>eQTLs</em><br /> The eQTLs from the <a href="https://gtexportal.org/home/datasets">GTEx</a> project across 49 human tissues.</p>
+                <p><em>caQTLs</em><br /> The chromatin accessibility QTLs (caQTLs) from <a href="https://www.encodeproject.org/report/?type=Annotation&annotation_type=caQTLs&field=references.identifiers&field=accession&field=description">9 publications</a>.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq5-question">
-                <strong><i className="icon icon-caret-right" />How to interpret the new RegulomeDB probability score?</strong>
+                <strong><i className="icon icon-caret-right" />How are TF motifs and DNase footprints computed?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq5-answer">
-                <p>The RegulomeDB probability score is ranging from 0 to 1, with 1 being most likely to be a regulatory variant. The RegulomeDB score represents a model integrating functional genomics features along with continuous values such as ChIP-seq      signal, DNase-seq signal, information content change, and DeepSEA scores among others. For more detail see our manuscript:</p>
-                <p className="citation">Dong S and Boyle AP. Predicting functional variants in enhancer and promoter elements using RegulomeDB. Human Mutation 2019, 40:1292-1298. PMID: 31228310.</p>
-                <p> There is an overall positive correlation between the ranking scores and the probability scores, but there are some exceptions because 1) we added additional features when predicting probability scores. 2) features used in probability      scoring were weighted differently from ranking scoring. We are working on further refining our algorithm.</p>
+                <p>For TF motifs, we downloaded the PWMs (position weight matrices) of 746 non-redundant TF motifs from the <a href="https://jaspar2020.genereg.net/downloads/">JASPAR 2020 CORE collection</a>. The kmers matching to TF motifs were called by <a href="https://github.com/j-andrews7/pytfmpval">TFM P-value</a> with a threshold at 4<sup>-8</sup> for each PWM. Bowtie was used to map the kmers on the genome to determine the final PWM matching positions for the TF motifs.</p>
+                <p>Footprints were predicted with the signals from DNase-seq experiments and the PWMs of TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE pipeline</a>. TRACE is a computational method that incorporates DNase-seq signals and PWMs within a multivariate hidden Markov model to detect footprint regions with matching motifs.</p>
+                <p>Note that TF motifs and DNase Footprints are two separate genomic annotations. TF motifs are called totally from the DNA sequence, while DNase footprints also consider signals from DNase-seq experiments and weigh less on the sequence side.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq6-question">
-                <strong><i className="icon icon-caret-right" />What details are provided for the datatypes supporting a SNP?</strong>
+                <strong><i className="icon icon-caret-right" />Can I download precalculated scores from RegulomeDB?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq6-answer">
-                <p>This page lists all the DNA features and regulatory regions that have been identified to contain the input coordinate.</p>
-                <ul>
-                    <li>Transcription factor binding sites</li>
-                    <li>Position-Weight Matrix for TF binding (PWM)</li>
-                    <li>DNase Footprinting</li>
-                    <li>Open Chromatin</li>
-                    <li>Chromatin States</li>
-                    <li>eQTLs</li>
-                    <li>Validated functional SNPs</li>
-                </ul>
+                <p>We currently have RegulomeDB rank scores available for common SNVs (Single Nucleotide Variants) in NCBI dbSNP Build 153. You can download the file here: <a href="https://regulome-master.demo.encodedcc.org/files/TSTFF344324/@@download/TSTFF344324.tsv">regulomedb_dbsnp153_common_snv.tsv</a>.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq7-question">
-                <strong><i className="icon icon-caret-right" />What data is currently available at RegulomeDB?</strong>
-            </p>
-
-            <div className="regulomehelp-answer" id="regulomehelp-faq7-answer">
-                <p>RegulomeDB can currently query the following data types:</p>
-                <p><em>ENCODE</em><br /> RegulomeDB now directly uses all available ENCODE datasets including newly released data.</p>
-                <p><em>Position-Weight Matrix for TF binding (PWM)</em><br />JASPAR 2020 Release</p>
-                <p><em>eQTLs / dsQTLs</em><br /> Tissue types:</p>
-                <ul>
-                    <li>Cerebellum</li>
-                    <li>Cortex</li>
-                    <li>Fibroblasts</li>
-                    <li>Frontal-Cortex</li>
-                    <li>Liver</li>
-                    <li>Lymphoblastoid</li>
-                    <li>Monocytes</li>
-                    <li>Pons</li>
-                    <li>T-cells</li>
-                    <li>Temporal-Cortex</li>
-                </ul>
-                <p><em>DNase Footprinting</em></p>
-                <ul>
-                    <li>Boyle et al.</li>
-                    <li>Pique-Regi et al.</li>
-                    <li>Piper et al.</li>
-                </ul>
-            </div>
-
-            <p className="regulomehelp-question" id="regulomehelp-faq8-question">
                 <strong><i className="icon icon-caret-right" />What version of dbSNP is RegulomeDB querying?</strong>
             </p>
-            <p className="regulomehelp-answer" id="regulomehelp-faq8-answer">RegulomeDB is currently querying build 153 of dbSNP. See NCBI for additional information about <a href="https://www.ncbi.nlm.nih.gov/projects/SNP/snp_summary.cgi">dbSNP 153</a>. </p>
-
-            <p className="regulomehelp-question" id="regulomehelp-faq9-question">
-                <strong><i className="icon icon-caret-right" />What version of the human genome sequence are the data mapped to at RegulomeDB?</strong>
-            </p>
-            <p className="regulomehelp-answer" id="regulomehelp-faq9-answer">All data at RegulomeDB is currently mapped to hg19. Additional information about the human reference genome can be found at the <a href="http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/">Genome Reference Consortium</a>.
-            </p>
-
-            <p className="regulomehelp-question" id="regulomehelp-faq10-question">
+            <p className="regulomehelp-answer" id="regulomehelp-faq7-answer">RegulomeDB is currently querying build 153 of dbSNP. See NCBI for additional information about <a href="https://www.ncbi.nlm.nih.gov/projects/SNP/snp_summary.cgi">dbSNP 153</a>. </p>
+            
+            <p className="regulomehelp-question" id="regulomehelp-faq8-question">
                 <strong><i className="icon icon-caret-right" />Why is there no data for my chromosomal region?</strong>
             </p>
-            <div className="regulomehelp-answer" id="regulomehelp-faq10-answer">
-                <p>Entering a chromosomal region will identify all common SNPs (with an allele frequency &gt; 1%) in that region. These SNPs are used to query RegulomeDB. If there are no common SNPs in the uploaded genomic regions, there will be no      dataavailable. However, the chromosomal region can be uploaded as split single nucleotide values in order to query each nucleotide individually.</p>
-                <p>Alternatively, the region you entered could be in a protein-coding region of the genome. Currently, RegulomeDB only integrates and curates high-throughput data from non-coding and intergenic regions of the human genome.</p>
+            <div className="regulomehelp-answer" id="regulomehelp-faq8-answer">
+                <p>Entering a chromosomal region will identify all common SNPs (with an allele frequency &gt; 1%) in that region. These SNPs are used to query RegulomeDB. If there are no common SNPs in the uploaded genomic regions, there will be no data that can be returned.</p>
             </div>
         </div>
 
-        <p className="citation"><strong>To cite RegulomeDB:</strong><br /> Boyle AP, Hong EL, Hariharan M, Cheng Y, Schaub MA, Kasowski M, Karczewski KJ, Park J, Hitz BC, Weng S, Cherry JM, Snyder M. Annotation of functional variation in personal genomes  usingRegulomeDB. Genome Research 2012, 22(9):1790-1797. PMID: 22955989.</p><p><strong>To contact RegulomeDB:</strong><br /> <a data-reactid="104" href="mailto:regulomedb@mailman.stanford.edu">regulomedb@mailman.stanford.edu</a>&nbsp;</p>
+        <p className="citation"><strong>To cite RegulomeDB:</strong><br /> Boyle AP, Hong EL, Hariharan M, Cheng Y, Schaub MA, Kasowski M, Karczewski KJ, Park J, Hitz BC, Weng S, Cherry JM, Snyder M. Annotation of functional variation in personal genomes  usingRegulomeDB. Genome Research 2012, 22(9):1790-1797. <a href="https://pubmed.ncbi.nlm.nih.gov/22955989/">PMID: 22955989</a>.</p><p><strong>To contact RegulomeDB:</strong><br /> <a data-reactid="104" href="mailto:regulomedb@mailman.stanford.edu">regulomedb@mailman.stanford.edu</a>&nbsp;</p>
     </div>
 );
 
