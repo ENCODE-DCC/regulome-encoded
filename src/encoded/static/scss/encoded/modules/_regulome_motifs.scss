@@ -1,13 +1,53 @@
+.reference-sequence {
+    background: #f2f2f2;
+
+    &.fixed-position {
+        position: fixed;
+        top: 46px;
+        left: 0;
+        right: 0;
+        margin: auto;
+        max-width: 1076px;
+    }
+}
+
+
 .element {
     display: flex;
-    padding: 10px 0 5px;
+    padding: 10px 0 0px;
     align-items: center;
+    .footprint {
+        display: flex;
+    }
+    .scrollable-list {
+        max-height: 67px;
+        margin-left: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #d2d2d2;
+        padding: 3px 10px;
+        flex-grow: 1;
+
+        &.shading {
+            overflow-y: scroll;
+            background: linear-gradient(white, 90%, #ddd);
+        }
+    }
+    &.reference-sequence {
+        .motif-element {
+            svg {
+                max-height: 50px;
+            }
+        }
+        .sub-text {
+            font-weight: 600;
+        }
+    }
     .motif-element {
         flex: 0 0 60%;
         svg {
             width: 100%;
             max-width: 100%;
-            max-height: 90px;
+            max-height: 100px;
             .domain {
                 display: none;
             }
@@ -25,6 +65,10 @@
         text-align: left;
         @media screen and (max-width: $screen-md-min) {
             overflow-x: scroll;
+        }
+        &.reference-sequence {
+            font-size: 1.2rem;
+            font-weight: bold;
         }
         p {
             margin-bottom: 0;
@@ -59,4 +103,33 @@
 .motif-count {
     margin-top: -20px;
     padding-bottom: 20px;
+}
+
+.motif-label-row  {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: stretch;
+    align-items: flex-start;
+}
+
+.motif-label-col {
+    font-weight: 300;
+    font-size: 14px;
+    margin-right: 5px;
+    order: 0;
+    flex: 1 1 33.33%;
+    align-self: auto;
+
+    a {
+        font-weight: 600;
+    }
+
+    .label-value-pair {
+        display: flex;
+        .value {
+            font-weight: 600;
+        }
+    }
 }

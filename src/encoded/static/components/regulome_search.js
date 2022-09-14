@@ -118,7 +118,9 @@ const dataColumnsChromatin = {
     },
 };
 
-const dataColumnsQTL = {
+//split QTL data & show different columns
+
+const dataColumnseQTL = {
     method: {
         title: 'Method',
     },
@@ -131,7 +133,7 @@ const dataColumnsQTL = {
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
     },
     value: {
-        title: 'Targets',
+        title: 'Target genes',
         getValue: item => item.value || 'N/A',
     },
     dataset: {
@@ -144,6 +146,32 @@ const dataColumnsQTL = {
     },
 };
 
+const dataColumnscaQTL = {
+    method: {
+        title: 'Method',
+    },
+    peak: {
+        title: 'QTL location',
+        getValue: item => `${item.chrom}:${item.start}..${item.end}`,
+    },
+    biosample_term_name: {
+        title: 'Biosample',
+        getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
+    },
+    population: {
+        title: 'Population',
+        getValue: item => item.ancestry || 'N/A',
+    },
+    dataset: {
+        title: 'Dataset',
+        display: item => <a href={item.dataset}>{item.dataset.split('/')[4]}</a>,
+    },
+    file: {
+        title: 'File',
+        display: item => <a href={`https://encodeproject.org//files/${item.file}/`}>{item.file}</a>,
+    }
+};
+
 const dataColumnsQTLShort = {
     method: {
         title: 'Method',
@@ -151,11 +179,7 @@ const dataColumnsQTLShort = {
     biosample_term_name: {
         title: 'Biosample',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
-    },
-    value: {
-        title: 'Targets',
-        getValue: item => item.value || 'N/A',
-    },
+    }
 };
 
 const dataColumnsChip = {
@@ -449,12 +473,12 @@ export const ResultsTable = (props) => {
     let dataColumns = null;
     if (props.dataFilter === 'chromatin') {
         dataColumns = dataColumnsChromatin;
+    } else if (props.dataFilter === 'eqtl') {
+        dataColumns = dataColumnseQTL;
+    } else if (props.dataFilter === 'caqtl') {
+        dataColumns = dataColumnscaQTL;
     } else if (props.dataFilter === 'qtl') {
-        if (props.shortened) {
-            dataColumns = dataColumnsQTLShort;
-        } else {
-            dataColumns = dataColumnsQTL;
-        }
+        dataColumns = dataColumnsQTLShort;
     } else if (props.dataFilter === 'chip') {
         dataColumns = dataColumnsChip;
     }
@@ -469,12 +493,12 @@ export const ResultsTable = (props) => {
         <React.Fragment>
             {data.length > 0 ?
                 <SortTablePanel title="Results">
-                    <SortTable list={data} columns={dataColumns} maxRows={maxRows} />
+                    <SortTable list={data} columns={dataColumns} maxRows={maxRows} title={displayTitle}/>
                 </SortTablePanel>
             :
                 <table className="table table-sortable table-panel">
-                    {displayTitle ? <tr className="table-section" key="title"><th colSpan={colCount}>{displayTitle}</th></tr> : null}
                     <thead>
+                        {displayTitle ? <tr className="table-section" key="title"><th colSpan={colCount}>{displayTitle}</th></tr> : null}
                         <tr key="header">
                             {Object.keys(dataColumns).map(columnId => <th key={columnId}>{dataColumns[columnId].title}</th>)}
                         </tr>
@@ -806,6 +830,8 @@ export class RegulomeSearch extends React.Component {
         const coordinates = context.query_coordinates[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
+        const eQTLData = allData.filter(d => (d.method == 'eQTLs'));
+        const caQTLData = allData.filter(d => (d.method == 'caQTLs'));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
         const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
@@ -1029,7 +1055,7 @@ export class RegulomeSearch extends React.Component {
                                     <h4>QTL data</h4>
                                     {(thumbnail === null) ?
                                         <React.Fragment>
-                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see dsQTL and eQTL data.
+                                            <div className="line"><i className="icon icon-chevron-circle-right" />Click to see caQTL and eQTL data.
                                                 <div>
                                                     (<b>{QTLData.length}</b> result{QTLData.length !== 1 ? 's' : ''})
                                                 </div>
@@ -1112,7 +1138,10 @@ export class RegulomeSearch extends React.Component {
                                             }
                                         </React.Fragment>
                                     : (thumbnail === 'qtl') ?
-                                        <ResultsTable data={QTLData} displayTitle={'dsQTL and eQTL data'} dataFilter={thumbnail} errorMessage={'No result table is available for this SNP.'} />
+                                        <React.Fragment>
+                                            <ResultsTable data={caQTLData} displayTitle={'caQTL data'} dataFilter={'caqtl'} errorMessage={'No result table is available for this SNP.'} />
+                                            <ResultsTable data={eQTLData} displayTitle={'eQTL data'} dataFilter={'eqtl'} errorMessage={'No result table is available for this SNP.'} />
+                                        </React.Fragment>
                                     : (thumbnail === 'chromatin') ?
                                           <ChromatinView
                                               data={chromatinData}

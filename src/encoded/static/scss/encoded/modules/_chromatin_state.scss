@@ -126,6 +126,35 @@ $chromatinstates:
             stroke-width: 2px;
 
             &.active, &.highlight {
+                fill: $activeenhancer;
+                stroke: #896656;
+            }
+        }
+
+        &.bivalentenhancer {
+            fill: #dcd9b2;
+            stroke: #8D883F;
+
+            &.active, &.highlight {
+                fill: $bivalentenhancer;
+            }
+        }
+
+        &.genicenhancer {
+            fill: #E5F386;
+            stroke: #A2B331;
+
+            &.active, &.highlight {
+                fill: $genicenhancer;
+            }
+        }
+
+        &.weakenhancer {
+            fill: #fdfdad;
+            stroke: #e3e319;
+            stroke-width: 2px;
+
+            &.active, &.highlight {
                 fill: $weakenhancer;
                 stroke: #c3c327;
             }

@@ -14,7 +14,7 @@
  *  (3) call entry_point with (1) and (2).
  */
 
-const d3 = require('d3');
+// const d3 = require('d3');
 
 // ordering for positive strand
 const positiveStrandLetterOrder = ['A', 'C', 'G', 'T'];
@@ -183,34 +183,33 @@ function calcPathTransform(path, d, yscale, colWidth) {
  * @param {number[]} seqLenBounds
  * @param {number[]} seqNumBounds
  */
-function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate, lastCoordinate, strand) {
+function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate, lastCoordinate, strand, reference) {
     // skipping error checking for now
     // const isValid = isValidData(sequenceData, seqLenBounds, seqNumBounds);
     //
     // if (!isValid) {
     //   return;
     // }
-
+    
     // number of sequences
     let n = 0;
     PWM.forEach((pwm) => {
         n = Math.max(n, Math.max(...pwm));
     });
-
+    
     // if the strand is negative, we want the reverse complement
     if (strand === '-') {
         PWM.reverse();
     }
-
+    
     // number of nucleotides per sequence
     const m = PWM.length;
-
+    
     // range of letter bounds at each nucleotide index position
     const yz = d3.range(m).map(i => offsets(PWM[i], n));
-
+    
     // find coordinate index
     const alignmentIndex = +alignmentCoordinate - +firstCoordinate;
-
     /**
    * Next, we set local values that govern visual appearance.
    *
@@ -220,19 +219,24 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
    */
 
     // width including endpoint markers
-    const svgFullWidth = 550;
+    const svgFullWidth = 610;
 
     // width of just the base letters + x-axis labels
-    const svgLetterWidth = 500;
+    const svgLetterWidth = 550;
 
     const endpointWidth = (svgFullWidth - svgLetterWidth) / 2;
 
     // height including x-axis labels and endpoint markers
-    const svgFullHeight = 180;
-    const svgFullHeightWithMargin = 200;
-
+    let svgFullHeight = 180;
+    let svgFullHeightWithMargin = 180;
     // height of just the base letters
-    const svgLetterHeight = 150;
+    let svgLetterHeight = 150;
+
+    if (reference) {
+        svgFullHeight = 90;
+        svgFullHeightWithMargin = 90;
+        svgLetterHeight = 60;
+    }
 
     const colorBase = {
         A: '#489655',
@@ -241,7 +245,21 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         T: '#C13B42',
     };
 
+    const mapRefColors = (arrColors) => {
+        if (arrColors[0] === 1000) {
+            return colorBase.A;
+        } else if (arrColors[1] === 1000) {
+            return colorBase.C;
+        } else if (arrColors[2] === 1000) {
+            return colorBase.G;
+        }
+        return colorBase.T;
+    };
+
     const lookupBaseColor = (i) => {
+        if (reference) {
+            return 'white';
+        }
         // if the strand is negative, we want the reverse complement
         if (strand === '-') {
             return colorBase[negativeStrandLetterOrder[i]];
@@ -276,6 +294,31 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
 
     const endptTY = (svgFullHeight + svgLetterHeight) / 2;
 
+    if (reference) {
+        PWM.forEach((p, pIdx) => {
+            // append red box around search coordinate position
+            svg.append('rect')
+                .attr('y', '-1px')
+                .attr('x', '-1px')
+                .attr('width', `${(svgLetterWidth / m) + 2}px`)
+                .attr('height', `${(svgFullHeight - 20)}px`)
+                .attr('fill', mapRefColors(p))
+                .attr('stroke-width', '4px')
+                .attr('transform', `translate(${xscale(pIdx)},0)`);
+        });
+
+        // append black rectangle around the alignment index box
+        svg.append('rect')
+            .attr('y', '-1px')
+            .attr('x', '-1px')
+            .attr('width', `${(svgLetterWidth / m) + 2}px`)
+            .attr('height', `${(svgFullHeight - 20)}px`)
+            .attr('fill', 'none')
+            .attr('stroke-width', '4px')
+            .attr('stroke', 'black')
+            .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
+    }
+
     // Attach left endpoint to SVG
     svg.append('text')
         .text('5\'')
@@ -290,22 +333,24 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         .style('font-size', endptFontSize)
         .attr('transform', `translate(${svgFullWidth},${endptTY + 10})`);
 
-    // Add the y axis
-    const y = d3.scaleLinear().range([svgLetterHeight, 0]);
-    y.domain([0, 2]);
-    svg.append('g')
-        .call(d3.axisLeft(y)
-            .ticks(4));
+    if (!reference) {
+        // Add the y axis
+        const y = d3.scaleLinear().range([svgLetterHeight, 0]);
+        y.domain([0, 2]);
+        svg.append('g')
+            .call(d3.axisLeft(y)
+                .ticks(1));
 
-    // text label for the y axis
-    svg.append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', -65)
-        .attr('x', 0 - (svgFullHeight / 2))
-        .attr('dy', '1em')
-        .style('text-anchor', 'middle')
-        .style('font-size', endptFontSize)
-        .text('Bits');
+        // text label for the y axis
+        svg.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', -65)
+            .attr('x', 0 - (svgFullHeight / 2))
+            .attr('dy', '1em')
+            .style('text-anchor', 'middle')
+            .style('font-size', endptFontSize)
+            .text('Bits');
+    }
 
 
     /**
@@ -314,12 +359,22 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     *
     * The column is used to neatly handle all x-offsets and labels.
     */
-    const group = svg.selectAll('group')
-        .data(yz)
-        .enter()
-        .append('g')
-        .attr('class', 'column')
-        .attr('transform', (d, i) => `translate(${xscale(i)},0)`);
+    let group;
+    if (reference) {
+        group = svg.selectAll('group')
+            .data(yz)
+            .enter()
+            .append('g')
+            .attr('class', 'column')
+            .attr('transform', (d, i) => `translate(${(xscale(i) + 2)},15) scale (0.6)`);
+    } else {
+        group = svg.selectAll('group')
+            .data(yz)
+            .enter()
+            .append('g')
+            .attr('class', 'column')
+            .attr('transform', (d, i) => `translate(${xscale(i)},0)`);
+    }
 
     /**
     * Attach the number labels to the x-axis.
@@ -330,15 +385,15 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
     * visually it will look fine, but it may be
     * desirable to alter font size as well.
     */
-    const xLabelFontSize = 20;
-    const xLabelTX = (colWidth / 2) + (xLabelFontSize / 3);
-    const xLabelTY = svgLetterHeight + 10;
-
-    group.append('text')
-        .text((d, i) => `${i + 1}`)
-        .style('font-size', xLabelFontSize)
-        .style('text-anchor', 'end')
-        .attr('transform', `translate(${xLabelTX}, ${xLabelTY}) rotate(270)`);
+    // const xLabelFontSize = 20;
+    // const xLabelTX = (colWidth / 2) + (xLabelFontSize / 3);
+    // const xLabelTY = svgLetterHeight + 10;
+    //
+    // group.append('text')
+    //     .text((d, i) => `${i + 1}`)
+    //     .style('font-size', xLabelFontSize)
+    //     .style('text-anchor', 'end')
+    //     .attr('transform', `translate(${xLabelTX}, ${xLabelTY}) rotate(270)`);
 
     /*
     * For each column (group):
@@ -361,18 +416,22 @@ function entryPoint(logoSelector, PWM, d3, alignmentCoordinate, firstCoordinate,
         .attr('d', d => getLetterPath(d[2], strand))
         .style('fill', d => lookupBaseColor(d[2]))
         /* eslint-disable func-names */
-        .attr('transform', function (d) { return calcPathTransform(this, d, yscale, colWidth); }); // This line cannot be an arrow function or 'this' will be improperly assigned
+        .attr('transform', function (d) {
+            return calcPathTransform(this, d, yscale, colWidth);
+        }); // This line cannot be an arrow function or 'this' will be improperly assigned
 
-    // append red box around search coordinate position
-    svg.append('rect')
-        .attr('y', '-1px')
-        .attr('x', '-1px')
-        .attr('width', `${(svgLetterWidth / m)}px`)
-        .attr('height', `${svgFullHeight + 2}px`)
-        .attr('stroke', '#c13b42')
-        .attr('fill', 'none')
-        .attr('stroke-width', '4px')
-        .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
+    if (!reference) {
+        // append red box around search coordinate position
+        svg.append('rect')
+            .attr('y', '-1px')
+            .attr('x', '-1px')
+            .attr('width', `${(svgLetterWidth / m)}px`)
+            .attr('height', `${(svgFullHeight - 20)}px`)
+            .attr('stroke', '#c13b42')
+            .attr('fill', 'none')
+            .attr('stroke-width', '4px')
+            .attr('transform', `translate(${xscale(alignmentIndex)},0)`);
+    }
 }
 
 module.exports.entryPoint = entryPoint;

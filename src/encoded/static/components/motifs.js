@@ -1,7 +1,7 @@
 import React from 'react';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
-// import * as logos from '../libs/d3-sequence-logo'; // This is for local development when changes are needed to d3-sequence-logo.
+import * as logos from '../libs/d3-sequence-logo';
 
 // Convert PWM file into JavaScript object
 // Input "str" consists of PWM file
@@ -87,8 +87,7 @@ export class MotifElement extends React.Component {
     componentDidMount() {
         require.ensure(['d3', 'd3-sequence-logo'], (require) => {
             this.d3 = require('d3');
-            // this.sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
-            this.sequenceLogos = require('d3-sequence-logo');
+            this.sequenceLogos = logos;
             const pwmLink = this.generatePWMLink();
             this.mounted = true;
 
@@ -150,7 +149,7 @@ export class MotifElement extends React.Component {
         }
 
         // Generate the logo from the PWM object
-        this.sequenceLogos.entryPoint(this.chartdisplay, newPWM, this.d3, alignmentCoordinate, this.props.alignedStartCoordinate, this.props.alignedEndCoordinate, strand);
+        this.sequenceLogos.entryPoint(this.chartdisplay, newPWM, this.d3, alignmentCoordinate, this.props.alignedStartCoordinate, this.props.alignedEndCoordinate, strand, false);
     }
 
     render() {
@@ -158,12 +157,27 @@ export class MotifElement extends React.Component {
         const targetList = element.targets;
         const footprintList = {};
         const pwmList = {};
+
+        /*
+        Element {
+            accessions [ ID ]
+            biosamples [ Label ]
+            datasets [ URL ]
+        }
+        */
         element.datasets.forEach((d, dIndex) => {
+            // (URL, Index)
+
             const biosample = element.biosamples[dIndex];
+            // biosample: Label
             const accession = element.accessions[dIndex];
+            // accession: ID
+            // So for a dataset d, we get the Label and ID corresponding to the same index we are at now
             if (biosample !== undefined) {
+                // If we have a biosample, then we map Label -> URL into `footprintList`
                 footprintList[biosample] = d;
             } else {
+                // If we don't have a biosample, then map Label -> URL into `pwmList`
                 pwmList[accession] = d;
             }
         });
@@ -174,39 +188,81 @@ export class MotifElement extends React.Component {
 
         const targetListLabel = (targetList.indexOf(',') !== -1) ? 'Targets' : 'Target';
         const pwmsLabel = (pwmsLength > 1 || pwmsLength === 0) ? 'PWMs' : 'PWM';
-        const footprintsLabel = (footprintsLength > 1 || footprintsLength === 0) ? 'Footprints' : 'Footprint';
+        const footprintsLabel = (footprintsLength > 1 || footprintsLength === 0) ? `Footprints (${footprintsLength})` : 'Footprint';
+        
+        const targetComponent = (
+            <React.Fragment>
+                {targetList.length > 0 && (
+                    <div className='label-value-pair'>
+                        {targetListLabel} &nbsp; <div className='value'>{targetList}</div>
+                    </div>
+                )}
+            </React.Fragment>
+        );
+
+        const strandComponent = (
+            <React.Fragment>
+                {element.strand && (
+                    <React.Fragment>
+                        Strand <i className={`icon ${element.strand === '+' ? 'icon-plus-circle' : 'icon-minus-circle'}`} />
+                    </React.Fragment>
+                )}
+            </React.Fragment>
+        )
+
+        // This is the pwm component if this.props.shortened is not true
+        const pwmComponentLong = (
+            <React.Fragment>
+                {pwmsLength > 0 && (
+                    <React.Fragment>
+                        <span>{pwmsLabel}</span> &nbsp; 
+                        {Object.keys(pwmList).map((d, dIndex) => <a key={d} href={pwmList[d]}>{d}{dIndex === (Object.keys(pwmList).length - 1) ? '' : ', '}</a>)}
+                    </React.Fragment>
+                )}
+            </React.Fragment>
+        )
+
+        // This is the pwm component if this.props.shortened is true
+        const pwmComponentShort = (
+            <React.Fragment>
+                {pwmsLength} {pwmsLabel}
+            </React.Fragment>
+        )
+
+        // Combining the two previous into the ternary, we'll use the short if
+        // this.props.shortned is true, and use the long if not shortened
+        const pwmComponent = (
+            <React.Fragment>
+                {this.props.shortened ? pwmComponentShort : pwmComponentLong}
+            </React.Fragment>
+        )
 
         return (
             <div className="element" id={`element${element.pwm}`}>
                 <div className={`motif-description ${this.props.shortened ? 'shortened-description' : ''}`}>
-                    {(targetList.length > 0) ?
-                        <p><span className="motif-label">{targetListLabel}</span>{targetList}</p>
-                    : null}
-                    {element.strand ?
-                        <p><span className="motif-label">Strand</span><i className={`icon ${element.strand === '+' ? 'icon-plus-circle' : 'icon-minus-circle'}`} /></p>
-                    : null}
+                    <div className="motif-label-row">
+                        <div className="motif-label-col">{targetComponent}</div> 
+                        <div className="motif-label-col">{strandComponent}</div>
+                        <div className="motif-label-col">{pwmComponent}</div>
+                    </div>
+
                     {element.description && !(this.props.shortened) ?
                         <p><span className="motif-label">Description</span>{element.description}</p>
                     : null}
                     {!(this.props.shortened) ?
                         <React.Fragment>
                             {(footprintsLength > 0) ?
-                                <p>
-                                    <span className="motif-label">{footprintsLabel}</span>
-                                    {footprintKeysSorted.map((d, dIndex) => <a key={d} href={footprintList[d]}>{d}{dIndex === (footprintsLength - 1) ? '' : ', '}</a>)}
-                                </p>
-                            : null}
-                            {(pwmsLength > 0) ?
-                                <p>
-                                    <span className="motif-label">{pwmsLabel}</span>
-                                    {Object.keys(pwmList).map((d, dIndex) => <a key={d} href={pwmList[d]}>{d}{dIndex === (Object.keys(pwmList).length - 1) ? '' : ', '}</a>)}
-                                </p>
+                                <div className='footprint'>
+                                    <span className='motif-label'>{footprintsLabel}</span>
+                                    <div className={`scrollable-list ${footprintsLength > 3 ? 'shading' : ''}`}>
+                                        {footprintKeysSorted.map(d => <div key={d}><a href={footprintList[d]}>{d}</a></div>)}
+                                    </div>
+                                </div>
                             : null}
                         </React.Fragment>
                     :
                         <React.Fragment>
                             <p>{footprintsLength} {footprintsLabel}</p>
-                            <p>{pwmsLength} {pwmsLabel}</p>
                             {(footprintsLength > 0) ?
                                 <p className="motifs-list">
                                     <span className="motif-label">{footprintsLabel}</span>
@@ -238,9 +294,19 @@ MotifElement.contextTypes = {
 };
 
 export const Motifs = (props) => {
+    const [d3lib, setD3Lib] = React.useState(null);
+    const refToReference = React.useRef(null);
+    const refContainer = React.useRef(null);
+    const tableTop = React.useRef(null);
+    const refPlaceholder = React.useRef(null);
+
     const results = props.context['@graph'];
     const limit = +props.limit;
     const classList = props.classList;
+
+    const coordinates = props.context.query_coordinates[0]
+    const alignmentCoordinate = +coordinates.split(':')[1].split('-')[0];
+
 
     // Filter results to find ones with PWM data
     const pwmLinkListFull = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
@@ -285,6 +351,59 @@ export const Motifs = (props) => {
         alignedEndCoordinate = Math.max(p.end, alignedEndCoordinate);
     });
 
+    // trimming the reference sequence to widest window of pwms
+    const referenceLength = alignedEndCoordinate - alignedStartCoordinate;
+    const referenceStart = alignedStartCoordinate - props.context.sequence.start;
+    const referenceSequence = props.context.sequence.sequence.slice(referenceStart, referenceStart + referenceLength);
+
+    const trackScrolling = () => {
+        if (tableTop && tableTop.current && refContainer && refContainer.current && refPlaceholder && refPlaceholder.current) {
+            if (tableTop.current.getBoundingClientRect().top <= 27) {
+                refContainer.current.classList.add('fixed-position');
+                refPlaceholder.current.setAttribute('style', `height:${refContainer.current.getBoundingClientRect().height}px`);
+            } else {
+                refContainer.current.classList.remove('fixed-position');
+                refPlaceholder.current.setAttribute('style', 'width:0px');
+            }
+        }
+    };
+
+    React.useEffect(() => {
+        if (limit === 0) {
+            document.addEventListener('scroll', trackScrolling);
+        }
+
+        // drawing reference sequence as a pwm so it lines up with the others
+        require.ensure(['d3', 'd3-sequence-logo'], (require) => {
+            setD3Lib(require('d3'));
+            const sequenceLogos = logos; // This is for local development when changes are needed to d3-sequence-logo.
+
+            const refSeq = referenceSequence.split('');
+            const fakePWM = [];
+
+            refSeq.forEach((nucleotide) => {
+                const maxHeight = 1000;
+                if (nucleotide === 'A') {
+                    fakePWM.push([maxHeight, 0, 0, 0]);
+                } else if (nucleotide === 'C') {
+                    fakePWM.push([0, maxHeight, 0, 0]);
+                } else if (nucleotide === 'G') {
+                    fakePWM.push([0, 0, maxHeight, 0]);
+                } else {
+                    fakePWM.push([0, 0, 0, maxHeight]);
+                }
+            });
+
+            if (d3lib) {
+                sequenceLogos.entryPoint(refToReference.current, fakePWM, d3lib, alignmentCoordinate, alignedStartCoordinate, referenceStart, '+', true);
+            }
+
+            return () => {
+                document.removeEventListener("scroll", trackScrolling);
+            }
+        });
+    }, [d3lib, referenceSequence, limit, refToReference, alignmentCoordinate, alignedStartCoordinate, referenceStart, trackScrolling]);
+
     return (
         <React.Fragment>
             {(pwmLinkList.length === 0) ?
@@ -300,8 +419,20 @@ export const Motifs = (props) => {
                     {(limit > 0) ?
                         <div className="motif-count">(<b>{groupedListMapped.length}</b> results)</div>
                     : null}
-                    <div className={`sequence-logo-table ${classList}`}>
+                    <div className={`sequence-logo-table ${classList}`} ref={tableTop}>
                         <div className="sequence-logo">
+                            {limit === 0 ?
+                                <React.Fragment>
+                                    <div className="reference-sequence element" ref={refContainer} >
+                                        <div className="motif-description reference-sequence">
+                                            {props.context.assembly} Reference
+                                            <div className="sub-text">{alignedStartCoordinate + 1}-{alignedEndCoordinate}</div>
+                                        </div>
+                                        <div ref={refToReference} className="motif-element" />
+                                    </div>
+                                    <div className="placeholder-element" ref={refPlaceholder} />
+                                </React.Fragment>
+                            : null}
                             {pwmLinkList.map(d =>
                                 <MotifElement
                                     key={d.pwm}
