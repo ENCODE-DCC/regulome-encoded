@@ -1016,9 +1016,8 @@ export class RegulomeSearch extends React.Component {
                                             <GenomeBrowser
                                                 key={this.state.includedFiles.length}
                                                 fixedHeight={this.state.multipleBrowserPages}
-                                                extraFiles={this.state.includedFiles}
-                                                expanded
                                                 files={this.state.includedFiles}
+                                                expanded
                                                 assembly={this.state.genome}
                                                 coordinates={coordinates}
                                                 selectedFilters={this.state.selectedFilters}
