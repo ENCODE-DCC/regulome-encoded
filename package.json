@@ -66,6 +66,7 @@
     "cookie-monster": "0.0.7",
     "create-react-class": "^15.5.2",
     "d3": "^5.7.0",
+    "d3-sequence-logo": "https://github.com/ENCODE-DCC/d3-sequence-logo.git",
     "domready": "^0.3.0",
     "form-serialize": "^0.6.0",
     "genome-visualizer": "https://github.com/ENCODE-DCC/valis-hpgv.git#1.10.0",
