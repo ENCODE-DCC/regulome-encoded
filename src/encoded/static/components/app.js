@@ -19,8 +19,8 @@ const portal = {
             id: 'data',
             title: 'Data',
             children: [
-                { id: 'experiments', title: 'Experiments', url: 'https://www.encodeproject.org/search/?type=Experiment&internal_tags=RegulomeDB_2_0' },
-                { id: 'annotations', title: 'Annotations', url: 'https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_0' },
+                { id: 'experiments', title: 'Experiments', url: 'https://www.encodeproject.org/search/?type=Experiment&internal_tags=RegulomeDB_2_1' },
+                { id: 'annotations', title: 'Annotations', url: 'https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1' },
             ],
         },
         {
