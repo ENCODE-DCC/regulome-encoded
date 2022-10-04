@@ -21,8 +21,8 @@ function onClick(e) {
 const RegulomeHelp = () => (
     <div className="richtextblock">
         <h1 className="page-title">Help</h1>
-        <p>RegulomeDB is a database that provides functional context to variants or regions of interest and serves as a tool to prioritize functionally important single nucleotide variants (SNVs) located within the non-coding regions of the human genome. RegulomeDB queries any given variant by intersecting its position with the genomic intervals that were identified to be functionally active regions from the computational analysis outputs of functional genomic assays such as TF ChIP-seq and DNase-seq (from ENCODE database) as well as those overlapping the DNase footprints and QTL data.</p>
-        <p>All the backend data sources used in RegulomeDB v2.1 can be found on the ENCODE website using these two links under the Data button at the top of the page: <a href="https://www.encodeproject.org/search/?type=Experiment&internal_tags=RegulomeDB_2_1">Experiments</a> and <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1">Annotations</a>. RegulomeDB also provides further information about those hits by incorporating them into prediction scores, thereby, providing a way to interpret the probability of these variants to be of real functional significance.</p>
+        <p>RegulomeDB is a database that provides functional context to variants or regions of interest and serves as a tool to prioritize functionally important single nucleotide variants (SNVs) located within the non-coding regions of the human genome. RegulomeDB queries any given variant by intersecting its position with the genomic intervals that were identified to be functionally active regions from the computational analysis outputs of functional genomic assays such as TF ChIP-seq and DNase-seq (from the ENCODE database) as well as those overlapping the DNase footprints and QTL data.</p>
+        <p>All the source data used in RegulomeDB v2.1 can be found on the ENCODE website using these two links under the Data button at the top of the page: <a href="https://www.encodeproject.org/search/?type=Experiment&internal_tags=RegulomeDB_2_1">Experiments</a> and <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1">Annotations</a>. RegulomeDB also provides further information about those hits by incorporating them into prediction scores, thereby, providing a way to interpret the probability of these variants to be of real functional significance.</p>
         <h3>Querying variants with RegulomeDB</h3>
         <p>Users can submit queries to the RegulomeDB database in the following formats (Note: one can toggle between the hg19 and GRCh38 coordinates using the toggle button above the search box):</p>
             <ol>
@@ -54,10 +54,11 @@ const RegulomeHelp = () => (
             <img src="/static/img/help_page_screenshots/section_1_ChIP.jpg"/>
             </div>
             
-            <li><b>DNase accessibility:</b> This section provides the users with a bar plot graphical representation showing the number of times the variant was found to be within DNAse-seq peaks assayed using each biosample including different donors and treatment conditions.</li>
+            <li><b>DNase accessibility:</b> This section provides the users with a bar plot graphical representation showing the number of times the variant was found to be within DNAse-seq peaks assayed using each biosample.</li>
             <ul>
-                <li>Each of the bars on the bar plot can be further expanded to view the underlying data table by clicking on it or by using the drop down array key next to the text.</li>
+                <li>Each of the bars on the bar plot can be further expanded to view the underlying data table by clicking the title to the left of each bar.</li>
                 <li>Just like the ChIP data page, users can click on the hyperlinked ENCFF (file ids) or ENCSR (dataset ids) and that leads them to the corresponding ENCODE pages showing further metadata of the file or dataset information.</li>
+                <li>Note: in cases where we have more than one biosample DNase peak, they are not necessarily redundant. The DNase-seq samples can be derived from different donors and different treatment conditions. One could explore the exact underlying metadata by looking on the dataset linkouts to the ENCODE portal.</li>
             </ul>
             <div className="image-align-center">
             <img src="/static/img/help_page_screenshots/section_2_DNase.jpg"/>
@@ -65,10 +66,11 @@ const RegulomeHelp = () => (
             
             <li><b>TF motifs & DNase footprints:</b> This page provides information regarding the position weighted matrices (PWMs) representing TF motifs and matching with the sequence overlapping the variant of interest, as well as DNase footprints information that intersected with the variant of interest.</li>
             <ul>
-                <li>We provide a list of biosamples that were the source files for DNAse-seq peak files used in the TRACE pipeline for predicting the footprints. (See how TF motifs and DNase footprints are computed in <a href="#FAQ">FAQ</a>.)</li>
-                <li>The biosamples list is hyperlinked to the corresponding ENCODE annotation filesets that contain the TRACE output files in the bed format. The ENCODE page also provides information about the exact input file used for the TRACE pipeline.</li>
+                <li>We provide a list of biosamples that were the source files for DNAse-seq peak files used in the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline for predicting the footprints. (See how TF motifs and DNase footprints are computed in <a href="#FAQ">FAQ</a>.)</li>
+                <li>The biosamples list is hyperlinked to the corresponding ENCODE annotation filesets that contain the TRACE output files in the bed format. The ENCODE page also provides information about the exact DNA accessibility file used for the TRACE pipeline.</li>
                 <li>Similarly the PWM file (when available) is also listed as a hyperlinked ENCFF id above the biosamples list box and can be further explored on the ENCODE website.</li>
                 <li>The exact genome reference region that overlaps with all the output motifs is represented on the top section along with a “boxed” letter that represents the variant of interest.</li>
+                <li>Each query could match a footprint (sometimes with no significant PWM score), or match the PWM itself outside of a footprint.</li>
             </ul>
             <div className="image-align-center">
             <img src="/static/img/help_page_screenshots/section_3_motifs.jpg"/>
@@ -76,8 +78,8 @@ const RegulomeHelp = () => (
             
             <li><b>eQTLs & caQTLs (chromatin accessibility QTLs):</b> The tables in this section show the information of eQTL and caQTL studies where the query variant is identified to be associated with gene expression levels and chromatin accessibility. </li>
             <ul>
-                <li>The caQTL data comes from curated publications and has been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=caQTLs">ENCODE portal</a>.</li>
-                <li>The eQTL data comes from the GTEx project and has also been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=eQTLs">ENCODE portal</a>.</li>
+                <li>The caQTL data comes from curated publications, viewable at <a href="https://www.encodeproject.org/report/?type=Publication&notes=*&field=%40id&field=title&field=identifiers&field=notes">ENCODE portal</a>.</li>
+                <li>The eQTL data comes from the <a href="https://pubmed.ncbi.nlm.nih.gov/32913098/">GTEx</a> project (<a href="https://storage.googleapis.com/gtex_analysis_v8/single_tissue_qtl_data/GTEx_Analysis_v8_eQTL.tar">GTEx_Analysis_v8_eQTL.tar</a>) and has also been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=eQTLs">ENCODE portal</a>.</li>
                 <li>The corresponding ENCODE file ids and their corresponding dataset ids are also listed on the table and hyperlinked for further exploration.</li>
                 <li>The biosample information and population ethnicity information (when available)  are also listed on the caQTL table and correspond to the original biosample information used for that study in the publication.</li>
                 <li>Example: <a href="https://beta.regulomedb.org/regulome-search/?regions=chr10:11699181-11699182&genome=GRCh38/thumbnail=qtl">rs75982468</a> has both biosample and population information that comes from the publication listed here: <a href="https://www.encodeproject.org/publications/7be44d09-ae33-43af-9af2-dad1df6b0d1e/">PMID:30650056</a>.</li>
@@ -89,9 +91,9 @@ const RegulomeHelp = () => (
             <li><b>Chromatin states:</b></li>
             <ul>
                 <li>This section shows predicted chromatin states from <a href="https://www.encodeproject.org/search/?type=Annotation&annotation_type=chromatin+state&status=released">chromHMM</a>.</li>
-                <li>The variant positions are intersected with those chromatin states and displayed in an elegant way on an interactive human body map as well as in a tabular representation.</li>
+                <li>The variant positions are intersected with those chromatin states and displayed on an interactive human body map as well as in a tabular representation.</li>
                 <li>The body map is colored by the most active state among all biosamples in each organ. Thus, it shows the users a pictorial representation of candidate organs where the query variant is likely to be functional and within different categories of regulatory elements.</li>
-                <li>For example if the variant is within an active enhancer region for that biosample, it might lead to changes in the gene expression that is regulated by that enhancer.</li>
+                <li>For example, if the variant is within an active enhancer region for that biosample, it might lead to changes in the gene expression that is regulated by that enhancer.</li>
                 <li>Users can use the body map diagram to filter down the search results to display only a few organs of interest. Users can also filter the search results using the list of biosamples or the various chromatin states that are listed on the panels next to the body map.</li>
                 <li>The tabular view below provides further details on the biosample, classification, organ as well as the source ENCODE datasets and files (hyperlinked to ENCODE for further metadata exploration).</li>
             </ul>
@@ -101,9 +103,9 @@ const RegulomeHelp = () => (
 
             <li><b>Genome browser:</b> Users can explore the nearby genes of the variant (shown as a yellow highlight on the browser tracks). The browser shows the tracks from TF ChIP-seq and DNase-seq assays with overlapping peaks of the variant.</li>
             <ul>
-                <li>Users can use the “Refine your search” modal located above the browser tracks to further narrow down the list of tracks as needed.</li>
-                <li>This modal allows users to select from a variety of faceting options. For example, users can filter down the browser tracks displayed in the browser using the file types (bigWig or bigBed), dataset types (ChIP-seq or DNAse-seq), organ or cell type, biosamples as well as the targets used in respective ChIP-seq assays.</li>
-                <li>Users can also expand the track information section located on the section using the expand button on the lower right. This expanded view allows the users to see the underlying ENCODE file and ENCODE dataset (both of which are hyperlinked to the respective ENCODE pages).</li>
+                <li>Users can use the “Refine your search” interface located above the browser tracks to further narrow down the list of tracks as needed.</li>
+                <li>This interface allows users to select from a variety of faceting options. For example, users can filter down the browser tracks displayed in the browser using the file types (bigWig or bigBed), dataset types (ChIP-seq or DNAse-seq), organ or cell type, biosamples as well as the targets used in respective ChIP-seq assays.</li>
+                <li>Users can also expand the track information section using the expand button on the lower right corner of each track. This expanded view allows the users to see the underlying ENCODE file and ENCODE dataset (both of which are hyperlinked to the respective ENCODE pages).</li>
             </ul>
             <div className="image-align-center">
             <img src="/static/img/help_page_screenshots/section_6_browser.jpg"/>
@@ -213,7 +215,7 @@ const RegulomeHelp = () => (
                 <p><em>TF motifs</em><br /> PWM matching positions from 746 motifs in <a href="https://jaspar2020.genereg.net/downloads/">JASPAR 2020 CORE collection</a> for vertebrates.</p>
                 <p><em>DNase footprints</em><br /> Footprints were predicted with signals from 642 DNase-seq experiments and 591 TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline.</p>
                 <p><em>eQTLs</em><br /> The eQTLs from the <a href="https://gtexportal.org/home/datasets">GTEx</a> project across 49 human tissues.</p>
-                <p><em>caQTLs</em><br /> The chromatin accessibility QTLs (caQTLs) from <a href="https://www.encodeproject.org/report/?type=Annotation&annotation_type=caQTLs&field=references.identifiers&field=accession&field=description">9 publications</a>.</p>
+                <p><em>caQTLs</em><br /> The chromatin accessibility QTLs (caQTLs) from <a href="https://www.encodeproject.org/report/?type=Publication&notes=*&field=%40id&field=title&field=identifiers&field=notes">9 publications</a>.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq5-question">
