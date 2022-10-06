@@ -522,7 +522,7 @@ class GenomeBrowser extends React.Component {
                 trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
                 trackObj.longname = <TrackLabel file={file} assembly={this.props.assembly} long />;
                 trackObj.type = 'signal';
-                trackObj.path = file.cloud_metadata.url;
+                trackObj.path = file.cloud_metadata_url;
                 trackObj.heightPx = 50;
                 trackObj.expandable = true;
                 return trackObj;
@@ -567,7 +567,7 @@ class GenomeBrowser extends React.Component {
             const trackObj = {};
             trackObj.name = <TrackLabel file={file} assembly={this.props.assembly} />;
             trackObj.type = 'annotation';
-            trackObj.path = file.cloud_metadata.url;
+            trackObj.path = file.cloud_metadata_url;
             trackObj.expandable = true;
             trackObj.longname = <TrackLabel file={file} assembly={this.props.assembly} long />;
             // bigBed bedRNAElements, bigBed peptideMapping, bigBed bedExonScore, bed12, and bed9 have two tracks and need extra height

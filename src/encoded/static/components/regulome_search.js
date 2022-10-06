@@ -6,7 +6,6 @@ import * as globals from './globals';
 import { SortTablePanel, SortTable } from './sorttable';
 import { Motifs } from './motifs';
 import { BarChart, ChartList, lookupChromatinNames } from './visualizations';
-import { requestSearch } from './objectutils';
 import GenomeBrowser from './genome_browser';
 import NearbySNPsDrawing from './snps_diagram';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../libs/bootstrap/modal';
@@ -15,8 +14,6 @@ import { ChromatinView } from './chromatin_view';
 
 const screenMediumMax = 787;
 const screenSmallMax = 483;
-
-const fieldsToSave = '&field=cloud_metadata.url&field=title&field=href&field=path&field=file_format_type&field=dataset&field=biosample_ontology.term_name&field=target&field=file_format&field=biosample_ontology.organ_slims&field=biosample_ontology.cell_slims&field=assay_term_name&field=biological_replicates';
 
 // Define facets parameters
 const facetParameters = [
@@ -118,7 +115,7 @@ const dataColumnsChromatin = {
     },
 };
 
-//split QTL data & show different columns
+// split QTL data & show different columns
 
 const dataColumnseQTL = {
     method: {
@@ -169,7 +166,7 @@ const dataColumnscaQTL = {
     file: {
         title: 'File',
         display: item => <a href={`https://encodeproject.org//files/${item.file}/`}>{item.file}</a>,
-    }
+    },
 };
 
 const dataColumnsQTLShort = {
@@ -179,7 +176,7 @@ const dataColumnsQTLShort = {
     biosample_term_name: {
         title: 'Biosample',
         getValue: item => (item.biosample_ontology ? item.biosample_ontology.term_name : ''),
-    }
+    },
 };
 
 const dataColumnsChip = {
@@ -493,7 +490,7 @@ export const ResultsTable = (props) => {
         <React.Fragment>
             {data.length > 0 ?
                 <SortTablePanel title="Results">
-                    <SortTable list={data} columns={dataColumns} maxRows={maxRows} title={displayTitle}/>
+                    <SortTable list={data} columns={dataColumns} maxRows={maxRows} title={displayTitle} />
                 </SortTablePanel>
             :
                 <table className="table table-sortable table-panel">
@@ -527,17 +524,6 @@ ResultsTable.defaultProps = {
     shortened: false,
 };
 
-const appendDatasetsToQuery = (query, chunkDatasets) => {
-    let searchQuery = query;
-    chunkDatasets.forEach((d) => {
-        const dataset = d.dataset_rel;
-        searchQuery += `&dataset=${dataset}`;
-    });
-    return searchQuery;
-};
-
-// size of each query (how many datasets)
-const chunkSize = 12;
 // number of files to display on genome browser
 const displaySize = 20;
 // Default number of populations to display for allele frequencies.
@@ -557,30 +543,6 @@ const populationOrder = [
     'PAGE_STUDY',
     'source unknown',
 ];
-
-const loadData = searchQuery => new Promise(((ok) => {
-    requestSearch(searchQuery).then((results) => {
-        const newFiles = (results && results['@graph']) ? results['@graph'] : [];
-        ok(newFiles);
-    });
-}));
-
-const chunkingDataset = (requests, startIdxWrapper, endIdxWrapper, datasets, baseQuery) => {
-    // iterate over queries
-    const promiseList = [];
-    for (let chunkIdx = startIdxWrapper; chunkIdx < endIdxWrapper; chunkIdx += 1) {
-        // subset of datasets for the query
-        const startIdx = chunkIdx * chunkSize;
-        const endIdx = (chunkIdx + 1) * chunkSize;
-        let chunkDatasets = [];
-        chunkDatasets = datasets.slice(startIdx, endIdx);
-        // this is the query
-        const searchQuery = appendDatasetsToQuery(baseQuery, chunkDatasets);
-        // add results of query to full array of results
-        promiseList.push(loadData(searchQuery));
-    }
-    return promiseList;
-};
 
 export class RegulomeSearch extends React.Component {
     constructor(props) {
@@ -621,22 +583,7 @@ export class RegulomeSearch extends React.Component {
         if (this.context.location_href.split('/thumbnail=')[1] === 'valis') {
             this.chooseThumbnail('valis');
         }
-        // the goal is to pick 1 each bigWig and bigBed file per experiment, with the following output types and replicate numbers for the different assays:
-        // DNase → peaks, read-depth normalized signal (rep1)
-        // ChIP → peaks and background as input for IDR, signal p-value (rep1,2) or rep1
-        // FAIRE → peaks, signal
-        // we start by collecting all files that satisfy these conditions
-        if (this.state.genome === 'hg19') {
-            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&assembly=hg19&preferred_default=true&sort=dataset&limit=all&${fieldsToSave}`;
-            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&assembly=hg19&preferred_default=true&sort=dataset&limit=all&${fieldsToSave}`;
-            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&assembly=hg19&preferred_default=true&sort=dataset&limit=all&${fieldsToSave}`;
-            this.loadValisData(chipBaseQuery, dnaseBaseQuery, faireBaseQuery);
-        } else {
-            const chipBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
-            const dnaseBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&sort=dataset&status!=revoked&status!=deleted&preferred_default=true&analyses.status=released&limit=all&${fieldsToSave}`;
-            const faireBaseQuery = `type=File&assembly=${this.state.genome}&file_format=bigBed&file_format=bigWig&output_type=peaks&output_type=signal&sort=dataset&status!=revoked&status!=deleted&limit=all&${fieldsToSave}`;
-            this.loadValisData(chipBaseQuery, dnaseBaseQuery, faireBaseQuery);
-        }
+        this.loadValisData();
     }
 
 
@@ -752,76 +699,51 @@ export class RegulomeSearch extends React.Component {
         }
     }
 
- 
-    loadValisData(chipBaseQuery, dnaseBaseQuery, faireBaseQuery) {
+    loadValisData() {
         if (this.state.filteredFiles.length < 1 && this.props.context['@graph']) {
             // Valis tab requires additional queries, unlike other tabs, in order to collect all the visualizable files corresponding to the SNP datasets
             // there can be a lot of datasets to query for visualizable files so we are going to do it in chunks
             const duplicatedExperimentDatasets = this.props.context['@graph'].filter(d => d.dataset.includes('experiment'));
             // for some reason we are getting duplicates here so we need to filter those out
             const experimentDatasets = _.uniq(duplicatedExperimentDatasets, d => d.dataset);
-            // each query corresponds to a promise and 'requests' keeps track of whether the query has successfully returned data
-            const requests = [];
-            // in order to append dataset information to file data, we generate lookups for biosample, assay, and target list by dataset
-            const biosampleMap = {};
-            const assayMap = {};
-            const targetMap = {};
-            const organMap = {};
+            experimentDatasets.sort((a, b) => ((a.method > b.method) ? 1 : -1));
+            // genome browser files
+            let filesForGenomeBrowser = [];
             experimentDatasets.forEach((dataset) => {
-                biosampleMap[dataset.dataset] = dataset.biosample_ontology.term_name || '';
-                assayMap[dataset.dataset] = dataset.method || '';
-                targetMap[dataset.dataset] = dataset.targets ? dataset.targets.join(', ') : '';
-                organMap[dataset.dataset] = (dataset.biosample_ontology.classification === 'tissue') ? dataset.biosample_ontology.organ_slims.join(', ') : dataset.biosample_ontology.cell_slims.join(', ');
+                const files = dataset.files_for_genome_browser;
+                // eslint-disable-next-line no-plusplus
+                for (let i = 0; i < files.length; i++) {
+                    files[i].assay_term_name = dataset.method;
+                    files[i].biosample_ontology = dataset.biosample_ontology;
+                    files[i].file_format = files[i].href.split('.')[1];
+                    files[i].dataset = dataset.dataset_rel;
+                    files[i].title = files[i].accession;
+                    files[i].target = dataset.targets ? dataset.targets.join(', ') : '';
+                    files[i].biosample = dataset.biosample_ontology.term_name || '';
+                    files[i].assay = dataset.method || '';
+                    files[i].organ = (dataset.biosample_ontology.classification === 'tissue') ? dataset.biosample_ontology.organ_slims.join(', ') : dataset.biosample_ontology.cell_slims.join(', ');
+                }
+                filesForGenomeBrowser = filesForGenomeBrowser.concat(dataset.files_for_genome_browser);
             });
-            // we have to construct queries for files corresponding to ChIP-seq, DNase-seq, and FAIRE-seq datasets separately because we want different files for each
-            const chipDatasets = experimentDatasets.filter(d => d.method === 'ChIP-seq');
-            const dnaseDatasets = experimentDatasets.filter(d => d.method === 'DNase-seq');
-            const faireDatasets = experimentDatasets.filter(d => d.method === 'FAIRE-seq');
-            // how many queries we need to run based on number of datasets per query
-            const numChipChunks = Math.ceil(Object.keys(chipDatasets).length / chunkSize);
-            const numDnaseChunks = Math.ceil(Object.keys(dnaseDatasets).length / chunkSize);
-            const numFaireChunks = Math.ceil(Object.keys(faireDatasets).length / chunkSize);
 
-            // cannot query all datasets at once (query string is too long), so we need to construct series of queries with a reasonable number of datasets each
-            // we construct an array of Promises for all the queries
-            const chipPromises = chunkingDataset(requests, 0, numChipChunks, chipDatasets, chipBaseQuery);
-            const dnasePromises = chunkingDataset(requests, 0, numDnaseChunks, dnaseDatasets, dnaseBaseQuery);
-            const fairePromises = chunkingDataset(requests, 0, numFaireChunks, faireDatasets, faireBaseQuery);
-            const allPromises = [...chipPromises, ...dnasePromises, ...fairePromises];
-
-            Promise.all(allPromises)
-                .then((results) => {
-                    this.setState({ allFiles: results.flat() }, () => {
-                        // sort by dataset
-                        const sortedFiles = _.sortBy(this.state.allFiles, obj => obj.dataset);
-                        sortedFiles.forEach((d) => {
-                            const fileDataset = `https://www.encodeproject.org${d.dataset}`;
-                            d.biosample = biosampleMap[fileDataset];
-                            d.assay = assayMap[fileDataset];
-                            d.target = targetMap[fileDataset];
-                            d.organ = organMap[fileDataset];
-                        });
-                        // if there are more filtered files than we want to display on one page, we will paginate
-                        if (sortedFiles.length > displaySize) {
-                            const includedFiles = sortedFiles.slice(0, displaySize);
-                            const browserTotalPages = Math.ceil(sortedFiles.length / displaySize);
-                            this.setState({
-                                allFiles: sortedFiles,
-                                includedFiles,
-                                filteredFiles: sortedFiles,
-                                multipleBrowserPages: true,
-                                browserTotalPages,
-                                browserCurrentPage: 1,
-                            });
-                        } else {
-                            this.setState({
-                                allFiles: sortedFiles,
-                                filteredFiles: sortedFiles,
-                                includedFiles: sortedFiles,
-                            });
-                        }
-                    });
+            if (filesForGenomeBrowser.length > displaySize) {
+                const includedFiles = filesForGenomeBrowser.slice(0, displaySize);
+                const browserTotalPages = Math.ceil(filesForGenomeBrowser.length / displaySize);
+                this.setState({
+                    allFiles: filesForGenomeBrowser,
+                    includedFiles,
+                    filteredFiles: filesForGenomeBrowser,
+                    multipleBrowserPages: true,
+                    browserTotalPages,
+                    browserCurrentPage: 1,
                 });
+            } else {
+                this.setState({
+                    allFiles: filesForGenomeBrowser,
+                    filteredFiles: filesForGenomeBrowser,
+                    includedFiles: filesForGenomeBrowser,
+                });
+            }
         }
     }
 
@@ -830,8 +752,8 @@ export class RegulomeSearch extends React.Component {
         const coordinates = context.query_coordinates[0];
         const allData = context['@graph'] || [];
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
-        const eQTLData = allData.filter(d => (d.method == 'eQTLs'));
-        const caQTLData = allData.filter(d => (d.method == 'caQTLs'));
+        const eQTLData = allData.filter(d => (d.method === 'eQTLs'));
+        const caQTLData = allData.filter(d => (d.method === 'caQTLs'));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
         const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
