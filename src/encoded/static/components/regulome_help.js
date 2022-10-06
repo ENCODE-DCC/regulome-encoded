@@ -21,7 +21,7 @@ function onClick(e) {
 const RegulomeHelp = () => (
     <div className="richtextblock">
         <h1 className="page-title">Help</h1>
-        <p>RegulomeDB is a database that provides functional context to variants or regions of interest and serves as a tool to prioritize functionally important single nucleotide variants (SNVs) located within the non-coding regions of the human genome. RegulomeDB queries any given variant by intersecting its position with the genomic intervals that were identified to be functionally active regions from the computational analysis outputs of functional genomic assays such as TF ChIP-seq and DNase-seq (from the ENCODE database) as well as those overlapping the DNase footprints and QTL data.</p>
+        <p>RegulomeDB is a database that provides functional context to variants or regions of interest and serves as a tool to prioritize functionally important single nucleotide variants (SNVs) located within the non-coding regions of the human genome. RegulomeDB queries any given variant by intersecting its position with the genomic intervals that were identified to be functionally active regions from the computational analysis outputs of functional genomic assays such as TF ChIP-seq and DNase-seq (from the ENCODE database) as well as those overlapping the footprints and QTL data.</p>
         <p>All the source data used in RegulomeDB v2.1 can be found on the ENCODE website using these two links under the Data button at the top of the page: <a href="https://www.encodeproject.org/search/?type=Experiment&internal_tags=RegulomeDB_2_1">Experiments</a> and <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1">Annotations</a>. RegulomeDB also provides further information about those hits by incorporating them into prediction scores, thereby, providing a way to interpret the probability of these variants to be of real functional significance.</p>
         <h3>Querying variants with RegulomeDB</h3>
         <p>Users can submit queries to the RegulomeDB database in the following formats (Note: one can toggle between the hg19 and GRCh38 coordinates using the toggle button above the search box):</p>
@@ -54,20 +54,20 @@ const RegulomeHelp = () => (
             <img src="/static/img/help_page_screenshots/section_1_ChIP.jpg"/>
             </div>
             
-            <li><b>DNase accessibility:</b> This section provides the users with a bar plot graphical representation showing the number of times the variant was found to be within DNAse-seq peaks assayed using each biosample.</li>
+            <li><b>Chromatin accessibility:</b> This section provides the users with a bar plot graphical representation showing the number of times the variant was found to be within peaks called from chromatin accessibility assays using each biosample.</li>
             <ul>
                 <li>Each of the bars on the bar plot can be further expanded to view the underlying data table by clicking the title to the left of each bar.</li>
                 <li>Just like the ChIP data page, users can click on the hyperlinked ENCFF (file ids) or ENCSR (dataset ids) and that leads them to the corresponding ENCODE pages showing further metadata of the file or dataset information.</li>
                 <li>Note: in cases where we have more than one biosample DNase peak, they are not necessarily redundant. The DNase-seq samples can be derived from different donors and different treatment conditions. One could explore the exact underlying metadata by looking on the dataset linkouts to the ENCODE portal.</li>
             </ul>
             <div className="image-align-center">
-            <img src="/static/img/help_page_screenshots/section_2_DNase.jpg"/>
+            <img src="/static/img/help_page_screenshots/section_2_accessibility.jpg"/>
             </div>
             
-            <li><b>TF motifs & DNase footprints:</b> This page provides information regarding the position weighted matrices (PWMs) representing TF motifs and matching with the sequence overlapping the variant of interest, as well as DNase footprints information that intersected with the variant of interest.</li>
+            <li><b>TF motifs & footprints:</b> This page provides information regarding the position weighted matrices (PWMs) representing TF motifs and matching with the sequence overlapping the variant of interest, as well as footprints information that intersected with the variant of interest.</li>
             <ul>
-                <li>We provide a list of biosamples that were the source files for DNAse-seq peak files used in the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline for predicting the footprints. (See how TF motifs and DNase footprints are computed in <a href="#FAQ">FAQ</a>.)</li>
-                <li>The biosamples list is hyperlinked to the corresponding ENCODE annotation filesets that contain the TRACE output files in the bed format. The ENCODE page also provides information about the exact DNA accessibility file used for the TRACE pipeline.</li>
+                <li>We provide a list of biosamples that were the source files for DNase-seq peak files used in the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline for predicting the footprints. (See how TF motifs and footprints are computed in <a href="#FAQ">FAQ</a>.)</li>
+                <li>The biosamples list is hyperlinked to the corresponding ENCODE annotation filesets that contain the TRACE output files in the bed format. The ENCODE page also provides information about the exact chromatin accessibility file used for the TRACE pipeline.</li>
                 <li>Similarly the PWM file (when available) is also listed as a hyperlinked ENCFF id above the biosamples list box and can be further explored on the ENCODE website.</li>
                 <li>The exact genome reference region that overlaps with all the output motifs is represented on the top section along with a “boxed” letter that represents the variant of interest.</li>
                 <li>Each query could match a footprint (sometimes with no significant PWM score), or match the PWM itself outside of a footprint.</li>
@@ -79,7 +79,7 @@ const RegulomeHelp = () => (
             <li><b>eQTLs & caQTLs (chromatin accessibility QTLs):</b> The tables in this section show the information of eQTL and caQTL studies where the query variant is identified to be associated with gene expression levels and chromatin accessibility. </li>
             <ul>
                 <li>The caQTL data comes from curated publications, viewable at <a href="https://www.encodeproject.org/report/?type=Publication&notes=*&field=%40id&field=title&field=identifiers&field=notes">ENCODE portal</a>.</li>
-                <li>The eQTL data comes from the <a href="https://pubmed.ncbi.nlm.nih.gov/32913098/">GTEx</a> project (<a href="https://storage.googleapis.com/gtex_analysis_v8/single_tissue_qtl_data/GTEx_Analysis_v8_eQTL.tar">GTEx_Analysis_v8_eQTL.tar</a>) and has also been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=eQTLs">ENCODE portal</a>.</li>
+                <li>The eQTL data comes from the <a href="https://pubmed.ncbi.nlm.nih.gov/32913098/">GTEx</a> project (<a href="https://www.gtexportal.org/home/datasets">GTEx_Analysis_v8_eQTL.tar</a>) and has also been uploaded on the <a href="https://www.encodeproject.org/search/?type=Annotation&internal_tags=RegulomeDB_2_1&annotation_type=eQTLs">ENCODE portal</a>.</li>
                 <li>The corresponding ENCODE file ids and their corresponding dataset ids are also listed on the table and hyperlinked for further exploration.</li>
                 <li>The biosample information and population ethnicity information (when available)  are also listed on the caQTL table and correspond to the original biosample information used for that study in the publication.</li>
                 <li>Example: <a href="https://beta.regulomedb.org/regulome-search/?regions=chr10:11699181-11699182&genome=GRCh38/thumbnail=qtl">rs75982468</a> has both biosample and population information that comes from the publication listed here: <a href="https://www.encodeproject.org/publications/7be44d09-ae33-43af-9af2-dad1df6b0d1e/">PMID:30650056</a>.</li>
@@ -134,19 +134,19 @@ const RegulomeHelp = () => (
                         </tr>
                         <tr>
                             <td>1a</td>
-                            <td>eQTL/caQTL + TF binding + matched TF motif + matched DNase Footprint + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + matched TF motif + matched Footprint + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>1b</td>
-                            <td>eQTL/caQTL + TF binding + any motif + DNase Footprint + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + any motif + Footprint + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>1c</td>
-                            <td>eQTL/caQTL + TF binding + matched TF motif + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + matched TF motif + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>1d</td>
-                            <td>eQTL/caQTL + TF binding + any motif + DNase peak</td>
+                            <td>eQTL/caQTL + TF binding + any motif + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>1e</td>
@@ -154,23 +154,23 @@ const RegulomeHelp = () => (
                         </tr>
                         <tr>
                             <td>1f</td>
-                            <td>eQTL/caQTL + TF binding / DNase peak</td>
+                            <td>eQTL/caQTL + TF binding / chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>2a</td>
-                            <td>TF binding + matched TF motif + matched DNase Footprint + DNase peak</td>
+                            <td>TF binding + matched TF motif + matched Footprint + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>2b</td>
-                            <td>TF binding + any motif + DNase Footprint + DNase peak</td>
+                            <td>TF binding + any motif + Footprint + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>2c</td>
-                            <td>TF binding + matched TF motif + DNase peak</td>
+                            <td>TF binding + matched TF motif + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>3a</td>
-                            <td>TF binding + any motif + DNase peak</td>
+                            <td>TF binding + any motif + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>3b</td>
@@ -178,11 +178,11 @@ const RegulomeHelp = () => (
                         </tr>
                         <tr>
                             <td>4</td>
-                            <td>TF binding + DNase peak</td>
+                            <td>TF binding + chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>5</td>
-                            <td>TF binding or DNase peak</td>
+                            <td>TF binding or chromatin accessibility peak</td>
                         </tr>
                         <tr>
                             <td>6</td>
@@ -211,20 +211,20 @@ const RegulomeHelp = () => (
                 <p>RegulomeDB currently query variants with genomic annotations from the following data types:</p>
                 <p><em>TF binding sites</em><br /> Peaks from TF (transcription factor) ChIP-seq assays called by uniform pipeline from the latest release of the ENCODE project.</p>
                 <p><em>Chromatin states</em><br /> Chromatin states in 833 biosamples were called from chromHMM in <a href="https://www.nature.com/articles/s41586-020-03145-z">EpiMap</a> and were directly retrieved from the ENCODE portal. </p>
-                <p><em>DNase peaks</em><br /> Peaks from DNase-seq assays called by uniform pipeline from the latest release of the ENCODE project.</p>
+                <p><em>Chromatin accessibility peaks</em><br /> Peaks from DNase-seq assays called by uniform pipeline from the latest release of the ENCODE project.</p>
                 <p><em>TF motifs</em><br /> PWM matching positions from 746 motifs in <a href="https://jaspar2020.genereg.net/downloads/">JASPAR 2020 CORE collection</a> for vertebrates.</p>
-                <p><em>DNase footprints</em><br /> Footprints were predicted with signals from 642 DNase-seq experiments and 591 TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline.</p>
+                <p><em>Footprints</em><br /> Footprints were predicted with signals from 642 DNase-seq experiments and 591 TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE</a> pipeline.</p>
                 <p><em>eQTLs</em><br /> The eQTLs from the <a href="https://gtexportal.org/home/datasets">GTEx</a> project across 49 human tissues.</p>
                 <p><em>caQTLs</em><br /> The chromatin accessibility QTLs (caQTLs) from <a href="https://www.encodeproject.org/report/?type=Publication&notes=*&field=%40id&field=title&field=identifiers&field=notes">9 publications</a>.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq5-question">
-                <strong><i className="icon icon-caret-right" />How are TF motifs and DNase footprints computed?</strong>
+                <strong><i className="icon icon-caret-right" />How are TF motifs and footprints computed?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq5-answer">
                 <p>For TF motifs, we downloaded the PWMs (position weight matrices) of 746 non-redundant TF motifs from the <a href="https://jaspar2020.genereg.net/downloads/">JASPAR 2020 CORE collection</a>. The kmers matching to TF motifs were called by <a href="https://github.com/j-andrews7/pytfmpval">TFM P-value</a> with a threshold at 4<sup>-8</sup> for each PWM. Bowtie was used to map the kmers on the genome to determine the final PWM matching positions for the TF motifs.</p>
-                <p>Footprints were predicted with the signals from DNase-seq experiments and the PWMs of TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE pipeline</a>. TRACE is a computational method that incorporates DNase-seq signals and PWMs within a multivariate hidden Markov model to detect footprint regions with matching motifs.</p>
-                <p>Note that TF motifs and DNase Footprints are two separate genomic annotations. TF motifs are called totally from the DNA sequence, while DNase footprints also consider signals from DNase-seq experiments and weigh less on the sequence side.</p>
+                <p>Footprints were predicted with the signals from DNase-seq experiments and the PWMs of TF motifs by the <a href="https://genome.cshlp.org/content/30/7/1040">TRACE pipeline</a>. TRACE is a computational method that incorporates signals from chromatin accessibility assays and PWMs within a multivariate hidden Markov model to detect footprint regions with matching motifs.</p>
+                <p>Note that TF motifs and Footprints are two separate genomic annotations. TF motifs are called totally from the DNA sequence, while footprints also consider signals from chromatin accessibility experiments and weigh less on the sequence side.</p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq6-question">
