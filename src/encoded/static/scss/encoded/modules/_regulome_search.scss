@@ -193,6 +193,19 @@ body {
             background: none;
         }
     }
+    .link-to-beta-regulome {
+        font-family: 'Khula', sans-serif !important;
+        font-size: 1.4rem;
+        padding: 5px 5px 0;
+        @media screen and (max-width: $screen-md-min) {
+            font-size: 1.1rem;
+            padding: 0 0 10px;
+        }
+        font-weight: bold;
+        a {
+            text-decoration: underline;
+        }
+    }
 }
 
 .btn {
