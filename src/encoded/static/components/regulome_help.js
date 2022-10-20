@@ -247,7 +247,9 @@ const RegulomeHelp = () => (
             </div>
         </div>
 
-        <p className="citation"><strong>To cite RegulomeDB:</strong><br /> Boyle AP, Hong EL, Hariharan M, Cheng Y, Schaub MA, Kasowski M, Karczewski KJ, Park J, Hitz BC, Weng S, Cherry JM, Snyder M. Annotation of functional variation in personal genomes  usingRegulomeDB. Genome Research 2012, 22(9):1790-1797. <a href="https://pubmed.ncbi.nlm.nih.gov/22955989/">PMID: 22955989</a>.</p><p><strong>To contact RegulomeDB:</strong><br /> <a data-reactid="104" href="mailto:regulomedb@mailman.stanford.edu">regulomedb@mailman.stanford.edu</a>&nbsp;</p>
+        <p className="citation"><strong>To cite RegulomeDB:</strong><br />Dong, S., Zhao, N., Spragins, E., Kagda, M. S., Li, M., Assis, P. R., Jolanki, O., Luo, Y., Michael Cherry, J., Boyle, A. P., & Hitz, B. C. (2022). Annotating and prioritizing human non-coding variants with RegulomeDB. <a href="https://doi.org/10.1101/2022.10.18.512627">In bioRxiv</a>.
+        <br /> Boyle AP, Hong EL, Hariharan M, Cheng Y, Schaub MA, Kasowski M, Karczewski KJ, Park J, Hitz BC, Weng S, Cherry JM, Snyder M. Annotation of functional variation in personal genomes  usingRegulomeDB. Genome Research 2012, 22(9):1790-1797. <a href="https://pubmed.ncbi.nlm.nih.gov/22955989/">PMID: 22955989</a>.</p>
+        <p><strong>To contact RegulomeDB:</strong><br /> <a data-reactid="104" href="mailto:regulomedb@mailman.stanford.edu">regulomedb@mailman.stanford.edu</a>&nbsp;</p>
     </div>
 );
 
