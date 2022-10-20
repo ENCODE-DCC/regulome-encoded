@@ -755,7 +755,7 @@ export class RegulomeSearch extends React.Component {
         const eQTLData = allData.filter(d => (d.method === 'eQTLs'));
         const caQTLData = allData.filter(d => (d.method === 'caQTLs'));
         const chipData = allData.filter(d => d.method === 'ChIP-seq');
-        const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq'));
+        const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq' || d.method === 'ATAC-seq'));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
         const thumbnail = this.context.location_href.split('/thumbnail=')[1] || null;
 
@@ -947,7 +947,7 @@ export class RegulomeSearch extends React.Component {
                                     {(thumbnail === null) ?
                                         <React.Fragment>
                                             <div className="line"><i className="icon icon-chevron-circle-right" />
-                                                {`Click to see ${this.state.genome === 'hg19' ? 'FAIRE-seq or' : ''} DNase-seq experiments.`}
+                                                {`Click to see ${this.state.genome === 'GRCh38' ? '' : 'FAIRE-seq or'} DNase-seq ${this.state.genome === 'GRCh38' ? 'or ATAC-seq ' : ''}experiments.`}
                                                 <div>
                                                     (<b>{dnaseData.length}</b> result{dnaseData.length !== 1 ? 's' : ''})
                                                 </div>
