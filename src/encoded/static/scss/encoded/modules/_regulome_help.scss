@@ -3,4 +3,9 @@
     @media screen and (max-width: $screen-md-min) {
         padding: 0 10px;
     }
+    font-size: 18px;
+    a {
+        text-decoration: underline;
+        font-weight: bold;
+    }
 }

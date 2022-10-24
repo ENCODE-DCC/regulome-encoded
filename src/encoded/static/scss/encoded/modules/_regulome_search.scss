@@ -563,7 +563,7 @@ table {
     margin: auto;
 }
 
-#regulomehelp-faq8-answer, #regulomehelp-faq5-answer {
+#regulomehelp-faq2-answer {
     margin-bottom: 1em;
 }
 
@@ -1285,6 +1285,16 @@ button {
 
 .image-container {
     img {
+        max-width: 100%;
+    }
+}
+
+.image-align-center {
+    img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 25px;
         max-width: 100%;
     }
 }
