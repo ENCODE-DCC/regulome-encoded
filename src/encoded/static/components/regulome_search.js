@@ -815,7 +815,7 @@ export class RegulomeSearch extends React.Component {
                 <div className="assembly-badge-container">
                     <div className="assembly-badge">{this.state.genome}</div>
                 </div>
-                { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total !== 0) ?
+                { ((Object.keys(this.props.context.notifications)[0] === 'Failed') && context.total === 0) ?
                     <React.Fragment>
                         {Object.keys(this.props.context.notifications).map((note, noteIdx) =>
                             <div className="notification-line wider" key={noteIdx}>
