@@ -544,6 +544,29 @@ const populationOrder = [
     'source unknown',
 ];
 
+// function to de-dup overlapping peaks in each dataset from ChIP, DNase and ATAC-seq assays
+function filter_overlapping_peaks(Datasets) {
+    var Datasets_filtered = [];
+    if (Datasets.length > 0) {
+        //we want to keep the wider peaks in each dataset
+        //if the start & end positions are the same we will keep the one with the strongest signal
+        //sort all peaks by dataset ids -> start positions in ascending order -> end positions in descending order -> signal in descending order
+        Datasets.sort((a,b)=>a.dataset_rel.localeCompare(b.dataset_rel) || a.start-b.start || b.end-a.end || b.value-a.value);
+        //keep the peak if it is the first peak in a new dataset or if it is not within the previous peak
+        Datasets_filtered.push(Datasets[0]);
+        var lastDataset = Datasets[0].dataset_rel;
+        var lastEnd =  Datasets[0].end;
+        for (var i = 1; i < Datasets.length; i++) {
+            if (Datasets[i].dataset_rel !== lastDataset || Datasets[i].end > lastEnd) { 
+                Datasets_filtered.push(Datasets[i]); 
+                lastDataset = Datasets[i].dataset_rel;
+                lastEnd = Datasets[i].end;
+            } 
+        }
+    }
+    return Datasets_filtered;
+}
+
 export class RegulomeSearch extends React.Component {
     constructor(props) {
         super(props);
@@ -754,8 +777,9 @@ export class RegulomeSearch extends React.Component {
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
         const eQTLData = allData.filter(d => (d.method === 'eQTLs'));
         const caQTLData = allData.filter(d => (d.method === 'caQTLs'));
-        const chipData = allData.filter(d => d.method === 'ChIP-seq');
-        const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq' || d.method === 'ATAC-seq'));
+        //for ChIP & DNase, ATAC-seq, we want to first de-dup overlapping peaks from the same dataset
+        const chipData = filter_overlapping_peaks(allData.filter(d => d.method === 'ChIP-seq'));
+        const dnaseData = filter_overlapping_peaks(allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq' || d.method === 'ATAC-seq')));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
         const thumbnail = this.context.location_href.split('/thumbnail=')[1] || null;
 
