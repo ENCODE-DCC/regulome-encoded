@@ -23,7 +23,7 @@ runcmd:
 - chown build:build /opt/cloudwatchmon
 - sudo -u build virtualenv --python=python2.7 /opt/cloudwatchmon
 - sudo -u build /opt/cloudwatchmon/bin/pip install -r cloudwatchmon-requirements.txt
-- sudo pip3 install -U zc.buildout setuptools==43
+- sudo pip3 install -U zc.buildout==2.13.8 setuptools==43
 - sudo -u encoded buildout bootstrap
 - sudo -u encoded LANG=en_US.UTF-8 bin/buildout -c %(ROLE)s.cfg
 - sudo -u encoded aws s3 cp --recursive s3://regulome-conf-prod/.aws .aws --region us-west-2
