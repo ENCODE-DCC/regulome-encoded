@@ -544,6 +544,32 @@ const populationOrder = [
     'source unknown',
 ];
 
+// function to de-dup overlapping peaks in each dataset from ChIP, DNase and ATAC-seq assays
+function filterOverlappingPeaks(Datasets) {
+    const DatasetsFiltered = [];
+    let DatasetsFilteredCount = 0;
+    if (Datasets.length > 0) {
+        // we want to keep the wider peaks in each dataset
+        // if the start & end positions are the same we will keep the one with the strongest signal
+        // sort all peaks by dataset ids -> start positions in ascending order -> end positions in descending order -> signals in descending order
+        Datasets.sort((a, b) => a.dataset_rel.localeCompare(b.dataset_rel) || a.start - b.start || b.end - a.end || b.value - a.value);
+        // keep the peak if it is the first peak in a new dataset or if it is not within the previous peak
+        DatasetsFiltered.push(Datasets[0]);
+        let lastDataset = Datasets[0].dataset_rel;
+        let lastEnd = Datasets[0].end;
+        for (let i = 1; i < Datasets.length; i += 1) {
+            if (Datasets[i].dataset_rel !== lastDataset || Datasets[i].end > lastEnd) {
+                DatasetsFiltered.push(Datasets[i]);
+                lastDataset = Datasets[i].dataset_rel;
+                lastEnd = Datasets[i].end;
+            } else {
+                DatasetsFilteredCount += 1;
+            }
+        }
+    }
+    return [DatasetsFiltered, DatasetsFilteredCount];
+}
+
 export class RegulomeSearch extends React.Component {
     constructor(props) {
         super(props);
@@ -754,8 +780,9 @@ export class RegulomeSearch extends React.Component {
         const QTLData = allData.filter(d => (d.method && d.method.indexOf('QTL') !== -1));
         const eQTLData = allData.filter(d => (d.method === 'eQTLs'));
         const caQTLData = allData.filter(d => (d.method === 'caQTLs'));
-        const chipData = allData.filter(d => d.method === 'ChIP-seq');
-        const dnaseData = allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq' || d.method === 'ATAC-seq'));
+        // for ChIP & DNase, ATAC-seq, we want to first de-dup overlapping peaks from the same dataset
+        const [chipData, chipDataFilteredCount] = filterOverlappingPeaks(allData.filter(d => d.method === 'ChIP-seq'));
+        const [dnaseData, dnaseDataFilteredCount] = filterOverlappingPeaks(allData.filter(d => (d.method === 'FAIRE-seq' || d.method === 'DNase-seq' || d.method === 'ATAC-seq')));
         const chromatinData = allData.filter(d => (d.method === 'chromatin state'));
         const thumbnail = this.context.location_href.split('/thumbnail=')[1] || null;
 
@@ -843,7 +870,7 @@ export class RegulomeSearch extends React.Component {
                                 {allData && allData.length > 0 ?
                                     <div className="notification-line">
                                         <div className="notification-label">Peaks</div>
-                                        <div className="notification">{allData.length - chromatinData.length} peaks</div>
+                                        <div className="notification">{allData.length - chromatinData.length - chipDataFilteredCount - dnaseDataFilteredCount} peaks</div>
                                     </div>
                                 : null}
                                 {(context.regulome_score) ?
