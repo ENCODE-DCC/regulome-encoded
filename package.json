@@ -65,7 +65,7 @@
     "color": "^0.10.1",
     "cookie-monster": "0.0.7",
     "create-react-class": "^15.5.2",
-    "d3": "^5.7.0",
+    "d3": "^7.6.1",
     "d3-sequence-logo": "git+https://github.com/ENCODE-DCC/d3-sequence-logo.git",
     "domready": "^0.3.0",
     "form-serialize": "^0.6.0",
