@@ -781,6 +781,16 @@ class App extends React.Component {
                     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <Title>{title}</Title>
+                    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q7NV8NWM99" />
+                    <script
+                        dangerouslySetInnerHTML={{ __html: `
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag('js', new Date());
+                        gtag('config', 'G-Q7NV8NWM99');
+                    ` }}
+                    />
+
                     {base ? <base href={base} /> : null}
                     <link rel="canonical" href={canonical} />
                     <script async src="//www.google-analytics.com/analytics.js" />
