@@ -156,6 +156,7 @@ export class MotifElement extends React.Component {
         const targetList = element.targets;
         const footprintList = {};
         const pwmList = {};
+        const footprintAnnotationList = {};
 
         /*
         Element {
@@ -171,10 +172,21 @@ export class MotifElement extends React.Component {
             // biosample: Label
             const accession = element.accessions[dIndex];
             // accession: ID
+            const annotation = `accession=${d.split('/').slice(-2, -1)[0]}`;
+            // annotation: dataset accession
+
             // So for a dataset d, we get the Label and ID corresponding to the same index we are at now
             if (biosample !== undefined) {
                 // If we have a biosample, then we map Label -> URL into `footprintList`
-                footprintList[biosample] = d;
+                if (footprintAnnotationList[biosample]) {
+                    // If a biosample has multiple footprint datasets, we need to combine their annotation accessions into one url query
+                    footprintAnnotationList[biosample].push(annotation);
+                    footprintList[biosample] = `https://www.encodeproject.org/search/?${footprintAnnotationList[biosample].join('&')}`;
+                } else {
+                    // else we just need the single footprint dataset url
+                    footprintAnnotationList[biosample] = [annotation];
+                    footprintList[biosample] = d;
+                }
             } else {
                 // If we don't have a biosample, then map Label -> URL into `pwmList`
                 pwmList[accession] = d;
