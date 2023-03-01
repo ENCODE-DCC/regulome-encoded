@@ -171,13 +171,13 @@ const LegendLabel = () => (
 /**
  * Display a legend
  */
-const GenomeLegend = props => (
+const GenomeLegend = () => (
     <Tooltip
         trigger={<LegendLabel />}
         tooltipId="genome-legend"
         css="legend-button"
         size="large"
-        columnCount={props.colorBlock.length + 2}
+        columnCount={3}
     >
         <div className="legend-container">
             <div className="legend-block">
@@ -198,39 +198,18 @@ const GenomeLegend = props => (
                     </div>
                 ))}
             </div>
-            {(props.colorBlock.indexOf('ccres') > -1) ?
-                <div className="legend-block">
-                    <h5>CCREs</h5>
-                    {Object.keys(colorCCREs).map(ccre => (
-                        <div className="legend-element" key={ccre}>
-                            <div className={`legend-swatch ${colorCCREs[ccre] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorCCREs[ccre]}` }} />
-                            <div className="legend-label">{ccre}</div>
-                        </div>
-                    ))}
-                </div>
-            : null}
-            {(props.colorBlock.indexOf('chromatin') > -1) ?
-                <div className="legend-block">
-                    <h5>Chromatin</h5>
-                    {Object.keys(colorChromatinState).map(state => (
-                        <div className="legend-element" key={state}>
-                            {(colorChromatinState[state].indexOf(', ') === -1) ?
-                                <div className={`legend-swatch ${colorChromatinState[state] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorChromatinState[state]}` }} />
-                            :
-                                <div className={`legend-swatch ${colorChromatinState[state] === '#ffffff' ? 'with-border' : ''}`} style={{ backgroundImage: `-webkit-linear-gradient(45deg, ${colorChromatinState[state].split(', ')[0]} 50%, ${colorChromatinState[state].split(', ')[1]} 50%)` }} />
-                            }
-                            <div className="legend-label">{state}</div>
-                        </div>
-                    ))}
-                </div>
-            : null}
+            <div className="legend-block">
+                <h5>CCREs</h5>
+                {Object.keys(colorCCREs).map(ccre => (
+                    <div className="legend-element" key={ccre}>
+                        <div className={`legend-swatch ${colorCCREs[ccre] === '#ffffff' ? 'with-border' : ''}`} style={{ background: `${colorCCREs[ccre]}` }} />
+                        <div className="legend-label">{ccre}</div>
+                    </div>
+                ))}
+            </div>
         </div>
     </Tooltip>
 );
-
-GenomeLegend.propTypes = {
-    colorBlock: PropTypes.array.isRequired,
-};
 
 
 // Files to be displayed for local version of browser
@@ -349,7 +328,6 @@ class GenomeBrowser extends React.Component {
             pinnedFiles: [],
             disableBrowserForIE: false,
             geneSearch: false,
-            colorBlock: this.props.selectedFilters.filter(f => f.indexOf('biosample') > -1).length > 0 ? ['chromatin'] : [],
         };
         this.setBrowserDefaults = this.setBrowserDefaults.bind(this);
         this.filesToTracks = this.filesToTracks.bind(this);
@@ -379,11 +357,6 @@ class GenomeBrowser extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.selectedFilters.filter(f => (f.indexOf('biosample') > -1)).length > 0) {
-            if (this.state.colorBlock.length === 0) {
-                this.setState({ colorBlock: ['chromatin'] });
-            }
-        }
         if (!(this.state.disableBrowserForIE)) {
             if (this.state.contig !== prevState.contig && this.state.visualizer) {
                 this.state.visualizer.setLocation({ contig: this.state.contig, x0: this.state.x0, x1: this.state.x1 });
@@ -700,7 +673,7 @@ class GenomeBrowser extends React.Component {
                             </div>
                         : null}
                         <div className="regulome-legend">
-                            <GenomeLegend colorBlock={this.state.colorBlock} />
+                            <GenomeLegend />
                         </div>
                         <button className="reset-browser-button" onClick={this.resetLocation}>
                             <i className="icon icon-undo" />
