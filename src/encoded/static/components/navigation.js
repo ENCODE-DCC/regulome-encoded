@@ -74,10 +74,10 @@ export default class Navigation extends React.Component {
     }
 
     /**
-     * Download data for ENCFF297XMQ
+     * Download data for ENCFF250UJY (v2.2 precalculated scores in GRCh38)
      */
     batchDownload() {
-        this.context.navigate('https://www.encodeproject.org/files/ENCFF297XMQ/@@download/ENCFF297XMQ.tsv');
+        this.context.navigate('https://www.encodeproject.org/files/ENCFF250UJY/@@download/ENCFF250UJY.tsv');
     }
 
     render() {
@@ -99,8 +99,8 @@ export default class Navigation extends React.Component {
                             showTitle={false}
                             contentDescription={
                                 <div>
-                                    <h4>Download pre-calculated scores file for dbSNP v153 common SNPs (MAF &gt; 0.01)</h4>
-                                    <div>Click the &ldquo;Download&rdquo; button below to download the file &ldquo;ENCFF297XMQ.txt&rdquo;. The file size is 1.32 GB.</div>
+                                    <h4>Download pre-calculated scores file for dbSNP v153 common SNPs (MAF &ge; 0.01) in GRCh38</h4>
+                                    <div>Click the &ldquo;Download&rdquo; button below to download the file &ldquo;ENCFF250UJY.tsv&rdquo;. The file size is 1.44 GB.</div>
                                 </div>
                             }
                         />
