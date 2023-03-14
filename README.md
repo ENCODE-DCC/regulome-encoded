@@ -1,28 +1,21 @@
 # Regulome DB
 
-## Running app using docker
+## Running app using docker compose
 
-### **1. Runing RegulomeDB using docker**  
-
-- Make sure you have docker (<https://docs.docker.com/get-docker/>) installed. Build the image regulome:
-  - `docker build . -t regulome`
-
-- Run regulome:
-  - `docker run -d -p 6543:6543 regulome`
-
-- The app will be running at <http://localhost:6543>.
-
-### **2. Running RegulomeDB using docker compose**  
+### **1. Running RegulomeDB using docker compose**  
 
 - Make sure you have docker compose (<https://docs.docker.com/compose/install/>) installed. Build the image regulome:
-  - `docker-compose build`
+  - `docker compose build`
 
 - Run regulome:
-  - `docker-compose up`
+  - `docker compose up`
 
-- The app will be running at <http://localhost:6543>.
+- The app will be running at <http://0.0.0.0:6543>.
 
-### **3. Frontend development using docker compose**
+- Stop and remove containers, networks:
+  - `docker compose down`
+
+### **2. Frontend development using docker compose**
 
 - In Docker Desktop, find the running docker compose (should be named as "regulome-encoded"), there will be one docker container runing inside. Select the "CLI" to open the terminal:
   - `npm run dev`
