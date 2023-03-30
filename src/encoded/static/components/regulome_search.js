@@ -863,7 +863,7 @@ export class RegulomeSearch extends React.Component {
                         <div className="lead-logo">
                             <a href="/">
                                 <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
-                                <div className="version-tag">2.1</div>
+                                <div className="version-tag">2.2</div>
                             </a>
                         </div>
                         <React.Fragment>
@@ -1114,7 +1114,7 @@ export class RegulomeSearch extends React.Component {
                         <div className="lead-logo">
                             <a href="/">
                                 <img src="/static/img/RegulomeLogoFinal.gif" alt="Regulome logo" />
-                                <div className="version-tag">2.1</div>
+                                <div className="version-tag">2.2</div>
                             </a>
                         </div>
                         <AdvSearch
