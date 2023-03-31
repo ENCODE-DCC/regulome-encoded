@@ -318,7 +318,6 @@ export const Motifs = (props) => {
     const coordinates = props.context.query_coordinates[0]
     const alignmentCoordinate = +coordinates.split(':')[1].split('-')[0];
 
-
     // Filter results to find ones with PWM data
     const pwmLinkListFull = results.filter(d => d.documents && d.documents[0] && d.documents[0].document_type === 'position weight matrix');
 
@@ -330,18 +329,28 @@ export const Motifs = (props) => {
     // Flatten group to create an array of pwms
     // Properties that are identical across the group (for instance: pwm document, strand, and targets) are collapsed
     // Properties that are not the same across the group (for instance: biosamples, accessions, datasets) are merged into an array
-    let groupedListMapped = _.map(groupedList, group => ({
-        pwm: group[0].documents[0]['@id'],
-        href: group[0].documents[0].attachment.href,
-        targets: group[0].targets.join(', '),
-        accessions: _.pluck(group, 'file'),
-        datasets: _.pluck(group, 'dataset'),
-        start: group[0].start,
-        end: group[0].end,
-        strand: group[0].strand,
-        biosamples: _.pluck(group, 'biosample_ontology').map(d => d.term_name),
-        description: group[0].description ? group[0].description : null,
-    }));
+    let groupedListMapped = _.map(groupedList, group => {
+        const pwmScores = [];
+        for (let idx=0; idx < group.length; idx++) {
+            pwmScores.push(+group[idx].value);
+        }
+        const pwmIndex = pwmScores.indexOf(Math.max(...pwmScores));
+
+        return (
+            {
+                pwm: group[pwmIndex].documents[0]['@id'],
+                href: group[pwmIndex].documents[0].attachment.href,
+                targets: group[pwmIndex].targets.join(', '),
+                accessions: _.pluck(group, 'file'),
+                datasets: _.pluck(group, 'dataset'),
+                start: group[pwmIndex].start,
+                end: group[pwmIndex].end,
+                strand: group[pwmIndex].strand,
+                biosamples: _.pluck(group, 'biosample_ontology').map(d => d.term_name),
+                description: group[pwmIndex].description ? group[pwmIndex].description : null,
+            }
+        )
+    });
 
     // Sort flattened list by target
     groupedListMapped = _.sortBy(groupedListMapped, o => o.targets);
