@@ -197,11 +197,11 @@ const RegulomeHelp = () => (
             </div>
             
             <p className="regulomehelp-question" id="regulomehelp-faq3-question">
-                <strong><i className="icon icon-caret-right" />How to interpret the RegulomeDB probability score?</strong>
+                <strong><i className="icon icon-caret-right" />How to interpret the RegulomeDB model score?</strong>
             </p>
             <div className="regulomehelp-answer" id="regulomehelp-faq3-answer">
-                <p>The RegulomeDB probability score is ranging from 0 to 1, with 1 being most likely to be a regulatory variant. The probabilistic score is calculated from a random forest model, <a href="https://pubmed.ncbi.nlm.nih.gov/34648033/">TURF</a>, trained with allele-specific TF binding SNVs. We used a simplified version here only including binary features from functional genomic evidence as used in the heuristic ranking, as well as numeric features from information content in matched PWMs. We will include the whole feature set in a future release.</p>
-                <p> There is an overall positive correlation between the ranking scores and the probability scores, but there are some exceptions because 1) we added additional features when predicting probability scores. 2) features used in probability scoring were weighted differently from ranking scoring. </p>
+                <p>The RegulomeDB model score is ranging from 0 to 1, with 1 being most likely to be a regulatory variant. The model score is calculated from a random forest model, <a href="https://pubmed.ncbi.nlm.nih.gov/34648033/">TURF</a>, trained with allele-specific TF binding SNVs. We used a simplified version here only including binary features from functional genomic evidence as used in the heuristic ranking, as well as numeric features from information content in matched PWMs. We will include the whole feature set in a future release.</p>
+                <p> There is an overall positive correlation between the ranking scores and the model scores, but there are some exceptions because 1) we added additional features when predicting model scores. 2) features used in model scoring were weighted differently from ranking scoring. </p>
             </div>
 
             <p className="regulomehelp-question" id="regulomehelp-faq4-question">
