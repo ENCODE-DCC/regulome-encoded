@@ -395,6 +395,9 @@ class AdvSearch extends React.Component {
                   </Modal>
                 : null}
                 <div id="panel1" className="adv-search-form" autoComplete="off" aria-labelledby="tab1" onSubmit={this.handleOnFocus} >
+                    <div className="link-to-beta-regulome">
+                        New: Try beta version <a href="https://beta.regulomedb.org/">RegulomeDB v2.1</a> with GRCh38 database
+                    </div>
                     <div className="form-group">
                         <label htmlFor="annotation">
                             <i className="icon icon-search" />Search by dbSNP ID or coordinate range: <AssemblySelector
